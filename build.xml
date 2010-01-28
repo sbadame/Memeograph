@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 <project name="Memeograph" default="build" basedir=".">
 
+	<!-- Holds a list of all of the 'main' project's dependencies -->
+	<path id="lib.path">
+		<fileset dir=".">
+			<include name="lib/*.jar" />
+		</fileset>
+	</path>
+
 	<target name="run-test">
 		<java fork="true" classname="ReadChar">
 			<jvmarg value="-Xdebug" />
@@ -16,7 +23,7 @@
 
 	<target name="-compile-main">
 		<mkdir dir="bin/main" />
-		<javac srcdir="src/main" destdir="bin/main" />
+		<javac srcdir="src/main" destdir="bin/main" classpathref="lib.path"/>
 	</target>
 
 	<target name="-compile-test">
