@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<project name="Memeograph" default="build" basedir=".">
+
+	<target name="run-test">
+		<java fork="true" classname="ReadChar">
+			<jvmarg value="-Xdebug" />
+			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"/>
+			<classpath>
+				<path location="bin/test"/>
+			</classpath>
+		</java>
+	</target>
+
+
+	<target name="build" depends="-compile-main,-compile-test">
+		<mkdir dir="bin/main" />
+		<javac srcdir="src/main" destdir="bin/main" />
+	</target>
+
+	<target name="-compile-main">
+		<mkdir dir="bin/main" />
+		<javac srcdir="src/main" destdir="bin/main" />
+	</target>
+
+	<target name="-compile-test">
+		<mkdir dir="bin/test" />
+		<javac debug="true" srcdir="src/test" destdir="bin/test" />
+	</target>
+
+	<target name="clean">
+		<delete dir="bin"/>
+	</target>
+</project>
