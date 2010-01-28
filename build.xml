@@ -12,10 +12,7 @@
 	</target>
 
 
-	<target name="build" depends="-compile-main,-compile-test">
-		<mkdir dir="bin/main" />
-		<javac srcdir="src/main" destdir="bin/main" />
-	</target>
+	<target name="build" depends="-compile-main,-compile-test" />
 
 	<target name="-compile-main">
 		<mkdir dir="bin/main" />
