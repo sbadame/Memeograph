@@ -1,6 +1,16 @@
 <?xml version="1.0"?>
 <project name="Memeograph" default="build" basedir=".">
 
+	<!--
+	     	Define all of our properties here
+	-->
+
+	<!-- the port to make our connection across -->
+	<property name="port" value="8000" />
+
+	<!-- the type of transport that we are using -->
+	<property name="transport" value="dt_socket" />
+
 	<!-- Holds a list of all of the 'main' project's dependencies -->
 	<path id="lib.path">
 		<fileset dir=".">
@@ -8,22 +18,44 @@
 		</fileset>
 	</path>
 
+	<!--
+	     	Define all of our run targets here
+	-->
+
+	<target name="run">
+		<antcall target="run-test" />
+		<antcall target="run-main" />
+	</target>
+
 	<target name="run-test">
-		<java fork="true" classname="ReadChar">
+		<java fork="true" classname="ReadChar" >
 			<jvmarg value="-Xdebug" />
-			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"/>
+			<jvmarg value="-Xrunjdwp:transport=${transport},address=${port},server=y,suspend=n"/>
 			<classpath>
 				<path location="bin/test"/>
 			</classpath>
 		</java>
 	</target>
 
+	<target name="run-main">
+		<java fork="true" classname="memeograph.Memeographer">
+			<classpath>
+				<path location="bin/main" />
+				<path refid="lib.path" />
+			</classpath>
+		</java>
+	</target>
+
+
+	<!--
+	     	Define all of our build targets here
+	-->
 
 	<target name="build" depends="-compile-main,-compile-test" />
 
 	<target name="-compile-main">
 		<mkdir dir="bin/main" />
-		<javac srcdir="src/main" destdir="bin/main" classpathref="lib.path"/>
+		<javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6"/>
 	</target>
 
 	<target name="-compile-test">
@@ -31,6 +63,7 @@
 		<javac debug="true" srcdir="src/test" destdir="bin/test" />
 	</target>
 
+	<!-- Basic simple clean target -->
 	<target name="clean">
 		<delete dir="bin"/>
 	</target>

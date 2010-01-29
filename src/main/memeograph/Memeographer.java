@@ -1,6 +1,8 @@
 package memeograph;
 
 import com.sun.jdi.Bootstrap;
+import com.sun.jdi.ObjectReference;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
@@ -26,7 +28,9 @@ public class Memeographer {
 		VirtualMachine vm = getTargetVM();
 		if (vm == null)
 			throw new Error("No VM was found");
-		System.out.println(vm.allClasses());
+		for(ReferenceType t : vm.allClasses()){
+			System.out.println(t.name()+ " - " + t.instances(100).size());
+		}
 	}
 
 	private static VirtualMachine getTargetVM(){
@@ -34,7 +38,6 @@ public class Memeographer {
 		Iterator i = connectors.iterator();
 		while(i.hasNext()){
 			Connector c = (Connector)i.next();
-			System.out.println(c.name());
 			if (c.name().equals(TRANSPORT)) {
 				AttachingConnector ac = (AttachingConnector)c;
 				try {
