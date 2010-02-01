@@ -22,12 +22,7 @@
 	     	Define all of our run targets here
 	-->
 
-	<target name="run">
-		<antcall target="run-test" />
-		<antcall target="run-main" />
-	</target>
-
-	<target name="run-test">
+	<target name="run-test" depends="build">
 		<java fork="true" classname="ReadChar" >
 			<jvmarg value="-Xdebug" />
 			<jvmarg value="-Xrunjdwp:transport=${transport},address=${port},server=y,suspend=n"/>
@@ -37,7 +32,7 @@
 		</java>
 	</target>
 
-	<target name="run-main">
+	<target name="run-main" depends="build">
 		<java fork="true" classname="memeograph.Memeographer">
 			<classpath>
 				<path location="bin/main" />
@@ -67,4 +62,10 @@
 	<target name="clean">
 		<delete dir="bin"/>
 	</target>
+
+        <target name="pdf" depends="run-main">
+                <exec executable="dot">
+                    <arg line="-Tpdf output.dot -o output.pdf"/>
+                </exec>
+        </target>
 </project>
