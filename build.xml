@@ -32,8 +32,8 @@
 		</java>
 	</target>
 
-	<target name="run-main" depends="build">
-		<java fork="true" classname="memeograph.Memeographer">
+	<target name="run-memeographer" depends="build">
+	  	<java fork="true" classname="memeograph.Memeographer">
 			<classpath>
 				<path location="bin/main" />
 				<path refid="lib.path" />
@@ -41,6 +41,18 @@
 		</java>
 	</target>
 
+        <target name="pdf" depends="build">
+		<java fork="true" classname="memeograph.Memeographer">
+		  	<arg value="dot" />
+			<classpath>
+				<path location="bin/main" />
+				<path refid="lib.path" />
+			</classpath>
+		</java>
+                <exec executable="dot">
+                    <arg line="-Tpdf output.dot -o output.pdf"/>
+                </exec>
+        </target>
 
 	<!--
 	     	Define all of our build targets here
@@ -63,9 +75,4 @@
 		<delete dir="bin"/>
 	</target>
 
-        <target name="pdf" depends="run-main">
-                <exec executable="dot">
-                    <arg line="-Tpdf output.dot -o output.pdf"/>
-                </exec>
-        </target>
 </project>

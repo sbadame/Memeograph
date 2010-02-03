@@ -1,12 +1,12 @@
 import java.util.Scanner;
 
 public class ReadChar{
-    class InnerClassName {
+    /*class InnerClassName {
         int i;
     }
 
     InnerClassName thing = new InnerClassName();
-    
+    */
     public static void main(String[] args){
         ReadChar r = new ReadChar();
         System.out.println(r);

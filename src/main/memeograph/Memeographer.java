@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import memeograph.graphics.GraphFrame;
 
 /**
  * Starting off the begining of the Memeographer. This class starts the show.
@@ -42,26 +43,15 @@ public class Memeographer {
 				GraphBuilder grapher = new GraphBuilder(vm);
 				grapher.buildGraph();
 				Tree graph = grapher.getGraph();
-				HashMap<String, Tree> graphMap = grapher.getGraphMap();
 
-        try {
-            PrintWriter out = new PrintWriter(new FileWriter("output.dot"), true);
-            out.println("digraph memeograph {");
-
-						for (Tree t : graphMap.values()) {
-								for (Tree child : t.getChildren()) {
-                    out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
-								}
-						}
-
-            out.println("}");
-            out.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-   
+				//Step 3 - Render the graph
+				if (args != null && args.length > 0 && args[0].equals("dot")){
+						outputDot(grapher);
+				}else{
+						GraphFrame frame = new GraphFrame(graph);
+						frame.setVisible(true);
+				}
+		}
 
     private static VirtualMachine getTargetVM(){
         List connectors = Bootstrap.virtualMachineManager().attachingConnectors();
@@ -85,5 +75,24 @@ public class Memeographer {
 
         return null;
     }
+
+		private static void outputDot(GraphBuilder grapher){
+				HashMap<String, Tree> graphMap = grapher.getGraphMap();
+        try {
+            PrintWriter out = new PrintWriter(new FileWriter("output.dot"), true);
+            out.println("digraph memeograph {");
+
+						for (Tree t : graphMap.values()) {
+								for (Tree child : t.getChildren()) {
+                    out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
+								}
+						}
+
+            out.println("}");
+            out.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+		}
 
 }
