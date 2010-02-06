@@ -75,4 +75,30 @@
 		<delete dir="bin"/>
 	</target>
 
+	<!-- Test parallel -->
+	<target name="run-all" depends="build">
+	  	<parallel>
+		  	<!-- Start our target program -->
+			<sequential>
+			  <java fork="true" classname="ReadChar" >
+			      <jvmarg value="-Xdebug" />
+			      <jvmarg value="-Xrunjdwp:transport=${transport},address=${port},server=y,suspend=n"/>
+			      <classpath>
+				      <path location="bin/test"/>
+			      </classpath>
+			   </java>
+			</sequential>
+
+		  	<!-- Start our Memeographer -->
+		  	<sequential>
+			    <java fork="true" classname="memeograph.Memeographer">
+				  <classpath>
+					  <path location="bin/main" />
+					  <path refid="lib.path" />
+				  </classpath>
+			    </java>
+			</sequential>
+		</parallel>
+	</target>
+
 </project>
