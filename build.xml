@@ -76,7 +76,7 @@
 	</target>
 
 	<!-- Test parallel -->
-	<target name="run-all" depends="build">
+	<target name="run" depends="build">
 	  	<parallel>
 		  	<!-- Start our target program -->
 			<sequential>

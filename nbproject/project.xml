@@ -36,10 +36,7 @@
                     <target>clean</target>
                 </action>
                 <action name="run">
-                    <target>run-test</target>
-                </action>
-                <action name="test">
-                    <target>run-test</target>
+                    <target>run</target>
                 </action>
                 <action name="rebuild">
                     <target>clean</target>
@@ -75,7 +72,6 @@
                     <ide-action name="rebuild"/>
                     <ide-action name="clean"/>
                     <ide-action name="run"/>
-                    <ide-action name="test"/>
                 </context-menu>
             </view>
             <subprojects/>
@@ -83,7 +79,7 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/1">
             <compilation-unit>
                 <package-root>src/main</package-root>
-                <classpath mode="compile">bin/main:lib/tools.jar</classpath>
+                <classpath mode="compile">bin/main:lib/tools.jar:lib/core.jar</classpath>
                 <built-to>bin/main</built-to>
                 <source-level>1.5</source-level>
             </compilation-unit>

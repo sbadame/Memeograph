@@ -1,3 +1,4 @@
 bin/*
+processing*
 *.dot
 *.pdf

@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import memeograph.graphics.GraphFrame;
+import memeograph.ui.MemeoFrame;
 
 /**
  * Starting off the begining of the Memeographer. This class starts the show.
@@ -48,8 +49,10 @@ public class Memeographer {
 				if (args != null && args.length > 0 && args[0].equals("dot")){
 						outputDot(grapher);
 				}else{
-						GraphFrame frame = new GraphFrame(graph);
-						frame.setVisible(true);
+                    MemeoFrame frame = new MemeoFrame();
+                    frame.setVisible(true);
+//						GraphFrame frame = new GraphFrame(graph);
+//						frame.setVisible(true);
 				}
 		}
 
