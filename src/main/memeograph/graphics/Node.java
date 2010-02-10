@@ -38,12 +38,12 @@ public class Node {
         g.drawLine( (int)startx, (int)starty, (int)endx, (int)endy );
     }
 
-    double x, y;
-    double fx;
-    double vx=0;
-    double opacity = 1;
-    double width = 70;
-    Tree data;
+    public double x, y;
+    public double fx;
+    public double vx=0;
+    public double opacity = 1;
+    public double width = 70;
+    public Tree data;
     
 
     public Node(Tree data, double x, double y)
