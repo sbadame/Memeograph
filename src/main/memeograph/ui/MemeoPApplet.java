@@ -32,14 +32,12 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
     @Override
     public void setup(){
-        size(800, 600);
+        size(1024, 768);
         background(102);
 
-        //font = loadFont("Ziggurat-HTF-Black-32.vlw");
-        //textFont(font, 12);
-
-        //Set Font color
-        fill(0);
+        font = createFont("SansSerif.plain", 12);
+        textFont(font);
+        textAlign(CENTER, CENTER);
 
         //Lets see if we can slow down the tree rendering to 30fps
         frameRate(30);
@@ -47,10 +45,13 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
     @Override
     public void draw(){
+        background(102);
+        //fill(color(255,255,255));
+
         //First check if we have to layout this stuff out
         if (!laidout) {
             treechanged = false;
-            layout(tree, 0, PADDING);
+            layout(tree, width/2, PADDING);
         }
 
         //jiggle our layout
@@ -71,11 +72,11 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
     }
 
     private void drawLine(Node from, Node to){
-       line((float)from.x, (float)from.y, (float)to.x, (float)to.y);
+        line((float)from.x, (float)from.y, (float)to.x, (float)to.y);
     }
 
     private void drawNode(Node n){
-
+        text(n.data.getTreeName(), (float)n.x, (float)n.y);
     }
 
     private void layout(Tree t, double x, double y){
@@ -104,7 +105,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             t.addTreeChangeListener(this);
 
             Node n = new Node(t, xpos, (layer+1)*50);
-            xpos += n.width + PADDING;
+            n.width = textWidth(n.data.getTreeName());
+            xpos += n.width + 100;
 
             layers.get(layer).add(n);
             positions.put(t, n);
@@ -131,18 +133,18 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             Vector<Node> layer = layers.get(i);
 
             for(int j = 0; j < layer.size(); j++){
-                if (j >  0){
+                if (j > 0){
                     Node r = layer.get(j);
                     Node l = layer.get(j-1);
-                    double d = (l.x + l.width/2) - (r.x - r.width/2);
-                    layer.get(j).fx += 1000.0 / (d*d);
+                    double d = Math.abs((l.x + l.width/2) - (r.x - r.width/2)) + 1;
+                    layer.get(j).fx += 100.0 / (d*d);
                 }
 
                 if (j < layer.size() - 1){
                     Node l = layer.get(j);
                     Node r = layer.get(j+1);
-                    double d = (l.x + l.width/2) - (r.x - r.width/2);
-                    layer.get(j).fx -= 1000.0 / (d*d);
+                    double d = Math.abs((l.x + l.width/2) - (r.x - r.width/2)) + 1;
+                    layer.get(j).fx -= 100.0 / (d*d);
                 }
             }
         }
@@ -162,10 +164,26 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             }
         }
 
-        for (Node n : positions.values()) {
-            n.vx = n.vx*0.9 + 100*n.fx;
-            n.x += 0.1*n.vx;
-            total+= Math.abs(100*n.fx);
+        for (int i = 1; i < layers.size(); i++) {
+            Vector<Node> layer = layers.get(i);
+            for(int j = 0; j < layer.size(); j++){
+                Node n = layer.get(j);
+                n.vx = n.vx*0.95 + 1*n.fx;
+                double newx = n.x + 0.1*n.vx;
+                total+= Math.abs(100*n.fx);
+                n.x = newx;
+            }
+
+            for(int j = 1; j < layer.size(); j++){
+                
+                Node n = layer.get(j);
+                Node l = layer.get(j-1);
+                if (l.x + l.width/2 + n.width/2 + 1 > n.x) {
+                    //System.out.print("n.x " + n.x);
+                    n.x = l.x + l.width/2 + n.width/2 + 1;
+                    //System.out.println(" -> " + n.x);
+                }
+            }
         }
 
         return total;
