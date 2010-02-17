@@ -37,7 +37,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         size(1024, 768, P3D);
         background(102);
 
-        font = createFont("SansSerif.plain", 12);
+        font = createFont("SansSerif.bold", 18);
         textFont(font);
         textAlign(CENTER, CENTER);
 
@@ -109,6 +109,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             }
 
             t = curr_layer.remove();
+						if (positions.containsKey(t)) continue;
+
             t.addTreeChangeListener(this);
 
             Node n = new Node(t, xpos, (layer+1)*50);
@@ -119,7 +121,9 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             positions.put(t, n);
 
             for (Tree kid : t.getChildren()) {
-                next_layer.add(kid);
+							  if (!positions.containsKey(kid)) {
+									next_layer.add(kid);
+								}
             }
         }
 
@@ -175,7 +179,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             Vector<Node> layer = layers.get(i);
             for(int j = 0; j < layer.size(); j++){
                 Node n = layer.get(j);
-                n.vx = n.vx*0.90 + 1*n.fx;
+                n.vx = n.vx*0.95 + 1*n.fx;
                 double newx = n.x + 0.1*n.vx;
                 total+= Math.abs(100*n.fx);
                 n.x = newx;
