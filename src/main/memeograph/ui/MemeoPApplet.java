@@ -83,7 +83,13 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
     }
 
     private void drawNode(Node n){
-        text(n.data.getTreeName(), (float)n.x, (float)n.y);
+        translate((float)n.x, (float)n.y, 0f);
+        fill(255);
+        box((float)n.width, 20f, 4f);
+        translate(0f, 0f, 3f);
+        fill(5);
+        text(n.data.getTreeName(), 0f, 0f);
+        translate(-(float)n.x, -(float)n.y, -3f);
     }
 
     private void layout(Tree t, double x, double y){
@@ -109,7 +115,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             }
 
             t = curr_layer.remove();
-						if (positions.containsKey(t)) continue;
+            if (positions.containsKey(t)) continue;
 
             t.addTreeChangeListener(this);
 
@@ -121,9 +127,9 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             positions.put(t, n);
 
             for (Tree kid : t.getChildren()) {
-							  if (!positions.containsKey(kid)) {
-									next_layer.add(kid);
-								}
+                if (!positions.containsKey(kid)) {
+                    next_layer.add(kid);
+                }
             }
         }
 
@@ -148,14 +154,14 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
                     Node r = layer.get(j);
                     Node l = layer.get(j-1);
                     double d = (l.x + l.width/2) - (r.x - r.width/2);
-                    layer.get(j).fx += 100.0 / (d*d + 1);
+                    layer.get(j).fx += 1000.0 / (d*d + 1);
                 }
 
                 if (j < layer.size() - 1){
                     Node l = layer.get(j);
                     Node r = layer.get(j+1);
                     double d = l.x + l.width/2 - (r.x - r.width/2);
-                    layer.get(j).fx -= 100.0 / (d*d + 1);
+                    layer.get(j).fx -= 1000.0 / (d*d + 1);
                 }
             }
         }
@@ -181,20 +187,21 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
                 Node n = layer.get(j);
                 n.vx = n.vx*0.95 + 1*n.fx;
                 double newx = n.x + 0.1*n.vx;
-                total+= Math.abs(100*n.fx);
+                total+= Math.abs(n.fx);
                 n.x = newx;
             }
 
+            // Not too close, okay...
             for(int j = 1; j < layer.size(); j++){
                 Node l = layer.get(j-1);
                 Node n = layer.get(j);
-                if (l.x + l.width/2 + n.width/2 + 1 > n.x) {
-                    System.out.println(l.x + " " + n.x + " " + (l.width/2) + " " + (n.width/2));
-                    n.x = l.x + l.width/2 + n.width/2 + 1;
+                if (l.x + l.width/2 + n.width/2 + PADDING > n.x) {
+                    n.x = l.x + l.width/2 + n.width/2 + PADDING;
                 }
             }
         }
 
+        System.out.println(total);
         return total;
     }
 
