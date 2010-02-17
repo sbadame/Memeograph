@@ -30,6 +30,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         this.tree = tree;
     }
 
+    float camz;
+
     @Override
     public void setup(){
         size(1024, 768, P3D);
@@ -41,13 +43,17 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
         //Lets see if we can slow down the tree rendering to 30fps
         frameRate(30);
+
+        camz = (height/2.0f) / tan(PI*60.0f / 360.0f);
+        camera(width/3.0f, height/3.0f, camz,
+                width/2.0f, height/2.0f, 0, 
+                0, 1, 0);
     }
+
 
     @Override
     public void draw(){
         background(102);
-				camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
-							width/2.0f, height/2.0f, 0, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
@@ -137,15 +143,15 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
                 if (j > 0){
                     Node r = layer.get(j);
                     Node l = layer.get(j-1);
-                    double d = Math.abs((l.x + l.width/2) - (r.x - r.width/2)) + 1;
-                    layer.get(j).fx += 100.0 / (d*d);
+                    double d = (l.x + l.width/2) - (r.x - r.width/2);
+                    layer.get(j).fx += 100.0 / (d*d + 1);
                 }
 
                 if (j < layer.size() - 1){
                     Node l = layer.get(j);
                     Node r = layer.get(j+1);
-                    double d = Math.abs((l.x + l.width/2) - (r.x - r.width/2)) + 1;
-                    layer.get(j).fx -= 100.0 / (d*d);
+                    double d = l.x + l.width/2 - (r.x - r.width/2);
+                    layer.get(j).fx -= 100.0 / (d*d + 1);
                 }
             }
         }
@@ -169,20 +175,18 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             Vector<Node> layer = layers.get(i);
             for(int j = 0; j < layer.size(); j++){
                 Node n = layer.get(j);
-                n.vx = n.vx*0.95 + 1*n.fx;
+                n.vx = n.vx*0.90 + 1*n.fx;
                 double newx = n.x + 0.1*n.vx;
                 total+= Math.abs(100*n.fx);
                 n.x = newx;
             }
 
             for(int j = 1; j < layer.size(); j++){
-                
-                Node n = layer.get(j);
                 Node l = layer.get(j-1);
+                Node n = layer.get(j);
                 if (l.x + l.width/2 + n.width/2 + 1 > n.x) {
-                    //System.out.print("n.x " + n.x);
+                    System.out.println(l.x + " " + n.x + " " + (l.width/2) + " " + (n.width/2));
                     n.x = l.x + l.width/2 + n.width/2 + 1;
-                    //System.out.println(" -> " + n.x);
                 }
             }
         }
@@ -202,4 +206,19 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         throw new UnsupportedOperationException();
     }
 
+
+    public void mouseDragged()
+    {
+        int d = mouseY - pmouseY;
+
+        if (d > 0) {
+            camz *= 1.1f;
+        } else if (d < 0) {
+            camz /= 1.1f;
+        }
+
+        camera(width/3.0f, height/3.0f, camz,
+                width/2.0f, height/2.0f, 0, 
+                0, 1, 0);
+    }
 }
