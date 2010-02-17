@@ -32,7 +32,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
     @Override
     public void setup(){
-        size(1024, 768);
+        size(1024, 768, P3D);
         background(102);
 
         font = createFont("SansSerif.plain", 12);
@@ -46,7 +46,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
     @Override
     public void draw(){
         background(102);
-        //fill(color(255,255,255));
+				camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
+							width/2.0f, height/2.0f, 0, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
