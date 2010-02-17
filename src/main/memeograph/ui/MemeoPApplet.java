@@ -26,11 +26,15 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
     PFont font;
 
+    //Camera Info
+    float xpos,ypos,zpos;
+    float xdir,ydir,zdir;
+
+
     public MemeoPApplet(Tree tree){
         this.tree = tree;
     }
 
-    float camz;
 
     @Override
     public void setup(){
@@ -44,16 +48,20 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         //Lets see if we can slow down the tree rendering to 30fps
         frameRate(30);
 
-        camz = (height/2.0f) / tan(PI*60.0f / 360.0f);
-        camera(width/3.0f, height/3.0f, camz,
-                width/2.0f, height/2.0f, 0, 
-                0, 1, 0);
+        xpos = width/3.0f;
+        ypos = height/3.0f;
+        zpos = (height/2.0f) / tan(PI*60.0f / 360.0f);
+        xdir = width/2.0f;
+        ydir = height/2.0f;
+        zdir = 0;
+        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
     }
 
 
     @Override
     public void draw(){
         background(102);
+        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
@@ -97,7 +105,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         int layer = 0;
         Queue<Tree> next_layer = new LinkedList<Tree>();
 
-        double xpos = x;
+        double xposition = x;
 
         while (!curr_layer.isEmpty() || !next_layer.isEmpty()) {
             if (curr_layer.isEmpty()) {
@@ -105,7 +113,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
                 curr_layer = next_layer;
                 next_layer = new LinkedList<Tree>();
                 layers.add(new Vector<Node>());
-                xpos = x;
+                xposition = x;
             }
 
             t = curr_layer.remove();
@@ -113,9 +121,9 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
             t.addTreeChangeListener(this);
 
-            Node n = new Node(t, xpos, (layer+1)*50);
+            Node n = new Node(t, xposition, (layer+1)*50);
             n.width = textWidth(n.data.getTreeName());
-            xpos += n.width + 100;
+            xposition += n.width + 100;
 
             layers.get(layer).add(n);
             positions.put(t, n);
@@ -189,7 +197,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
                 Node l = layer.get(j-1);
                 Node n = layer.get(j);
                 if (l.x + l.width/2 + n.width/2 + 1 > n.x) {
-                    System.out.println(l.x + " " + n.x + " " + (l.width/2) + " " + (n.width/2));
                     n.x = l.x + l.width/2 + n.width/2 + 1;
                 }
             }
@@ -211,18 +218,45 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
     }
 
 
+    @Override
     public void mouseDragged()
     {
         int d = mouseY - pmouseY;
-
         if (d > 0) {
-            camz *= 1.1f;
+            zpos *= 1.1f;
         } else if (d < 0) {
-            camz /= 1.1f;
+            zpos /= 1.1f;
         }
-
-        camera(width/3.0f, height/3.0f, camz,
-                width/2.0f, height/2.0f, 0, 
-                0, 1, 0);
+        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
     }
+
+    @Override
+    public void keyPressed(){
+        char k = (char)key;
+        switch(k){
+            case 'w':
+            case 'W': zdir -= 50; zpos -= 50; break;
+            case 'a':
+            case 'A': xdir -= 50; xpos -= 50; break;
+            case 's':
+            case 'S': zdir += 50; zpos += 50; break;
+            case 'd':
+            case 'D': xdir += 50; xpos += 50; break;
+            default: break;
+        }
+    }
+
+    @Override
+    public void mouseMoved(){
+        float mag = sqrt( (xpos-xdir)*(xpos-xdir)
+                          +(ypos-ydir)*(ypos-ydir)
+                          +(zpos-zdir)*(zpos-zdir)
+                        );
+       float centerx = width/2;
+       float centery = height/2;
+
+
+
+    }
+
 }
