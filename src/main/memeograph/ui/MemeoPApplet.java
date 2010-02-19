@@ -65,7 +65,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
       //camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
       //       width/2.0f, height/2.0f, 0, 0, 1, 0);
         camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
-        //smooth();
+       //smooth();
     }
 
 
