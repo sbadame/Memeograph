@@ -50,7 +50,6 @@ public class Memeographer {
 						outputDot(grapher);
 				}else{
                     MemeoFrame frame = new MemeoFrame(graph);
-                    frame.setVisible(true);
 
                     //Old swing implementation
 //						GraphFrame frame = new GraphFrame(graph);

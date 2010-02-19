@@ -1,5 +1,6 @@
 package memeograph.ui;
 
+import java.awt.Dimension;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -16,6 +17,8 @@ import processing.core.PFont;
  */
 public class MemeoPApplet extends PApplet implements TreeChangeListener{
     static final int PADDING = 20;
+    static final float K = 0.01f; //Spring constant (Along the Y)
+    static final float M = 0.95f; //Magnet contents (Along the X)
 
     private Map<Tree, Node> positions;
     private Vector<Vector<Node>> layers;
@@ -35,9 +38,14 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         this.tree = tree;
     }
 
+    public Dimension getPAppletSize(){
+        return new Dimension(width, height);
+    }
+
 
     @Override
     public void setup(){
+        //Full screen, go big or go home!
         size(1024, 768, P3D);
         background(102);
 
@@ -46,7 +54,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         textAlign(CENTER, CENTER);
 
         //Lets see if we can slow down the tree rendering to 30fps
-        frameRate(30);
+        frameRate(20);
 
         xpos = width/3.0f;
         ypos = height/3.0f;
@@ -54,7 +62,10 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         xdir = width/2.0f;
         ydir = height/2.0f;
         zdir = 0;
+      //camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
+      //       width/2.0f, height/2.0f, 0, 0, 1, 0);
         camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+        //smooth();
     }
 
 
@@ -184,7 +195,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
                 double dy = n.y - kid.y;
 
                 double d = Math.sqrt(dx*dx + dy*dy);
-                double F = 0.01 * d;
+                double F = K * d;
                 kid.fx += F*dx/d;
             }
         }
@@ -193,7 +204,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             Vector<Node> layer = layers.get(i);
             for(int j = 0; j < layer.size(); j++){
                 Node n = layer.get(j);
-                n.vx = n.vx*0.95 + 1*n.fx;
+                n.vx = n.vx*M + 1*n.fx;
                 double newx = n.x + 0.1*n.vx;
                 total+= Math.abs(n.fx);
                 n.x = newx;

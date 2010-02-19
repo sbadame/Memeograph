@@ -9,14 +9,14 @@ public class MemeoFrame extends JFrame{
     public MemeoFrame(Tree graph){
         super("Memeographer!");
 
-        MemeoPApplet papplet = new MemeoPApplet(graph);
-
         setLayout(new BorderLayout());
+        MemeoPApplet papplet = new MemeoPApplet(graph);
         add(papplet, BorderLayout.CENTER);
-
         papplet.init();
 
-        pack();
+        setSize(800, 600);
+        setLocationRelativeTo(null);
+        setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
