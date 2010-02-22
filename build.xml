@@ -79,7 +79,7 @@
 	<target name="run" depends="build">
 	  	<parallel>
 		  	<!-- Start our target program -->
-			<sequential>
+			<daemons>
 			  <java fork="true" classname="ReadChar" >
 			      <jvmarg value="-Xdebug" />
 			      <jvmarg value="-Xrunjdwp:transport=${transport},address=${port},server=y,suspend=n"/>
@@ -87,10 +87,11 @@
 				      <path location="bin/test"/>
 			      </classpath>
 			   </java>
-			</sequential>
+			</daemons>
 
 		  	<!-- Start our Memeographer -->
 		  	<sequential>
+			   <sleep seconds="3" />
 			    <java fork="true" classname="memeograph.Memeographer">
 				  <classpath>
 					  <path location="bin/main" />
