@@ -16,10 +16,10 @@ import processing.core.PFont;
  * Here is the moving eye example from processing
  */
 public class MemeoPApplet extends PApplet implements TreeChangeListener{
-    static final int PADDING = 20;
-    static final float K = 0.01f; //Spring constant (Along the Y)
-    static final float M = 0.95f; //Magnet contents (Along the X)
-    static final float FRICTION = .95f;
+    static int PADDING = 20;
+    static float K = 0.01f; //Spring constant (Along the Y)
+    static float M = 0.95f; //Magnet contents (Along the X)
+    static float FRICTION = .95f;
 
     private Map<Tree, Node> positions;
     private Vector<Vector<Node>> layers;
@@ -63,9 +63,9 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         xdir = width/2.0f;
         ydir = height/2.0f;
         zdir = 0;
-      camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
-             width/2.0f, height/2.0f, 0, 0, 1, 0);
-        //camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+      //camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
+             //width/2.0f, height/2.0f, 0, 0, 1, 0);
+        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
        //smooth();
     }
 
@@ -73,7 +73,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
     @Override
     public void draw(){
         background(102);
-        //camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
@@ -94,7 +94,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
         //Draw the nodes ontop of the lines. Awesome.
         for (Node n : positions.values()) {
-            System.out.println("" + n.x + " " + n.y);
             drawNode(n);
         }
     }

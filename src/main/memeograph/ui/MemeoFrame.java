@@ -12,12 +12,13 @@ public class MemeoFrame extends JFrame{
         setLayout(new BorderLayout());
         MemeoPApplet papplet = new MemeoPApplet(graph);
         add(papplet, BorderLayout.CENTER);
-        papplet.init();
 
         setSize(800, 600);
         setLocationRelativeTo(null);
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        papplet.init();
     }
 
 }
