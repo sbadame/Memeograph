@@ -19,6 +19,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
     static final int PADDING = 20;
     static final float K = 0.01f; //Spring constant (Along the Y)
     static final float M = 0.95f; //Magnet contents (Along the X)
+    static final float FRICTION = .95f;
 
     private Map<Tree, Node> positions;
     private Vector<Vector<Node>> layers;
@@ -56,15 +57,15 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         //Lets see if we can slow down the tree rendering to 30fps
         frameRate(20);
 
-        xpos = width/3.0f;
-        ypos = height/3.0f;
+        xpos = width/2.0f;
+        ypos = height/2.0f;
         zpos = (height/2.0f) / tan(PI*60.0f / 360.0f);
         xdir = width/2.0f;
         ydir = height/2.0f;
         zdir = 0;
-      //camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
-      //       width/2.0f, height/2.0f, 0, 0, 1, 0);
-        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+      camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
+             width/2.0f, height/2.0f, 0, 0, 1, 0);
+        //camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
        //smooth();
     }
 
@@ -72,7 +73,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
     @Override
     public void draw(){
         background(102);
-        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+        //camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
@@ -93,6 +94,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
         //Draw the nodes ontop of the lines. Awesome.
         for (Node n : positions.values()) {
+            System.out.println("" + n.x + " " + n.y);
             drawNode(n);
         }
     }
@@ -204,7 +206,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
             Vector<Node> layer = layers.get(i);
             for(int j = 0; j < layer.size(); j++){
                 Node n = layer.get(j);
-                n.vx = n.vx*M + 1*n.fx;
+                n.vx = n.vx*FRICTION + 1*n.fx;
                 double newx = n.x + 0.1*n.vx;
                 total+= Math.abs(n.fx);
                 n.x = newx;
