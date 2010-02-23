@@ -91,7 +91,7 @@
 
 		  	<!-- Start our Memeographer -->
 		  	<sequential>
-			   <sleep seconds="3" />
+			   <sleep seconds="2" />
 			    <java fork="true" classname="memeograph.Memeographer">
 				  <classpath>
 					  <path location="bin/main" />

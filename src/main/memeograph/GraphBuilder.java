@@ -58,11 +58,12 @@ public class GraphBuilder {
     * The String representation of a Stack Frame. NOTE: This needs to be unique
     * for every object. Otherwise building the graph will probably go wrong.
     */
-    protected String StackFrame2String(int depth, ThreadReference t){
+    protected String StackFrame2String(int depth, ThreadReference t) throws IncompatibleThreadStateException{
+        int count = t.frameCount() - depth - 1;
         try {
-            return "Thread(" + t.name() + ") StackFrame(" + depth + ") " + t.frame(depth).location().method().name();
+            return "Thread(" + t.name() + ") StackFrame(" + count + ") " + t.frame(depth).location().method().name();
         } catch (IncompatibleThreadStateException itse) {
-            return "Thread(" + t.name() + ") StackFrame(" + depth + ")";
+            return "Thread(" + t.name() + ") StackFrame(" + count + ")";
         }
     }
 
@@ -93,16 +94,16 @@ public class GraphBuilder {
        }
     }
 
-    private Tree getStackFrame(int depth, ThreadReference t){
-            String key = StackFrame2String(depth, t);
-            if (!treeMap.containsKey(key)){
-                    treeMap.put(key, new Tree(key));
-            }
-            return treeMap.get(key);
+    private Tree getStackFrame(int depth, ThreadReference t) throws IncompatibleThreadStateException{
+        String key = StackFrame2String(depth, t);
+        if (!treeMap.containsKey(key)){
+                treeMap.put(key, new Tree(key));
+        }
+        return treeMap.get(key);
     }
 
     
-    private Tree exploreStackFrame(StackFrame frame, int depth){
+    private Tree exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
             Tree tree = getStackFrame(depth, frame.thread());
             ObjectReference thisor = frame.thisObject();
             if (thisor != null) {
