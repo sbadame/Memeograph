@@ -43,10 +43,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         addMouseWheelListener(this);
     }
 
-    public Dimension getPAppletSize(){
-        return new Dimension(width, height);
-    }
-
 
     @Override
     public void setup(){
@@ -77,7 +73,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     @Override
     public void draw(){
         background(102);
-        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+        camera(xpos, -mouseY, zpos, xdir, ydir, zdir, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
