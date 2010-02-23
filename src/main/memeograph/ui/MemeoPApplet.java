@@ -1,6 +1,8 @@
 package memeograph.ui;
 
 import java.awt.Dimension;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -15,11 +17,12 @@ import processing.core.PFont;
 /**
  * Here is the moving eye example from processing
  */
-public class MemeoPApplet extends PApplet implements TreeChangeListener{
+public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWheelListener{
     static int PADDING = 20;
     static float K = 0.01f; //Spring constant (Along the Y)
     static float M = 0.95f; //Magnet contents (Along the X)
     static float FRICTION = .95f;
+    static int MOVE_TICK = 50;
 
     private Map<Tree, Node> positions;
     private Vector<Vector<Node>> layers;
@@ -37,6 +40,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
 
     public MemeoPApplet(Tree tree){
         this.tree = tree;
+        addMouseWheelListener(this);
     }
 
     public Dimension getPAppletSize(){
@@ -255,19 +259,26 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener{
         char k = (char)key;
         switch(k){
             case 'w':
-            case 'W': zdir -= 50; zpos -= 50; break;
+            case 'W': ydir -= MOVE_TICK; ypos -= MOVE_TICK; break;
             case 'a':
-            case 'A': xdir -= 50; xpos -= 50; break;
+            case 'A': xdir -= MOVE_TICK; xpos -= MOVE_TICK; break;
             case 's':
-            case 'S': zdir += 50; zpos += 50; break;
+            case 'S': ydir += MOVE_TICK; ypos += MOVE_TICK; break;
             case 'd':
-            case 'D': xdir += 50; xpos += 50; break;
+            case 'D': xdir += MOVE_TICK; xpos += MOVE_TICK; break;
             default: break;
         }
     }
 
     @Override
     public void mouseMoved(){
+    }
+
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        int notches = e.getWheelRotation(); //notches goes negative if the
+                                            //wheel is scrolled up.
+        zdir += MOVE_TICK*notches;
+        zpos += MOVE_TICK*notches;
     }
 
 }
