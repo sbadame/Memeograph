@@ -73,7 +73,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     @Override
     public void draw(){
         background(102);
-        camera(xpos, mouseY, zpos, xdir, ydir, zdir, 0, 1, 0);
+        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
@@ -238,16 +238,37 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
 
+    float dtheta = .03f;
     @Override
     public void mouseDragged()
     {
-        int d = mouseY - pmouseY;
-        if (d > 0) {
-            zpos *= 1.1f;
-        } else if (d < 0) {
-            zpos /= 1.1f;
+        float dy = pmouseY - mouseY;
+        if (dy != 0) {
+            float y = (ypos-ydir);
+            float z = (zpos-zdir);
+            float r = sqrt(y*y + z*z);
+            float theta = atan2(y, z);
+
+            float theta_new = theta + ((dy > 0) ? dtheta : (-1*dtheta));
+            y = sin(theta_new) * r;
+            z = cos(theta_new) * r;
+            ypos = ydir + y;
+            zpos = zdir + z;
         }
-        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+
+        float dx = pmouseX - mouseX;
+        if (dx != 0) {
+            float x = (xpos-xdir);
+            float z = (zpos-zdir);
+            float r = sqrt(x*x + z*z);
+            float theta = atan2(z, x);
+
+            float theta_new = theta + ((dx < 0) ? dtheta : (-1*dtheta));
+            x = cos(theta_new) * r;
+            z = sin(theta_new) * r;
+            xpos = xdir + x;
+            zpos = zdir + z;
+        }
     }
 
     @Override
@@ -273,8 +294,21 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     public void mouseWheelMoved(MouseWheelEvent e) {
         int notches = e.getWheelRotation(); //notches goes negative if the
                                             //wheel is scrolled up.
-        zdir += MOVE_TICK*notches;
-        zpos += MOVE_TICK*notches;
-    }
 
+        if (notches < 0) {
+            float x = .9f * (xpos-xdir);
+            float y = .9f * (ypos-ydir);
+            float z = .9f * (zpos-zdir);
+            xpos = xdir + x;
+            ypos = ydir + y;
+            zpos = zdir + z;
+        } else if (notches > 0) {
+            float x = 1.1f * (xpos-xdir);
+            float y = 1.1f * (ypos-ydir);
+            float z = 1.1f * (zpos-zdir);
+            xpos = xdir + x;
+            ypos = ydir + y;
+            zpos = zdir + z;
+        }
+    }
 }
