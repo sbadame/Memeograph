@@ -13,6 +13,7 @@ import memeograph.TreeChangeListener;
 import memeograph.graphics.Node;
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PVector;
 
 /**
  * Here is the moving eye example from processing
@@ -34,9 +35,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     PFont font;
 
     //Camera Info
-    float xpos,ypos,zpos;
-    float xdir,ydir,zdir;
-
+    PVector pos;
+    PVector dir;
 
     public MemeoPApplet(Tree tree){
         this.tree = tree;
@@ -56,24 +56,17 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
         //Lets see if we can slow down the tree rendering to 30fps
         frameRate(20);
+        pos = new PVector(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f));
+        dir = new PVector(width/2.0f, height/2.0f, 0);
 
-        xpos = width/2.0f;
-        ypos = height/2.0f;
-        zpos = (height/2.0f) / tan(PI*60.0f / 360.0f);
-        xdir = width/2.0f;
-        ydir = height/2.0f;
-        zdir = 0;
-      //camera(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f),
-             //width/2.0f, height/2.0f, 0, 0, 1, 0);
-        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
-       //smooth();
+        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
     }
 
 
     @Override
     public void draw(){
         background(102);
-        camera(xpos, ypos, zpos, xdir, ydir, zdir, 0, 1, 0);
+        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
         //First check if we have to layout this stuff out
         if (!laidout) {
@@ -244,30 +237,30 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     {
         float dy = pmouseY - mouseY;
         if (dy != 0) {
-            float y = (ypos-ydir);
-            float z = (zpos-zdir);
+            float y = (pos.y-dir.y);
+            float z = (pos.z-dir.z);
             float r = sqrt(y*y + z*z);
             float theta = atan2(y, z);
 
             float theta_new = theta + ((dy > 0) ? dtheta : (-1*dtheta));
             y = sin(theta_new) * r;
             z = cos(theta_new) * r;
-            ypos = ydir + y;
-            zpos = zdir + z;
+            pos.y = dir.y + y;
+            pos.z = dir.z + z;
         }
 
         float dx = pmouseX - mouseX;
         if (dx != 0) {
-            float x = (xpos-xdir);
-            float z = (zpos-zdir);
+            float x = (pos.x-dir.x);
+            float z = (pos.z-dir.z);
             float r = sqrt(x*x + z*z);
             float theta = atan2(z, x);
 
             float theta_new = theta + ((dx < 0) ? dtheta : (-1*dtheta));
             x = cos(theta_new) * r;
             z = sin(theta_new) * r;
-            xpos = xdir + x;
-            zpos = zdir + z;
+            pos.x = dir.x + x;
+            pos.z = dir.z + z;
         }
     }
 
@@ -276,13 +269,13 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         char k = (char)key;
         switch(k){
             case 'w':
-            case 'W': ydir -= MOVE_TICK; ypos -= MOVE_TICK; break;
+            case 'W': dir.y -= MOVE_TICK; pos.y -= MOVE_TICK; break;
             case 'a':
-            case 'A': xdir -= MOVE_TICK; xpos -= MOVE_TICK; break;
+            case 'A': dir.x -= MOVE_TICK; pos.x -= MOVE_TICK; break;
             case 's':
-            case 'S': ydir += MOVE_TICK; ypos += MOVE_TICK; break;
+            case 'S': dir.y += MOVE_TICK; pos.y += MOVE_TICK; break;
             case 'd':
-            case 'D': xdir += MOVE_TICK; xpos += MOVE_TICK; break;
+            case 'D': dir.x += MOVE_TICK; pos.x += MOVE_TICK; break;
             default: break;
         }
     }
@@ -296,19 +289,19 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
                                             //wheel is scrolled up.
 
         if (notches < 0) {
-            float x = .9f * (xpos-xdir);
-            float y = .9f * (ypos-ydir);
-            float z = .9f * (zpos-zdir);
-            xpos = xdir + x;
-            ypos = ydir + y;
-            zpos = zdir + z;
+            float x = .9f * (pos.x-dir.x);
+            float y = .9f * (pos.y-dir.y);
+            float z = .9f * (pos.z-dir.z);
+            pos.x = dir.x + x;
+            pos.y = dir.y + y;
+            pos.z = dir.z + z;
         } else if (notches > 0) {
-            float x = 1.1f * (xpos-xdir);
-            float y = 1.1f * (ypos-ydir);
-            float z = 1.1f * (zpos-zdir);
-            xpos = xdir + x;
-            ypos = ydir + y;
-            zpos = zdir + z;
+            float x = 1.1f * (pos.x-dir.x);
+            float y = 1.1f * (pos.y-dir.y);
+            float z = 1.1f * (pos.z-dir.z);
+            pos.x = dir.x + x;
+            pos.y = dir.y + y;
+            pos.z = dir.z + z;
         }
     }
 }
