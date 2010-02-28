@@ -32,14 +32,20 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     private boolean treechanged = false;
     private boolean laidout = false;
 
+    private int wanted_width;
+    private int wanted_height;
+
     PFont font;
 
     //Camera Info
     PVector pos;
     PVector dir;
+    PVector camNorth = new PVector(0,1,0);
 
-    public MemeoPApplet(Tree tree){
+    public MemeoPApplet(Tree tree, int width, int height){
         this.tree = tree;
+        this.wanted_height = height;
+        this.wanted_width = width;
         addMouseWheelListener(this);
     }
 
@@ -47,7 +53,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     @Override
     public void setup(){
         //Full screen, go big or go home!
-        size(1024, 768, P3D);
+        size(wanted_width, wanted_height, P3D);
         background(102);
 
         font = createFont("SansSerif.bold", 18);
@@ -59,7 +65,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         pos = new PVector(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f));
         dir = new PVector(width/2.0f, height/2.0f, 0);
 
-        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
+        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
     }
 
 
@@ -269,15 +275,29 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         char k = (char)key;
         switch(k){
             case 'w':
-            case 'W': dir.y -= MOVE_TICK; pos.y -= MOVE_TICK; break;
-            case 'a':
-            case 'A': dir.x -= MOVE_TICK; pos.x -= MOVE_TICK; break;
+            case 'W': translateCameraY(-MOVE_TICK); break;
             case 's':
-            case 'S': dir.y += MOVE_TICK; pos.y += MOVE_TICK; break;
+            case 'S': translateCameraY(MOVE_TICK); break;
+            case 'a':
+            case 'A': translateCameraX(-MOVE_TICK); break;
             case 'd':
-            case 'D': dir.x += MOVE_TICK; pos.x += MOVE_TICK; break;
+            case 'D': translateCameraX(MOVE_TICK); break;
             default: break;
         }
+    }
+
+    private void translateCameraY(float amount){
+        pos.y += amount;
+        dir.y += amount;
+    }
+
+    private void translateCameraX(float amount){
+        PVector camera = PVector.sub(dir,pos);
+        PVector cross = camera.cross(camNorth);
+        cross.normalize();
+        cross.mult(amount);
+        pos.add(cross);
+        dir.add(cross);
     }
 
     @Override
@@ -287,7 +307,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     public void mouseWheelMoved(MouseWheelEvent e) {
         int notches = e.getWheelRotation(); //notches goes negative if the
                                             //wheel is scrolled up.
-
         if (notches < 0) {
             float x = .9f * (pos.x-dir.x);
             float y = .9f * (pos.y-dir.y);
