@@ -21,7 +21,6 @@ public class Node {
         this(data, x, y, 0.0);
     }
 
-@stinkymonkey
     public Node(Tree data, double x, double y, double z)
     {
         this.data = data;
