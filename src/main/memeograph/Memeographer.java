@@ -33,28 +33,24 @@ public class Memeographer {
 
     public static void main(String[] args) 
     { 
-
-			  //Step 1 - Connect to our target program
+        //Step 1 - Connect to our target program
         VirtualMachine vm = getTargetVM();
         if (vm == null)
             throw new Error("No VM was found");
 
-				//Step 2 - Get a Graph
-				GraphBuilder grapher = new GraphBuilder(vm);
-				grapher.buildGraph();
-				Tree graph = grapher.getGraph();
+        //Step 2 - Get a Graph
+        GraphBuilder grapher = new GraphBuilder(vm);
+        grapher.buildGraph();
+        Tree graph = grapher.getGraph();
 
-				//Step 3 - Render the graph
-				if (args != null && args.length > 0 && args[0].equals("dot")){
-						outputDot(grapher);
-				}else{
-                    MemeoFrame frame = new MemeoFrame(graph);
+        //Step 3 - Render the graph
+        if (args != null && args.length > 0 && args[0].equals("dot")){
+            outputDot(grapher);
+        } else {
+            MemeoFrame frame = new MemeoFrame(graph);
 
-                    //Old swing implementation
-//						GraphFrame frame = new GraphFrame(graph);
-//						frame.setVisible(true);
-				}
-		}
+            }
+        }
 
     private static VirtualMachine getTargetVM(){
         List connectors = Bootstrap.virtualMachineManager().attachingConnectors();
@@ -79,23 +75,22 @@ public class Memeographer {
         return null;
     }
 
-		private static void outputDot(GraphBuilder grapher){
-				HashMap<String, Tree> graphMap = grapher.getGraphMap();
+    private static void outputDot(GraphBuilder grapher) {
+        HashMap<String, Tree> graphMap = grapher.getGraphMap();
         try {
             PrintWriter out = new PrintWriter(new FileWriter("output.dot"), true);
             out.println("digraph memeograph {");
 
-						for (Tree t : graphMap.values()) {
-								for (Tree child : t.getChildren()) {
+            for (Tree t : graphMap.values()) {
+                for (Tree child : t.getChildren()) {
                     out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
-								}
-						}
+                }
+            }
 
             out.println("}");
             out.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-		}
-
+    }
 }

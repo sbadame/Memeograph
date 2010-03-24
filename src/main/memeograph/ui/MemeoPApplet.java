@@ -10,13 +10,12 @@ import java.util.Queue;
 import java.util.Vector;
 import memeograph.Tree;
 import memeograph.TreeChangeListener;
-import memeograph.graphics.Node;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PVector;
 
 /**
- * Here is the moving eye example from processing
+ * Does the drawing and layout. Originally made by extending the moving eye example from processing.
  */
 public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWheelListener{
     static int PADDING = 20;
