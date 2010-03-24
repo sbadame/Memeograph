@@ -102,13 +102,23 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     private void drawNode(Node n){
-        translate((float)n.x, (float)n.y, 0f);
-        fill(255);
-        box((float)n.width, 20f, 4f);
-        translate(0f, 0f, 3f);
+        translate((float)n.x, (float)n.y, (float)n.z);
+
+        fill(n.r, n.g, n.b);
+        box((float)n.width, 20f, 20f);
+
+        translate(0f, 0f, 11f);
         fill(5);
         text(n.data.getTreeName(), 0f, 0f);
-        translate(-(float)n.x, -(float)n.y, -3f);
+
+        translate(0f, 0f, -22f);
+
+        rotateY(PI);
+        text(n.data.getTreeName(), 0f, 0f);
+        rotateY(-PI);
+        translate(0f, 0f, 11f);
+
+        translate(-(float)n.x, -(float)n.y, -(float)n.z);
     }
 
     private void layout(Tree t, double x, double y){

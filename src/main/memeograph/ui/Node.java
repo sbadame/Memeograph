@@ -1,5 +1,6 @@
 package memeograph.ui;
 
+import java.util.Random;
 import memeograph.Tree;
 
 /*
@@ -7,6 +8,8 @@ import memeograph.Tree;
  */
 public class Node {
     public double x, y, z;
+    public int r,g,b;
+
     public double fx;
     public double vx=0;
     public double opacity = 1;
@@ -18,12 +21,19 @@ public class Node {
         this(data, x, y, 0.0);
     }
 
+@stinkymonkey
     public Node(Tree data, double x, double y, double z)
     {
         this.data = data;
         this.x = x;
         this.y = y;
         this.z = z;
+
+        Random rand = new Random();
+
+        r = rand.nextInt(20) + 200;
+        g = rand.nextInt(20) + 200;
+        b = rand.nextInt(10) + 245;
     }
 
 
