@@ -97,7 +97,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     private void drawLine(Node from, Node to){
-        line((float)from.x, (float)from.y, (float)to.x, (float)to.y);
+        line((float)from.x, (float)from.y, (float)from.z, 
+                (float)to.x, (float)to.y, (float)to.z);
     }
 
     private void drawNode(Node n){

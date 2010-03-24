@@ -1,16 +1,12 @@
 package memeograph.ui;
 
-import java.awt.*;
-import java.awt.geom.*;
 import memeograph.Tree;
 
 /*
  * The class that graphically represents a Node in our tree
  */
 public class Node {
-    private static final int PADDING = 5;
-
-    public double x, y;
+    public double x, y, z;
     public double fx;
     public double vx=0;
     public double opacity = 1;
@@ -19,9 +15,15 @@ public class Node {
     
     public Node(Tree data, double x, double y)
     {
+        this(data, x, y, 0.0);
+    }
+
+    public Node(Tree data, double x, double y, double z)
+    {
         this.data = data;
         this.x = x;
         this.y = y;
+        this.z = z;
     }
 
 
