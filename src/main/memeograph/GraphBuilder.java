@@ -2,14 +2,19 @@ package memeograph;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ClassType;
+import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.IntegerType;
+import com.sun.jdi.IntegerValue;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
+import java.awt.Color;
 import java.util.HashMap;
+import java.util.List;
 
 public class GraphBuilder {
 
@@ -141,12 +146,26 @@ public class GraphBuilder {
             treeMap.put(txt, tree); //Do this right off the bat to prevent infinite loop
                                                             //With cycling graphs
             if ( filterObject(or) ){
-                    for (Value val : or.getValues(or.referenceType().allFields()).values() ) {
-                            if ( val != null && val.type() != null && val.type() instanceof ClassType ){
-                                 ObjectReference child = (ObjectReference)    val;
-                                 tree.addChild(exploreObject(child));
-                            }
+                List<Field> allFields = or.referenceType().allFields();
+                for (Field field : allFields) {
+                    if (field.name().equals("memeographname") && field.typeName().equals("java.lang.String") ){
+                        String treetxt = or.getValue(field).toString();
+                        treetxt = treetxt.substring(1, treetxt.length()-1);
+                        System.out.println(treetxt);
+                        tree.setData(treetxt);
+                    }else if (field.name().equals("memeographcolor") && field.typeName().equals("java.awt.Color")){
+                        ObjectReference colorref = (ObjectReference) or.getValue(field);
+                        Value color_value = colorref.getValue(colorref.referenceType().fieldByName("value"));
+                        IntegerValue iv = (IntegerValue)color_value;
+                        tree.setColor(new Color(iv.intValue()));
+                    }else{
+                        Value val = or.getValue(field);
+                        if ( val != null && val.type() != null && val.type() instanceof ClassType ){
+                             ObjectReference child = (ObjectReference)    val;
+                             tree.addChild(exploreObject(child));
+                        }
                     }
+                }
             }
             return treeMap.get(txt);
     }

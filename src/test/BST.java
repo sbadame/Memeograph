@@ -6,8 +6,8 @@ public class BST {
 
     public BST(int data) {
         this.data = data;
-        memeographname = "BST(" + data + ")";
 
+        memeographname = "Test(" + data + ")";
         left = new Leaf();
         right = new Leaf();
     }
@@ -22,5 +22,5 @@ public class BST {
         return this;
     }
 
-    String memeographname = "BST()";
+    protected String memeographname = "Test()";
 }

@@ -1,14 +1,17 @@
 package memeograph;
 
+import java.awt.Color;
 import java.util.*;
 
 /*
  * The data structure behind it all.
  */
 public class Tree {
+
     private String data = null;
     private Vector<Tree> children = new Vector<Tree>();
-    
+    private Color color = null;
+
     Vector<TreeChangeListener> listeners = new Vector<TreeChangeListener>();
 
     public Tree(String data, Iterable<Tree> kids) 
@@ -148,5 +151,19 @@ public class Tree {
         for (TreeChangeListener nodeChangeListener : listeners) {
             nodeChangeListener.dataChanged(this);
         }
+    }
+
+    /**
+     * @return the color
+     */
+    public Color getColor() {
+        return color;
+    }
+
+    /**
+     * @param color the color to set
+     */
+    public void setColor(Color color) {
+        this.color = color;
     }
 }

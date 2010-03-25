@@ -1,5 +1,6 @@
 package memeograph.ui;
 
+import java.awt.Color;
 import java.util.Random;
 import memeograph.Tree;
 
@@ -28,11 +29,17 @@ public class Node {
         this.y = y;
         this.z = z;
 
-        Random rand = new Random();
-
-        r = rand.nextInt(20) + 200;
-        g = rand.nextInt(20) + 200;
-        b = rand.nextInt(10) + 245;
+        if (data.getColor() == null) {
+            Random rand = new Random();
+            r = rand.nextInt(20) + 200;
+            g = rand.nextInt(20) + 200;
+            b = rand.nextInt(10) + 245;
+        }else{
+            Color c = data.getColor();
+            r = c.getRed();
+            g = c.getGreen();
+            b = c.getBlue();
+        }
     }
 
 
@@ -43,5 +50,11 @@ public class Node {
 
     public double getOpacity(){
     	return opacity;
+    }
+
+    public void setColor(int r, int g, int b){
+        this.r = r;
+        this.g = g;
+        this.b = b;
     }
 }
