@@ -2,11 +2,11 @@ package memeograph.ui;
 
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
-import memeograph.Tree;
+import memeograph.DiGraph;
 
 public class MemeoFrame extends JFrame{
 		
-    public MemeoFrame(Tree graph){
+    public MemeoFrame(DiGraph graph){
         super("Memeographer!");
 
         setLayout(new BorderLayout());

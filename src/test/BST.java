@@ -1,3 +1,5 @@
+import java.awt.Color;
+
 public class BST {
     BST left, right;
     int data;
@@ -7,7 +9,7 @@ public class BST {
     public BST(int data) {
         this.data = data;
 
-        memeographname = "Test(" + data + ")";
+        memeographname = "BST(" + data + ")";
         left = new Leaf();
         right = new Leaf();
     }
@@ -22,5 +24,6 @@ public class BST {
         return this;
     }
 
-    protected String memeographname = "Test()";
+    protected Color memeographcolor = new Color(205, 183, 158);
+    protected String memeographname = "BST()";
 }

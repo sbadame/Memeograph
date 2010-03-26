@@ -4,7 +4,6 @@ import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
-import com.sun.jdi.IntegerType;
 import com.sun.jdi.IntegerValue;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
@@ -19,8 +18,8 @@ import java.util.List;
 public class GraphBuilder {
 
     private VirtualMachine vm;
-    private Tree graph =  new Tree("Memeograph!");
-    private HashMap<String, Tree> treeMap = new HashMap<String, Tree>();
+    private DiGraph graph =  new DiGraph("Memeograph!");
+    private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
 
     public GraphBuilder(VirtualMachine vm)
     {
@@ -83,12 +82,12 @@ public class GraphBuilder {
        try {
            int i = 0;
            for (StackFrame frame: t.frames()) {
-               Tree tree = exploreStackFrame(frame, i);
+               DiGraph tree = exploreStackFrame(frame, i);
  
                //Now where to put this tree...?
                if (i ==  t.frameCount() - 1){ //The top most frame
                    graph.addChild(tree);
-               }else{ //Just add to the previous Stack Frame Tree
+               }else{ //Just add to the previous Stack Frame DiGraph
                    getStackFrame(i+1, t).addChild(tree);
                }
                i++;
@@ -99,17 +98,17 @@ public class GraphBuilder {
        }
     }
 
-    private Tree getStackFrame(int depth, ThreadReference t) throws IncompatibleThreadStateException{
+    private DiGraph getStackFrame(int depth, ThreadReference t) throws IncompatibleThreadStateException{
         String key = StackFrame2String(depth, t);
         if (!treeMap.containsKey(key)){
-                treeMap.put(key, new Tree(key));
+                treeMap.put(key, new DiGraph(key));
         }
         return treeMap.get(key);
     }
 
     
-    private Tree exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
-            Tree tree = getStackFrame(depth, frame.thread());
+    private DiGraph exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
+            DiGraph tree = getStackFrame(depth, frame.thread());
             ObjectReference thisor = frame.thisObject();
             if (thisor != null) {
                 tree.addChild(exploreObject(thisor));
@@ -135,13 +134,13 @@ public class GraphBuilder {
             return true;
     }
 
-    private Tree exploreObject(ObjectReference or){
+    private DiGraph exploreObject(ObjectReference or){
             String txt = getText(or);
             if (treeMap.containsKey(txt)){
                     return treeMap.get(txt);
             }
 
-            Tree tree = new Tree();
+            DiGraph tree = new DiGraph();
             tree.setData(txt);
             treeMap.put(txt, tree); //Do this right off the bat to prevent infinite loop
                                                             //With cycling graphs
@@ -151,7 +150,6 @@ public class GraphBuilder {
                     if (field.name().equals("memeographname") && field.typeName().equals("java.lang.String") ){
                         String treetxt = or.getValue(field).toString();
                         treetxt = treetxt.substring(1, treetxt.length()-1);
-                        System.out.println(treetxt);
                         tree.setData(treetxt);
                     }else if (field.name().equals("memeographcolor") && field.typeName().equals("java.awt.Color")){
                         ObjectReference colorref = (ObjectReference) or.getValue(field);
@@ -170,11 +168,11 @@ public class GraphBuilder {
             return treeMap.get(txt);
     }
 
-    public Tree getGraph(){
+    public DiGraph getGraph(){
             return graph;
     }
 
-    public HashMap<String, Tree> getGraphMap(){
+    public HashMap<String, DiGraph> getGraphMap(){
             return treeMap;
     }
 

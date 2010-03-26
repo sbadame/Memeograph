@@ -2,7 +2,7 @@ package memeograph.ui;
 
 import java.awt.Color;
 import java.util.Random;
-import memeograph.Tree;
+import memeograph.DiGraph;
 
 /*
  * The class that graphically represents a Node in our tree
@@ -15,14 +15,14 @@ public class Node {
     public double vx=0;
     public double opacity = 1;
     public double width = 70;
-    public Tree data;
+    public DiGraph data;
     
-    public Node(Tree data, double x, double y)
+    public Node(DiGraph data, double x, double y)
     {
         this(data, x, y, 0.0);
     }
 
-    public Node(Tree data, double x, double y, double z)
+    public Node(DiGraph data, double x, double y, double z)
     {
         this.data = data;
         this.x = x;

@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Vector;
-import memeograph.Tree;
+import memeograph.DiGraph;
 import memeograph.TreeChangeListener;
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -23,10 +23,10 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     static float FRICTION = .95f;
     static int MOVE_TICK = 50;
 
-    private Map<Tree, Node> positions;
+    private Map<DiGraph, Node> positions;
     private Vector<Vector<Node>> layers;
 
-    private Tree tree;
+    private DiGraph tree;
     private boolean treechanged = false;
     private boolean laidout = false;
 
@@ -40,7 +40,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     PVector dir;
     PVector camNorth = new PVector(0,1,0);
 
-    public MemeoPApplet(Tree tree, int width, int height){
+    public MemeoPApplet(DiGraph tree, int width, int height){
         this.tree = tree;
         this.wanted_height = height;
         this.wanted_width = width;
@@ -83,7 +83,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
         //Now draw the lines between the nodes
         for (Node n : positions.values()) {
-            for (Tree kid : n.data.getChildren()) {
+            for (DiGraph kid : n.data.getChildren()) {
                 Node knode = positions.get(kid);
                 drawLine(n, knode);
             }
@@ -120,16 +120,16 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         translate(-(float)n.x, -(float)n.y, -(float)n.z);
     }
 
-    private void layout(Tree t, double x, double y){
-        positions = new HashMap<Tree,Node>();
+    private void layout(DiGraph t, double x, double y){
+        positions = new HashMap<DiGraph,Node>();
         layers = new Vector<Vector<Node>>();
         layers.add(new Vector<Node>());
 
-        Queue<Tree> curr_layer = new LinkedList<Tree>();
+        Queue<DiGraph> curr_layer = new LinkedList<DiGraph>();
         curr_layer.add(t);
 
         int layer = 0;
-        Queue<Tree> next_layer = new LinkedList<Tree>();
+        Queue<DiGraph> next_layer = new LinkedList<DiGraph>();
 
         double xposition = x;
 
@@ -137,7 +137,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             if (curr_layer.isEmpty()) {
                 layer += 1;
                 curr_layer = next_layer;
-                next_layer = new LinkedList<Tree>();
+                next_layer = new LinkedList<DiGraph>();
                 layers.add(new Vector<Node>());
                 xposition = x;
             }
@@ -154,7 +154,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             layers.get(layer).add(n);
             positions.put(t, n);
 
-            for (Tree kid : t.getChildren()) {
+            for (DiGraph kid : t.getChildren()) {
                 if (!positions.containsKey(kid)) {
                     next_layer.add(kid);
                 }
@@ -196,7 +196,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
         //springs
         for (Node n : positions.values()) {
-            for (Tree kidt : n.data.getChildren()) {
+            for (DiGraph kidt : n.data.getChildren()) {
                 Node kid = positions.get(kidt);
 
                 // F = -k*d
@@ -233,15 +233,15 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         return total;
     }
 
-    public void kidAdded(Tree parent, Tree addedNode) {
+    public void kidAdded(DiGraph parent, DiGraph addedNode) {
         throw new UnsupportedOperationException();
     }
 
-    public void childrenRemoved(Tree parent) {
+    public void childrenRemoved(DiGraph parent) {
         throw new UnsupportedOperationException();
     }
 
-    public void dataChanged(Tree parent) {
+    public void dataChanged(DiGraph parent) {
         throw new UnsupportedOperationException();
     }
 

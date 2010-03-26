@@ -41,7 +41,7 @@ public class Memeographer {
         //Step 2 - Get a Graph
         GraphBuilder grapher = new GraphBuilder(vm);
         grapher.buildGraph();
-        Tree graph = grapher.getGraph();
+        DiGraph graph = grapher.getGraph();
 
         //Step 3 - Render the graph
         if (args != null && args.length > 0 && args[0].equals("dot")){
@@ -76,13 +76,13 @@ public class Memeographer {
     }
 
     private static void outputDot(GraphBuilder grapher) {
-        HashMap<String, Tree> graphMap = grapher.getGraphMap();
+        HashMap<String, DiGraph> graphMap = grapher.getGraphMap();
         try {
             PrintWriter out = new PrintWriter(new FileWriter("output.dot"), true);
             out.println("digraph memeograph {");
 
-            for (Tree t : graphMap.values()) {
-                for (Tree child : t.getChildren()) {
+            for (DiGraph t : graphMap.values()) {
+                for (DiGraph child : t.getChildren()) {
                     out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
                 }
             }

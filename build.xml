@@ -58,7 +58,7 @@
 	     	Define all of our build targets here
 	-->
 
-	<target name="build" depends="clean,-compile-main,-compile-test" />
+	<target name="build" depends="-compile-main,-compile-test" />
 
 	<target name="-compile-main">
 		<mkdir dir="bin/main" />
