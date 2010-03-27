@@ -93,6 +93,7 @@
 		  	<sequential>
 			   <sleep seconds="2" />
 			    <java fork="true" classname="memeograph.Memeographer">
+				  <sysproperty key="java.library.path" path="${lib.path}" />
 				  <classpath>
 					  <path location="bin/main" />
 					  <path refid="lib.path" />

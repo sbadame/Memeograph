@@ -8,7 +8,6 @@ public class ReadChar{
         b = b.insert(12);
         b = b.insert(2);
         b = b.insert(1);
-
         ReadChar r = new ReadChar();
         System.out.println(r);
         Scanner s = new Scanner(System.in);
