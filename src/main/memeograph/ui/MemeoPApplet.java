@@ -51,7 +51,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     @Override
     public void setup(){
         //Full screen, go big or go home!
-        size(wanted_width, wanted_height, P3D);
+        size(wanted_width, wanted_height, OPENGL);
         background(102);
 
         font = createFont("SansSerif.bold", 18);
