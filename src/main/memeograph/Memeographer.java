@@ -5,14 +5,21 @@ import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.Connector.Argument;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import com.sun.jdi.connect.LaunchingConnector;
+import com.sun.jdi.connect.VMStartException;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import memeograph.ui.MemeoFrame;
 
 /**
@@ -32,9 +39,14 @@ public class Memeographer {
 
 
     public static void main(String[] args) 
-    { 
+    {
+        System.out.print("Args received: ");
+        for (String arg : args) {
+            System.out.print(arg +  " ");
+        }
+        System.out.println();
         //Step 1 - Connect to our target program
-        VirtualMachine vm = getTargetVM();
+        VirtualMachine vm = createTargetVM(args);
         if (vm == null)
             throw new Error("No VM was found");
 
@@ -52,8 +64,58 @@ public class Memeographer {
             }
         }
 
-    private static VirtualMachine getTargetVM(){
-        List connectors = Bootstrap.virtualMachineManager().attachingConnectors();
+    private static VirtualMachine createTargetVM(String[] args){
+        for (LaunchingConnector connector : Bootstrap.virtualMachineManager().launchingConnectors()) {
+                if (connector.transport().name().equals("dt_socket") == false) {
+                    continue;
+                }
+                Map<String, Argument> launchargs = connector.defaultArguments();
+                System.out.println(launchargs.keySet());
+                String options = "";
+                for(int i = 0; i < args.length - 2; i++){
+                   options += args[i] + " ";
+                }
+                launchargs.get("options").setValue(options);
+                launchargs.get("main").setValue(args[args.length-1]);
+                try {
+                    final VirtualMachine vm = connector.launch(launchargs);
+                    new Thread(){
+                        @Override
+                        public void run(){
+                            Process process = vm.process();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(
+                                    process.getInputStream()));
+                            String s;
+                            try {
+                                while ((s = reader.readLine()) != null) {
+                                    System.out.println(s);
+                                }
+                            } catch (IOException ex) { }
+                        }
+                    }.start();
+
+                    new Thread(){
+                        @Override
+                        public void run(){
+                            Process process = vm.process();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(
+                                    process.getErrorStream()));
+                            String s;
+                            try {
+                                while ((s = reader.readLine()) != null) {
+                                    System.err.println(s);
+                                }
+                            } catch (IOException ex) { }
+                        }
+                    }.start();
+                    vm.resume();
+                    return vm;
+                } catch (IOException ex) {
+                } catch (IllegalConnectorArgumentsException ex) {
+                } catch (VMStartException ex) {
+                }
+        }
+        /*List connectors = Bootstrap.virtualMachineManager().attachingConnectors();
         Iterator i = connectors.iterator();
         while(i.hasNext()){
             Connector c = (Connector)i.next();
@@ -71,7 +133,7 @@ public class Memeographer {
                 }
             }
         }
-
+*/
         return null;
     }
 
@@ -93,4 +155,5 @@ public class Memeographer {
             ex.printStackTrace();
         }
     }
+
 }
