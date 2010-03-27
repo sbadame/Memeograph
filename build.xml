@@ -33,7 +33,7 @@
 	</target>
 
 	<target name="run-memeographer" depends="build">
-	  	<java fork="true" classname="memeograph.Memeographer">
+	  	<java fork="false" classname="memeograph.Memeographer">
 			<classpath>
 				<path location="bin/main" />
 				<path refid="lib.path" />
@@ -77,6 +77,7 @@
 
 	<!-- Test parallel -->
 	<target name="run" depends="build">
+		 <echo>java.library.path=${java.library.path}</echo>
 	  	<parallel>
 		  	<!-- Start our target program -->
 			<daemons>
@@ -93,7 +94,7 @@
 		  	<sequential>
 			   <sleep seconds="2" />
 			    <java fork="true" classname="memeograph.Memeographer">
-				  <sysproperty key="java.library.path" path="${lib.path}" />
+				<sysproperty key="java.library.path" path="${basedir}/lib" />
 				  <classpath>
 					  <path location="bin/main" />
 					  <path refid="lib.path" />
