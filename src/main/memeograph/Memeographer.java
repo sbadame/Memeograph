@@ -82,7 +82,7 @@ public class Memeographer {
             out.println("digraph memeograph {");
 
             for (DiGraph t : graphMap.values()) {
-                for (DiGraph child : t.getChildren()) {
+                for (DiGraph child : t.getSoftwareChildren()) {
                     out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
                 }
             }

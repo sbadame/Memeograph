@@ -83,7 +83,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
         //Now draw the lines between the nodes
         for (Node n : positions.values()) {
-            for (DiGraph kid : n.data.getChildren()) {
+            for (DiGraph kid : n.data.getSoftwareChildren()) {
                 Node knode = positions.get(kid);
                 drawLine(n, knode);
             }
@@ -154,7 +154,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             layers.get(layer).add(n);
             positions.put(t, n);
 
-            for (DiGraph kid : t.getChildren()) {
+            for (DiGraph kid : t.getSoftwareChildren()) {
                 if (!positions.containsKey(kid)) {
                     next_layer.add(kid);
                 }
@@ -196,7 +196,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
         //springs
         for (Node n : positions.values()) {
-            for (DiGraph kidt : n.data.getChildren()) {
+            for (DiGraph kidt : n.data.getSoftwareChildren()) {
                 Node kid = positions.get(kidt);
 
                 // F = -k*d

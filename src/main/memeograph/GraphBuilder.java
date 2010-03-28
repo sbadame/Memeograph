@@ -86,9 +86,9 @@ public class GraphBuilder {
  
                //Now where to put this tree...?
                if (i ==  t.frameCount() - 1){ //The top most frame
-                   graph.addChild(tree);
+                   graph.addSoftwareChild(tree);
                }else{ //Just add to the previous Stack Frame DiGraph
-                   getStackFrame(i+1, t).addChild(tree);
+                   getStackFrame(i+1, t).addSoftwareChild(tree);
                }
                i++;
            }
@@ -111,13 +111,13 @@ public class GraphBuilder {
             DiGraph tree = getStackFrame(depth, frame.thread());
             ObjectReference thisor = frame.thisObject();
             if (thisor != null) {
-                tree.addChild(exploreObject(thisor));
+                tree.addSoftwareChild(exploreObject(thisor));
             }
 
             try {
                     for (Value val : frame.getValues(frame.visibleVariables()).values()) {
                             if (val != null && val.type() != null && val.type() instanceof ClassType)
-                                    tree.addChild(exploreObject((ObjectReference)val));
+                                    tree.addSoftwareChild(exploreObject((ObjectReference)val));
                     }
             } catch (AbsentInformationException ex) {
                     //Seems to only be thrown when we see a frame with no variables
@@ -159,8 +159,12 @@ public class GraphBuilder {
                     }else{
                         Value val = or.getValue(field);
                         if ( val != null && val.type() != null && val.type() instanceof ClassType ){
-                             ObjectReference child = (ObjectReference)    val;
-                             tree.addChild(exploreObject(child));
+                             ObjectReference child = (ObjectReference) val;
+                             if (or.referenceType().name().equals(child.referenceType().name())) {
+                                 tree.addDataChild(exploreObject(child));
+                            }else{
+                                 tree.addSoftwareChild(exploreObject(child));
+                            }
                         }
                     }
                 }
