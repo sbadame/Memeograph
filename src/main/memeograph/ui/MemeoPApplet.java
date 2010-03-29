@@ -76,10 +76,11 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         if (!laidout) {
             treechanged = false;
             layout(tree, width/2);
+            System.out.println(layers);
         }
 
         //jiggle our layout
-        adjust();
+        //adjust();
 
         //Now draw the lines between the nodes
         for (Node n : positions.values()) {
@@ -96,7 +97,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     private void drawLine(Node from, Node to){
-        line((float)from.x, (float)from.y, (float)from.z, 
+        line((float)from.x, (float)from.y, (float)from.z,
                 (float)to.x, (float)to.y, (float)to.z);
     }
 
@@ -136,9 +137,12 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         layers.add(next_layer);
 
 
-        Queue<DiGraph> zqueue = new LinkedList<DiGraph>();
-        Queue<DiGraph> yqueue = new LinkedList<DiGraph>();
-        Queue<DiGraph> xqueue = new LinkedList<DiGraph>();
+        LinkedList<DiGraph> zqueue = new LinkedList<DiGraph>();
+        LinkedList<LinkedList<DiGraph>> nextlayer = new LinkedList<LinkedList<DiGraph>>();
+        LinkedList<DiGraph> yqueue = new LinkedList<DiGraph>();
+        LinkedList<DiGraph> xqueue = new LinkedList<DiGraph>();
+
+        nextlayer.add(yqueue);
 
         xqueue.add(t);
 
@@ -146,30 +150,65 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         int yposition = 0;
         int zposition = 0;
 
-        while(!xqueue.isEmpty()){
-            DiGraph g = xqueue.remove();
-            for (DiGraph z : g.getDataChildren()) {
-                if (positions.containsKey(z)) continue;
-                zqueue.add(z);
+        while(!zqueue.isEmpty() || !xqueue.isEmpty() || !yqueue.isEmpty()){
+            while(!xqueue.isEmpty()){
+                DiGraph current_digraph = xqueue.remove();
+                Node node = new Node(current_digraph, xposition,(yposition + 1)*50, (zposition + 1)*50 );
+                current_row.add(node);
+                positions.put(current_digraph, node);
+                xposition += textWidth(current_digraph.getTreeName()) + 100;
+
+                for (DiGraph z : current_digraph.getDataChildren()) {
+                    if (!positions.containsKey(z)) {
+                        zqueue.add(z);
+                    }
+                }
+
+                for (DiGraph y : current_digraph.getSoftwareChildren()) {
+                    if (!positions.containsKey(y)) {
+                        yqueue.add(y);
+                    }
+                }
             }
+            xposition = x;
 
-            for (DiGraph y : g.getSoftwareChildren()) {
-                if (positions.containsKey(y)) continue;
-                yqueue.add(y);
+            if (!zqueue.isEmpty()){
+                //Position stuff, down one
+                zposition++;
+
+                //Queue stuff
+                xqueue = zqueue;
+                zqueue = new LinkedList<DiGraph>();
+                yqueue = new LinkedList<DiGraph>();
+                nextlayer.add(yqueue);
+
+                //Layer stuff
+                Vector<Node> newrow = new Vector<Node>();
+                current_layer.add(newrow);
+                current_row = newrow;
+
+            }else if (!yqueue.isEmpty()){
+                //Position stuff, moving down and over
+                zposition=0;
+                yposition++;
+
+                //Queue stuff
+                xqueue = nextlayer.getFirst();
+                if (nextlayer.size()==1){nextlayer.add(new LinkedList<DiGraph>());}
+                zqueue = nextlayer.get(1);
+                yqueue = new LinkedList<DiGraph>();
+                nextlayer = new LinkedList<LinkedList<DiGraph>>();
+                nextlayer.add(yqueue);
+
+                //layer stuff
+                Vector<Vector<Node>> new_layer = new Vector<Vector<Node>>();
+                Vector<Node> new_row = new Vector<Node>();
+                new_layer.add(new_row);
+                layers.add(new_layer);
+                current_row = new_row;
+                current_layer = new_layer;
             }
-
-            Node node = new Node(g, xposition,(yposition + 1)*50, (zposition + 1) * 50 );
-            positions.put(g, node);
-            xposition += textWidth(g.getTreeName()) + 100;
         }
-
-        if (!zqueue.isEmpty()){
-            xqueue = zqueue;
-            zqueue = new LinkedList<DiGraph>();
-            //keep going!
-
-        }
-
 
         laidout = true; 
     }
@@ -185,7 +224,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
         //magnets
         for (int i = 1; i < layers.size(); i++) {
-            Vector<Node> layer = layers.get(i);
+            Vector<Node> layer = layers.get(i).get(0);
 
             for(int j = 0; j < layer.size(); j++){
                 if (j > 0){
@@ -220,7 +259,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         }
 
         for (int i = 1; i < layers.size(); i++) {
-            Vector<Node> layer = layers.get(i);
+            Vector<Node> layer = layers.get(i).get(0);
             for(int j = 0; j < layer.size(); j++){
                 Node n = layer.get(j);
                 n.vx = n.vx*FRICTION + 1*n.fx;
