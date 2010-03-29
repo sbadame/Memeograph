@@ -130,6 +130,13 @@ public class DiGraph {
         fireTreeAddedEvent(datachild);
     }
 
+    public Vector<DiGraph> getChildren()
+    {
+        Vector<DiGraph> v = new Vector<DiGraph>(getSoftwareChildren());
+        v.addAll(getDataChildren());
+        return v;
+    }
+
 
     /*
     public int depth()

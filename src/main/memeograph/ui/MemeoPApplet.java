@@ -80,13 +80,14 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         }
 
         //jiggle our layout
-        //adjust();
+        adjust();
 
         //Now draw the lines between the nodes
         for (Node n : positions.values()) {
-            for (DiGraph kid : n.data.getSoftwareChildren()) {
+            for (DiGraph kid : n.data.getChildren()) {
                 Node knode = positions.get(kid);
-                drawLine(n, knode);
+                if (n != null && knode != null) 
+                    drawLine(n, knode);
             }
         }
 
@@ -223,57 +224,60 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         }
 
         //magnets
-        for (int i = 1; i < layers.size(); i++) {
-            Vector<Node> layer = layers.get(i).get(0);
+        for (Vector<Vector<Node>> twod : layers) {
+            for (Vector<Node> layer : twod) {
+                for(int j = 0; j < layer.size(); j++){
+                    if (j > 0){
+                        Node r = layer.get(j);
+                        Node l = layer.get(j-1);
+                        double d = (l.x + l.width/2) - (r.x - r.width/2);
+                        layer.get(j).fx += 1000.0 / (d*d + 1);
+                    }
 
-            for(int j = 0; j < layer.size(); j++){
-                if (j > 0){
-                    Node r = layer.get(j);
-                    Node l = layer.get(j-1);
-                    double d = (l.x + l.width/2) - (r.x - r.width/2);
-                    layer.get(j).fx += 1000.0 / (d*d + 1);
-                }
-
-                if (j < layer.size() - 1){
-                    Node l = layer.get(j);
-                    Node r = layer.get(j+1);
-                    double d = l.x + l.width/2 - (r.x - r.width/2);
-                    layer.get(j).fx -= 1000.0 / (d*d + 1);
+                    if (j < layer.size() - 1){
+                        Node l = layer.get(j);
+                        Node r = layer.get(j+1);
+                        double d = l.x + l.width/2 - (r.x - r.width/2);
+                        layer.get(j).fx -= 1000.0 / (d*d + 1);
+                    }
                 }
             }
         }
 
         //springs
         for (Node n : positions.values()) {
-            for (DiGraph kidt : n.data.getSoftwareChildren()) {
+            for (DiGraph kidt : n.data.getChildren()) {
                 Node kid = positions.get(kidt);
+                if (kid == null) continue;
 
                 // F = -k*d
                 double dx = n.x - kid.x;
                 double dy = n.y - kid.y;
+                double dz = n.z - kid.z;
 
-                double d = Math.sqrt(dx*dx + dy*dy);
+                double d = Math.sqrt(dx*dx + dy*dy + dz * dz);
                 double F = K * d;
                 kid.fx += F*dx/d;
             }
         }
 
-        for (int i = 1; i < layers.size(); i++) {
-            Vector<Node> layer = layers.get(i).get(0);
-            for(int j = 0; j < layer.size(); j++){
-                Node n = layer.get(j);
-                n.vx = n.vx*FRICTION + 1*n.fx;
-                double newx = n.x + 0.1*n.vx;
-                total+= Math.abs(n.fx);
-                n.x = newx;
-            }
+        for (Vector<Vector<Node>> twod : layers) {
+            for (Vector<Node> layer : twod) {
+                for(int j = 0; j < layer.size(); j++){
+                    Node n = layer.get(j);
+                    n.vx = n.vx*FRICTION + 1*n.fx;
+                    double newx = n.x + 0.1*n.vx;
+                    total+= Math.abs(n.fx);
+                    n.x = newx;
+                }
 
-            // Not too close, okay...
-            for(int j = 1; j < layer.size(); j++){
-                Node l = layer.get(j-1);
-                Node n = layer.get(j);
-                if (l.x + l.width/2 + n.width/2 + PADDING > n.x) {
-                    n.x = l.x + l.width/2 + n.width/2 + PADDING;
+                // Not too close, okay...
+                for(int j = 1; j < layer.size(); j++){
+                    Node l = layer.get(j-1);
+                    Node n = layer.get(j);
+                    if (l.x + l.width/2 + n.width/2 + PADDING > n.x) {
+                        n.x = l.x + l.width/2 + n.width/2 + PADDING;
+                    }
                 }
             }
         }
