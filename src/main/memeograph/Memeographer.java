@@ -28,11 +28,20 @@ public class Memeographer {
     private static final String TRANSPORT = "com.sun.jdi.SocketAttach";
 
     // We are also assuming that the target is waiting for us on port 8000
-    private static final String PORT = "8000";
+    private static String PORT = "8000";
 
 
     public static void main(String[] args) 
-    { 
+    {
+        //Basic arg reading
+        for (String arg : args) {
+            if (arg.contains("=")) {
+                String[] split = arg.split("=");
+                if (split[0].equals("port")) {
+                    PORT = split[1];
+                }
+            }
+        }
         //Step 1 - Connect to our target program
         VirtualMachine vm = getTargetVM();
         if (vm == null)
