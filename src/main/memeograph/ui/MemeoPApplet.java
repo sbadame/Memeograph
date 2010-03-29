@@ -23,8 +23,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     static float FRICTION = .95f;
     static int MOVE_TICK = 50;
 
-    private Map<DiGraph, Node> positions;
-    private Vector<Vector<Node>> layers;
+    private Map<DiGraph, Node> positions = new HashMap<DiGraph, Node>();
+    private Vector<Vector<Vector<Node>>> layers  = new Vector<Vector<Vector<Node>>>();
 
     private DiGraph tree;
     private boolean treechanged = false;
@@ -75,7 +75,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         //First check if we have to layout this stuff out
         if (!laidout) {
             treechanged = false;
-            layout(tree, width/2, PADDING);
+            layout(tree, width/2);
+            System.out.println(layers);
         }
 
         //jiggle our layout
@@ -85,7 +86,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         for (Node n : positions.values()) {
             for (DiGraph kid : n.data.getChildren()) {
                 Node knode = positions.get(kid);
-                drawLine(n, knode);
+                if (n != null && knode != null) 
+                    drawLine(n, knode);
             }
         }
 
@@ -96,7 +98,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     private void drawLine(Node from, Node to){
-        line((float)from.x, (float)from.y, (float)from.z, 
+        line((float)from.x, (float)from.y, (float)from.z,
                 (float)to.x, (float)to.y, (float)to.z);
     }
 
@@ -120,44 +122,92 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         translate(-(float)n.x, -(float)n.y, -(float)n.z);
     }
 
-    private void layout(DiGraph t, double x, double y){
-        positions = new HashMap<DiGraph,Node>();
-        layers = new Vector<Vector<Node>>();
-        layers.add(new Vector<Node>());
+    private void layout(DiGraph t, double x){
+        Vector<Vector<Node>> current_layer = new Vector<Vector<Node>>();
+        Vector<Node> current_row = new Vector<Node>();
+        current_layer.add(current_row);
 
-        Queue<DiGraph> curr_layer = new LinkedList<DiGraph>();
-        curr_layer.add(t);
+        Vector<Vector<Node>> next_layer = new Vector<Vector<Node>>();
+        Vector<Node> yrow = new Vector<Node>();
+        next_layer.add(yrow);
 
-        int layer = 0;
-        Queue<DiGraph> next_layer = new LinkedList<DiGraph>();
+        Vector<Node> zrow = new Vector<Node>();
+        current_layer.add(zrow);
+
+        layers.add(current_layer);
+        layers.add(next_layer);
+
+
+        LinkedList<DiGraph> zqueue = new LinkedList<DiGraph>();
+        LinkedList<LinkedList<DiGraph>> nextlayer = new LinkedList<LinkedList<DiGraph>>();
+        LinkedList<DiGraph> yqueue = new LinkedList<DiGraph>();
+        LinkedList<DiGraph> xqueue = new LinkedList<DiGraph>();
+
+        nextlayer.add(yqueue);
+
+        xqueue.add(t);
 
         double xposition = x;
+        int yposition = 0;
+        int zposition = 0;
 
-        while (!curr_layer.isEmpty() || !next_layer.isEmpty()) {
-            if (curr_layer.isEmpty()) {
-                layer += 1;
-                curr_layer = next_layer;
-                next_layer = new LinkedList<DiGraph>();
-                layers.add(new Vector<Node>());
-                xposition = x;
-            }
+        while(!zqueue.isEmpty() || !xqueue.isEmpty() || !yqueue.isEmpty()){
+            while(!xqueue.isEmpty()){
+                DiGraph current_digraph = xqueue.remove();
+                Node node = new Node(current_digraph, xposition,(yposition + 1)*50, (zposition + 1)*50 );
+                current_row.add(node);
+                positions.put(current_digraph, node);
+                xposition += textWidth(current_digraph.getTreeName()) + 100;
 
-            t = curr_layer.remove();
-            if (positions.containsKey(t)) continue;
-
-            t.addTreeChangeListener(this);
-
-            Node n = new Node(t, xposition, (layer+1)*50);
-            n.width = textWidth(n.data.getTreeName());
-            xposition += n.width + 100;
-
-            layers.get(layer).add(n);
-            positions.put(t, n);
-
-            for (DiGraph kid : t.getChildren()) {
-                if (!positions.containsKey(kid)) {
-                    next_layer.add(kid);
+                for (DiGraph z : current_digraph.getDataChildren()) {
+                    if (!positions.containsKey(z)) {
+                        zqueue.add(z);
+                    }
                 }
+
+                for (DiGraph y : current_digraph.getSoftwareChildren()) {
+                    if (!positions.containsKey(y)) {
+                        yqueue.add(y);
+                    }
+                }
+            }
+            xposition = x;
+
+            if (!zqueue.isEmpty()){
+                //Position stuff, down one
+                zposition++;
+
+                //Queue stuff
+                xqueue = zqueue;
+                zqueue = new LinkedList<DiGraph>();
+                yqueue = new LinkedList<DiGraph>();
+                nextlayer.add(yqueue);
+
+                //Layer stuff
+                Vector<Node> newrow = new Vector<Node>();
+                current_layer.add(newrow);
+                current_row = newrow;
+
+            }else if (!yqueue.isEmpty()){
+                //Position stuff, moving down and over
+                zposition=0;
+                yposition++;
+
+                //Queue stuff
+                xqueue = nextlayer.getFirst();
+                if (nextlayer.size()==1){nextlayer.add(new LinkedList<DiGraph>());}
+                zqueue = nextlayer.get(1);
+                yqueue = new LinkedList<DiGraph>();
+                nextlayer = new LinkedList<LinkedList<DiGraph>>();
+                nextlayer.add(yqueue);
+
+                //layer stuff
+                Vector<Vector<Node>> new_layer = new Vector<Vector<Node>>();
+                Vector<Node> new_row = new Vector<Node>();
+                new_layer.add(new_row);
+                layers.add(new_layer);
+                current_row = new_row;
+                current_layer = new_layer;
             }
         }
 
@@ -174,22 +224,22 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         }
 
         //magnets
-        for (int i = 1; i < layers.size(); i++) {
-            Vector<Node> layer = layers.get(i);
+        for (Vector<Vector<Node>> twod : layers) {
+            for (Vector<Node> layer : twod) {
+                for(int j = 0; j < layer.size(); j++){
+                    if (j > 0){
+                        Node r = layer.get(j);
+                        Node l = layer.get(j-1);
+                        double d = (l.x + l.width/2) - (r.x - r.width/2);
+                        layer.get(j).fx += 1000.0 / (d*d + 1);
+                    }
 
-            for(int j = 0; j < layer.size(); j++){
-                if (j > 0){
-                    Node r = layer.get(j);
-                    Node l = layer.get(j-1);
-                    double d = (l.x + l.width/2) - (r.x - r.width/2);
-                    layer.get(j).fx += 1000.0 / (d*d + 1);
-                }
-
-                if (j < layer.size() - 1){
-                    Node l = layer.get(j);
-                    Node r = layer.get(j+1);
-                    double d = l.x + l.width/2 - (r.x - r.width/2);
-                    layer.get(j).fx -= 1000.0 / (d*d + 1);
+                    if (j < layer.size() - 1){
+                        Node l = layer.get(j);
+                        Node r = layer.get(j+1);
+                        double d = l.x + l.width/2 - (r.x - r.width/2);
+                        layer.get(j).fx -= 1000.0 / (d*d + 1);
+                    }
                 }
             }
         }
@@ -198,33 +248,36 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         for (Node n : positions.values()) {
             for (DiGraph kidt : n.data.getChildren()) {
                 Node kid = positions.get(kidt);
+                if (kid == null) continue;
 
                 // F = -k*d
                 double dx = n.x - kid.x;
                 double dy = n.y - kid.y;
+                double dz = n.z - kid.z;
 
-                double d = Math.sqrt(dx*dx + dy*dy);
+                double d = Math.sqrt(dx*dx + dy*dy + dz * dz);
                 double F = K * d;
                 kid.fx += F*dx/d;
             }
         }
 
-        for (int i = 1; i < layers.size(); i++) {
-            Vector<Node> layer = layers.get(i);
-            for(int j = 0; j < layer.size(); j++){
-                Node n = layer.get(j);
-                n.vx = n.vx*FRICTION + 1*n.fx;
-                double newx = n.x + 0.1*n.vx;
-                total+= Math.abs(n.fx);
-                n.x = newx;
-            }
+        for (Vector<Vector<Node>> twod : layers) {
+            for (Vector<Node> layer : twod) {
+                for(int j = 0; j < layer.size(); j++){
+                    Node n = layer.get(j);
+                    n.vx = n.vx*FRICTION + 1*n.fx;
+                    double newx = n.x + 0.1*n.vx;
+                    total+= Math.abs(n.fx);
+                    n.x = newx;
+                }
 
-            // Not too close, okay...
-            for(int j = 1; j < layer.size(); j++){
-                Node l = layer.get(j-1);
-                Node n = layer.get(j);
-                if (l.x + l.width/2 + n.width/2 + PADDING > n.x) {
-                    n.x = l.x + l.width/2 + n.width/2 + PADDING;
+                // Not too close, okay...
+                for(int j = 1; j < layer.size(); j++){
+                    Node l = layer.get(j-1);
+                    Node n = layer.get(j);
+                    if (l.x + l.width/2 + n.width/2 + PADDING > n.x) {
+                        n.x = l.x + l.width/2 + n.width/2 + PADDING;
+                    }
                 }
             }
         }

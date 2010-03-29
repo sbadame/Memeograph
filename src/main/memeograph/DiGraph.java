@@ -9,23 +9,30 @@ import java.util.*;
 public class DiGraph {
 
     private String data = null;
-    private Vector<DiGraph> children = new Vector<DiGraph>();
     private Color color = null;
+
+    private Vector<DiGraph> softwarechildren = new Vector<DiGraph>();
+    private Vector<DiGraph> datachildren = new Vector<DiGraph>();
 
     Vector<TreeChangeListener> listeners = new Vector<TreeChangeListener>();
 
-    public DiGraph(String data, Iterable<DiGraph> kids)
+    public DiGraph(String data, Iterable<DiGraph> softwarekids, Iterable<DiGraph> datakids)
     {
         setData(data, false);
-        if (kids != null) 
-            for (DiGraph kid : kids) {
+        if (softwarekids != null)
+            for (DiGraph kid : softwarekids) {
                 //Avoid setting off the listeners
-                children.add(kid);
+                softwarechildren.add(kid);
+            }
+
+        if (datakids !=  null)
+            for (DiGraph kid : datakids) {
+                datachildren.add(kid);
             }
     }
 
-    public DiGraph(String data) { this(data, null); }
-    public DiGraph(Iterable<DiGraph> kids) { this(null, kids); }
+    public DiGraph(String data) { this(data, null, null); }
+    public DiGraph(Iterable<DiGraph> swkids, Iterable<DiGraph> datakids) { this(null, swkids, datakids); }
     public DiGraph(Object o) {
         setData(o, false);
     }
@@ -35,18 +42,23 @@ public class DiGraph {
     @Override
     public String toString()
     {
-        if (getData() != null && getChildren().size() == 0)
+        if (getData() != null && getSoftwareChildren().size() == 0)
             return getData();
 
-        String rv = "";
-        for (DiGraph kid : getChildren()) {
-            rv += " " + kid;
+        String swkids = "";
+        for (DiGraph kid : getSoftwareChildren()) {
+            swkids += " " + kid;
+        }
+
+        String dkids = "";
+        for (DiGraph kid : getDataChildren()) {
+            dkids += " " + kid;
         }
 
         if (getData() == null)
-            return "(" + rv.trim() + ")";
+            return "(" + swkids.trim() + ")";
         else
-            return "(" + getData() + " " + rv.trim() + ")";
+            return "(" + getData() + " -  ( " + swkids.trim() + " ) [ " + dkids.trim() + " ])" ;
     }
 
     /**
@@ -63,13 +75,8 @@ public class DiGraph {
 
     private void setData(Object o, boolean fireListener){
          //Check if we already have data, if we do, remove it.
-        if (!children.isEmpty())
-            removeChildren();
-/*
-        if (o != null)
-            System.out.println(o.getClass().getName() + " " + o);
-        else
-            System.out.println("null"); */
+        if (!softwarechildren.isEmpty())
+            removeSoftwareChildren();
 
         if (o != null) {
             this.data = o.toString();
@@ -93,30 +100,50 @@ public class DiGraph {
     }
 
     /**
-     * @return the kids
+     * @return the softwarekids
      */
-    public Vector<DiGraph> getChildren()
+    public Vector<DiGraph> getSoftwareChildren()
     {
-        return children;
+        return softwarechildren;
     }
 
-    public void addChild(DiGraph child)
+    public void addSoftwareChild(DiGraph softwarechild)
     {
-        children.add(child);
-        fireTreeAddedEvent(child);
+        softwarechildren.add(softwarechild);
+        fireTreeAddedEvent(softwarechild);
     }
 
-    public void removeChildren(){
-        children.clear();
+    public void removeSoftwareChildren(){
+        softwarechildren.clear();
         fireChildrenClearedEvent();
     }
 
+    public Vector<DiGraph> getDataChildren()
+    {
+        return datachildren;
+    }
 
+
+    public void addDataChild(DiGraph datachild)
+    {
+        datachildren.add(datachild);
+        fireTreeAddedEvent(datachild);
+    }
+
+    public Vector<DiGraph> getChildren()
+    {
+        Vector<DiGraph> v = new Vector<DiGraph>(getSoftwareChildren());
+        v.addAll(getDataChildren());
+        return v;
+    }
+
+
+    /*
     public int depth()
     {
         int depth = 1;
-        if (children != null) {
-            for (DiGraph kid : children) {
+        if (softwarechildren != null) {
+            for (DiGraph kid : softwarechildren) {
                 int kd = kid.depth();
                 if (1 + kd > depth) {
                     depth = 1 + kd;
@@ -125,7 +152,7 @@ public class DiGraph {
         }
 
         return depth;
-    }
+    }*/
 
     public void addTreeChangeListener(TreeChangeListener listener){
         listeners.add(listener);
