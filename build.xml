@@ -33,7 +33,8 @@
 	</target>
 
 	<target name="run-memeographer" depends="build">
-	  	<java fork="false" classname="memeograph.Memeographer">
+	  	<java fork="true" classname="memeograph.Memeographer">
+                        <sysproperty key="java.library.path" path="${basedir}/lib" />
 			<classpath>
 				<path location="bin/main" />
 				<path refid="lib.path" />

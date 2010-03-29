@@ -107,7 +107,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         translate((float)n.x, (float)n.y, (float)n.z);
 
         fill(n.r, n.g, n.b);
-        strokeWeight(0);
+        strokeWeight(1);
         box((float)n.width, 20f, 20f);
 
         translate(0f, 0f, 11f);

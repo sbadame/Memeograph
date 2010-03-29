@@ -130,7 +130,9 @@ public class GraphBuilder {
 
     protected boolean filterObject(ObjectReference o){
             if (o.referenceType().name().startsWith("java.")) return false;
+            if (o.referenceType().name().startsWith("com.sun.")) return false;
             if (o.referenceType().name().startsWith("sun.")) return false;
+            if (o.referenceType().name().startsWith("javax.")) return false;
             return true;
     }
 

@@ -37,11 +37,14 @@ public class Memeographer {
         VirtualMachine vm = getTargetVM();
         if (vm == null)
             throw new Error("No VM was found");
+        System.out.println("Connected!");
 
         //Step 2 - Get a Graph
         GraphBuilder grapher = new GraphBuilder(vm);
+        System.out.println("Building the Graph!");
         grapher.buildGraph();
         DiGraph graph = grapher.getGraph();
+        System.out.println("Built!");
 
         //Step 3 - Render the graph
         if (args != null && args.length > 0 && args[0].equals("dot")){
