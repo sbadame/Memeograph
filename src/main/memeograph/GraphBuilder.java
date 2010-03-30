@@ -165,7 +165,11 @@ public class GraphBuilder {
                              ObjectReference child = (ObjectReference) val;
                              if (or.referenceType().name().equals(child.referenceType().name())) {
                                  tree.addDataChild(exploreObject(child));
-                            }else{
+                            } else if (((ClassType)or.type()).subclasses().contains(val.type())) {
+                                 tree.addDataChild(exploreObject(child));
+                            } else if (((ClassType)val.type()).subclasses().contains(or.type())) {
+                                 tree.addDataChild(exploreObject(child));
+                            } else {
                                  tree.addSoftwareChild(exploreObject(child));
                             }
                         }

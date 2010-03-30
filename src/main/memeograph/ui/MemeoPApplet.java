@@ -256,7 +256,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             float r = sqrt(y*y + z*z);
             float theta = atan2(y, z);
 
-            float theta_new = theta + ((dy > 0) ? dtheta : (-1*dtheta));
+            float theta_new = theta + ((dy < 0) ? dtheta : (-1*dtheta));
             y = sin(theta_new) * r;
             z = cos(theta_new) * r;
             pos.y = dir.y + y;
