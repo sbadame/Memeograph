@@ -6,7 +6,6 @@ import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.IntegerValue;
 import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
@@ -14,12 +13,14 @@ import com.sun.jdi.VirtualMachine;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 
 public class GraphBuilder {
 
     private VirtualMachine vm;
-    private DiGraph graph =  new DiGraph("Memeograph!");
+    //private DiGraph graph =  new DiGraph("Memeograph!");
     private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
+    private Vector<DiGraph> stacks = new Vector<DiGraph>();
 
     public GraphBuilder(VirtualMachine vm)
     {
@@ -31,24 +32,24 @@ public class GraphBuilder {
         vm.suspend();
 
         //First we go through all of the loaded classes
-        //Do we really need to do this?
-        for(ReferenceType c : vm.allClasses()){
+        /*for(ReferenceType c : vm.allClasses()){
                 searchClass(c);
-        }
+        }*/
 
         //Now we go through all of the threads
         for (ThreadReference t : vm.allThreads()) {
-                getTree(t);
+                buildStack(t);
         }
 
         vm.resume();
     }
 
+    /*
     private void searchClass(ReferenceType t){
         for (ObjectReference o : t.instances(0)) {
                 exploreObject(o);
         }
-    }
+    }*/
 
     /**
     * The String representation of an Object. NOTE: This needs to be unique
@@ -76,18 +77,18 @@ public class GraphBuilder {
      * Traverses the frames of this thread until it reaches local 
      * variables
      */
-    private void getTree(ThreadReference t) {
-       //t.frame[0] == current frame
-       //t.frame[t.frameCount() - 1] == top most frame
+    private void buildStack(ThreadReference t) {
        try {
            int i = 0;
            for (StackFrame frame: t.frames()) {
                DiGraph tree = exploreStackFrame(frame, i);
- 
+               tree.setColor(Color.red);
                //Now where to put this tree...?
                if (i ==  t.frameCount() - 1){ //The top most frame
-                   graph.addSoftwareChild(tree);
-               }else{ //Just add to the previous Stack Frame DiGraph
+                   stacks.add(tree);
+               }else{ 
+                   //Just add to the previous Stack Frame DiGraph
+                   //add as a software child to go down the y direction
                    getStackFrame(i+1, t).addSoftwareChild(tree);
                }
                i++;
@@ -174,8 +175,12 @@ public class GraphBuilder {
             return treeMap.get(txt);
     }
 
-    public DiGraph getGraph(){
+    /*public DiGraph getGraph(){
             return graph;
+    }*/
+
+    public Vector<DiGraph> getStacks(){
+        return stacks;
     }
 
     public HashMap<String, DiGraph> getGraphMap(){

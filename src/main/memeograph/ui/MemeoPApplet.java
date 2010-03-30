@@ -4,6 +4,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Vector;
@@ -26,7 +27,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     private Map<DiGraph, Node> positions = new HashMap<DiGraph, Node>();
     private Grid rails  = new Grid();
 
-    private DiGraph tree;
+    private List<DiGraph> stacks;
     private boolean treechanged = false;
     private boolean laidout = false;
 
@@ -40,8 +41,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     PVector dir;
     PVector camNorth = new PVector(0,1,0);
 
-    public MemeoPApplet(DiGraph tree, int width, int height){
-        this.tree = tree;
+    public MemeoPApplet(List<DiGraph> tree, int width, int height){
+        this.stacks = tree;
         this.wanted_height = height;
         this.wanted_width = width;
         addMouseWheelListener(this);
@@ -58,7 +59,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         textFont(font);
         textAlign(CENTER, CENTER);
 
-        //Lets see if we can slow down the tree rendering to 30fps
+        //Lets see if we can slow down the stacks rendering to 30fps
         frameRate(20);
         pos = new PVector(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f));
         dir = new PVector(width/2.0f, height/2.0f, 0);
@@ -75,7 +76,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         //First check if we have to layout this stuff out
         if (!laidout) {
             treechanged = false;
-            layout(tree);
+            layout(stacks);
             System.out.println(rails);
         }
 
@@ -142,15 +143,17 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         }
     }
 
-    private void layout(DiGraph t)
+    private void layout(List<DiGraph> t)
     {
-        layout(t, 0,0);
+        for (DiGraph stack : t) {
+            layout(stack, 0, 0);
 
-        for (Vector<Node> rail : rails) {
-            double x = 0;
-            for (Node n : rail) {
-                n.x = x;
-                x += n.width + 50;
+            for (Vector<Node> rail : rails) {
+                double x = 0;
+                for (Node n : rail) {
+                    n.x = x;
+                    x += n.width + 50;
+                }
             }
         }
 

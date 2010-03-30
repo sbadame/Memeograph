@@ -8,11 +8,11 @@ import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import memeograph.ui.MemeoFrame;
 
 /**
@@ -46,20 +46,18 @@ public class Memeographer {
         VirtualMachine vm = getTargetVM();
         if (vm == null)
             throw new Error("No VM was found");
-        System.out.println("Connected!");
 
         //Step 2 - Get a Graph
         GraphBuilder grapher = new GraphBuilder(vm);
         System.out.println("Building the Graph!");
         grapher.buildGraph();
-        DiGraph graph = grapher.getGraph();
-        System.out.println("Built!");
+        Vector<DiGraph> stacks = grapher.getStacks();
 
         //Step 3 - Render the graph
         if (args != null && args.length > 0 && args[0].equals("dot")){
             outputDot(grapher);
         } else {
-            MemeoFrame frame = new MemeoFrame(graph);
+            MemeoFrame frame = new MemeoFrame(stacks);
 
             }
         }
