@@ -88,31 +88,14 @@
 
 	<!-- Test parallel -->
 	<target name="run" depends="build">
-	  	<parallel>
-		  	<!-- Start our target program -->
-			<daemons>
-			  <java fork="true" classname="ReadChar" >
-			      <jvmarg value="-Xdebug" />
-			      <jvmarg value="-Xrunjdwp:transport=${transport},address=${testport},server=y,suspend=n"/>
-			      <classpath>
-				      <path location="bin/test"/>
-			      </classpath>
-			   </java>
-			</daemons>
-
-		  	<!-- Start our Memeographer -->
-		  	<sequential>
-			   <sleep seconds="2" />
-			    <java fork="true" classname="memeograph.Memeographer">
-				<arg value="port=${port}" />
-				<sysproperty key="java.library.path" path="${basedir}/lib" />
-				<classpath>
-				      <path location="bin/main" />
-				      <path refid="lib.path" />
-				</classpath>
-			    </java>
-			</sequential>
-		</parallel>
-	</target>
+        <java fork="true" classname="memeograph.Memeographer">
+          <sysproperty key="java.library.path" path="${basedir}/lib" />
+          <arg value="-Xdebug -cp ${basedir}/bin/test ReadChar" />
+          <classpath>
+              <path location="bin/main" />
+              <path refid="lib.path" />
+          </classpath>
+        </java>
+    </target>
 
 </project>

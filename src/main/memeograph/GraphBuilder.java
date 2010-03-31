@@ -148,11 +148,13 @@ public class GraphBuilder {
 
                 for (Field field : allFields) {
                     if (field.name().equals("memeographname") && field.typeName().equals("java.lang.String") ){
+                        if (or.getValue(field) == null){ continue; }
                         String treetxt = or.getValue(field).toString();
                         treetxt = treetxt.substring(1, treetxt.length()-1);
                         tree.setData(treetxt);
                     }else if (field.name().equals("memeographcolor") && field.typeName().equals("java.awt.Color")){
                         ObjectReference colorref = (ObjectReference) or.getValue(field);
+                        if (colorref == null) { continue; } //Got this Nullpointer some how...
                         Value color_value = colorref.getValue(colorref.referenceType().fieldByName("value"));
                         IntegerValue iv = (IntegerValue)color_value;
                         tree.setColor(new Color(iv.intValue()));
