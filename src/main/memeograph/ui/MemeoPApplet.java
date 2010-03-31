@@ -3,10 +3,8 @@ package memeograph.ui;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Vector;
 import memeograph.DiGraph;
 import memeograph.TreeChangeListener;
@@ -40,6 +38,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     PVector pos;
     PVector dir;
     PVector camNorth = new PVector(0,1,0);
+    PVector camEast = new PVector(1,0,0);
 
     public MemeoPApplet(List<DiGraph> tree, int width, int height){
         this.stacks = tree;
@@ -65,6 +64,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         dir = new PVector(width/2.0f, height/2.0f, 0);
 
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
+        smooth();
     }
 
 
@@ -125,6 +125,31 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         translate(-(float)n.x, -(float)n.y, -(float)n.z);
     }
 
+    private void layout(List<DiGraph> t)
+    {
+        for (DiGraph stack : t) {
+            layout(stack, -10, 0);
+            
+            DiGraph sf = stack;
+            int y = 0;
+            while (sf.getSoftwareChildren().size() == 1){
+                sf = sf.getSoftwareChildren().firstElement();
+                y+=50;
+                layout(sf, -10, y);
+            }
+
+            for (Vector<Node> rail : rails) {
+                double x = 0;
+                for (Node n : rail) {
+                    n.x = x;
+                    x += n.width + 50;
+                }
+            }
+        }
+
+        laidout = true; 
+    }
+
     private void layout(DiGraph t, int z, int y)
     {
         if (positions.get(t) != null) return;
@@ -141,23 +166,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         for (DiGraph kid : t.getSoftwareChildren()) {
             layout(kid, z, y+1);
         }
-    }
-
-    private void layout(List<DiGraph> t)
-    {
-        for (DiGraph stack : t) {
-            layout(stack, 0, 0);
-
-            for (Vector<Node> rail : rails) {
-                double x = 0;
-                for (Node n : rail) {
-                    n.x = x;
-                    x += n.width + 50;
-                }
-            }
-        }
-
-        laidout = true; 
     }
 
     private double adjust(){
@@ -295,8 +303,12 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     private void translateCameraY(float amount){
-        pos.y += amount;
-        dir.y += amount;
+        PVector camera = PVector.sub(dir,pos);
+        PVector cross = camera.cross(camEast);
+        cross.normalize();
+        cross.mult(-amount);
+        pos.add(cross);
+        dir.add(cross);
     }
 
     private void translateCameraX(float amount){
@@ -313,22 +325,13 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     public void mouseWheelMoved(MouseWheelEvent e) {
-        int notches = e.getWheelRotation(); //notches goes negative if the
+        int notches = -1*e.getWheelRotation(); //notches goes negative if the
                                             //wheel is scrolled up.
-        if (notches < 0) {
-            float x = .9f * (pos.x-dir.x);
-            float y = .9f * (pos.y-dir.y);
-            float z = .9f * (pos.z-dir.z);
-            pos.x = dir.x + x;
-            pos.y = dir.y + y;
-            pos.z = dir.z + z;
-        } else if (notches > 0) {
-            float x = 1.1f * (pos.x-dir.x);
-            float y = 1.1f * (pos.y-dir.y);
-            float z = 1.1f * (pos.z-dir.z);
-            pos.x = dir.x + x;
-            pos.y = dir.y + y;
-            pos.z = dir.z + z;
-        }
+             
+        PVector camera = PVector.sub(dir,pos);
+        camera.normalize();
+        
+        pos.add(PVector.mult(camera, (float)notches * 100f));
+        dir.add(PVector.mult(camera, (float)notches * 100f));
     }
 }

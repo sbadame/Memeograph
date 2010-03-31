@@ -5,12 +5,14 @@ import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.IntegerValue;
+import com.sun.jdi.LocalVariable;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import com.sun.jdi.VirtualMachine;
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -18,7 +20,7 @@ import java.util.Vector;
 public class GraphBuilder {
 
     private VirtualMachine vm;
-    //private DiGraph graph =  new DiGraph("Memeograph!");
+
     private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
     private Vector<DiGraph> stacks = new Vector<DiGraph>();
 
@@ -31,25 +33,13 @@ public class GraphBuilder {
     {
         vm.suspend();
 
-        //First we go through all of the loaded classes
-        /*for(ReferenceType c : vm.allClasses()){
-                searchClass(c);
-        }*/
-
         //Now we go through all of the threads
         for (ThreadReference t : vm.allThreads()) {
                 buildStack(t);
         }
 
-        vm.resume();
+        //vm.resume();
     }
-
-    /*
-    private void searchClass(ReferenceType t){
-        for (ObjectReference o : t.instances(0)) {
-                exploreObject(o);
-        }
-    }*/
 
     /**
     * The String representation of an Object. NOTE: This needs to be unique
@@ -112,13 +102,18 @@ public class GraphBuilder {
             DiGraph tree = getStackFrame(depth, frame.thread());
             ObjectReference thisor = frame.thisObject();
             if (thisor != null) {
-                tree.addSoftwareChild(exploreObject(thisor));
+                tree.addDataChild(exploreObject(thisor));
             }
 
             try {
-                    for (Value val : frame.getValues(frame.visibleVariables()).values()) {
+                    List<LocalVariable> locals = frame.visibleVariables();
+                    LocalVariable[] localvars = locals.toArray(new LocalVariable[] {});
+                    Arrays.sort(localvars);
+
+                    for (LocalVariable var : localvars) {
+                            Value val = frame.getValue(var);
                             if (val != null && val.type() != null && val.type() instanceof ClassType)
-                                    tree.addSoftwareChild(exploreObject((ObjectReference)val));
+                                    tree.addDataChild(exploreObject((ObjectReference)val));
                     }
             } catch (AbsentInformationException ex) {
                     //Seems to only be thrown when we see a frame with no variables
@@ -148,7 +143,9 @@ public class GraphBuilder {
             treeMap.put(txt, tree); //Do this right off the bat to prevent infinite loop
                                                             //With cycling graphs
             if ( filterObject(or) ){
-                List<Field> allFields = or.referenceType().allFields();
+                Field[] allFields = or.referenceType().allFields().toArray(new Field[] {});
+                Arrays.sort(allFields);
+
                 for (Field field : allFields) {
                     if (field.name().equals("memeographname") && field.typeName().equals("java.lang.String") ){
                         String treetxt = or.getValue(field).toString();
