@@ -1,19 +1,15 @@
 <?xml version="1.0"?>
 <project name="Memeograph" default="build" basedir=".">
 
-	<!--
-	     	Define all of our properties here
-	-->
+	<!-- Define all of our properties here -->
+    <property name="testclass" value="ReadChar" />
+    <property name="args" value="-cp ${basedir}/bin/test ${testclass}" />
 
     <!-- the port# that Memeograph will connect to -->
     <property name="port" value="8000" />
 
     <!-- the port # that the test program will listen for a connection from -->
     <property name="testport" value="${port}" />
-
-    <!-- the port # that the memeographer will listen for, for a connection RARELY USED -->
-    <property name="memeoport" value="9000" />
-
 
 	<!-- the type of transport that we are using -->
 	<property name="transport" value="dt_socket" />
@@ -25,12 +21,10 @@
 		</fileset>
 	</path>
 
-	<!--
-	     	Define all of our run targets here
-	-->
+	<!-- Define all of our run targets here -->
 
 	<target name="run-test" depends="build">
-		<java fork="true" classname="ReadChar" >
+		<java fork="true" classname="${testclass}" >
 			<jvmarg value="-Xdebug" />
 			<jvmarg value="-Xrunjdwp:transport=${transport},address=${testport},server=y,suspend=n"/>
 			<classpath>
@@ -39,36 +33,31 @@
 		</java>
 	</target>
 
-	<target name="run-memeographer" depends="build">
-	  	<java fork="true" classname="memeograph.Memeographer">
-			<arg value="port=${port}" />
-                        <sysproperty key="java.library.path" path="${basedir}/lib" />
-			<jvmarg value="-Xdebug" />
-			<jvmarg value="-Xrunjdwp:transport=${transport},address=${memeoport},server=y,suspend=n"/>
-			<classpath>
-				<path location="bin/main" />
-				<path refid="lib.path" />
-			</classpath>
-		</java>
-	</target>
+	<target name="run" depends="build">
+        <java fork="true" classname="memeograph.Memeographer">
+          <sysproperty key="java.library.path" path="${basedir}/lib" />
+          <arg value="${args}" />
+          <classpath>
+              <path location="bin/main" />
+              <path refid="lib.path" />
+          </classpath>
+        </java>
+    </target>
 
-        <target name="pdf" depends="build">
-		<java fork="true" classname="memeograph.Memeographer">
-		  	<arg value="dot" />
-			<classpath>
-				<path location="bin/main" />
-				<path refid="lib.path" />
-			</classpath>
-		</java>
-                <exec executable="dot">
-                    <arg line="-Tpdf output.dot -o output.pdf"/>
-                </exec>
-        </target>
+    <target name="pdf" depends="build">
+    <java fork="true" classname="memeograph.Memeographer">
+        <arg value="dot" />
+        <classpath>
+            <path location="bin/main" />
+            <path refid="lib.path" />
+        </classpath>
+    </java>
+            <exec executable="dot">
+                <arg line="-Tpdf output.dot -o output.pdf"/>
+            </exec>
+    </target>
 
-	<!--
-	     	Define all of our build targets here
-	-->
-
+	<!-- Define all of our build targets here -->
 	<target name="build" depends="-compile-main,-compile-test" />
 
 	<target name="-compile-main">
@@ -86,16 +75,5 @@
 		<delete dir="bin"/>
 	</target>
 
-	<!-- Test parallel -->
-	<target name="run" depends="build">
-        <java fork="true" classname="memeograph.Memeographer">
-          <sysproperty key="java.library.path" path="${basedir}/lib" />
-          <arg value="-Xdebug -cp ${basedir}/bin/test ReadChar" />
-          <classpath>
-              <path location="bin/main" />
-              <path refid="lib.path" />
-          </classpath>
-        </java>
-    </target>
 
 </project>

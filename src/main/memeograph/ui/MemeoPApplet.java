@@ -95,6 +95,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         for (Node n : positions.values()) {
             drawNode(n);
         }
+
     }
 
     private void drawLine(Node from, Node to){
