@@ -1,5 +1,6 @@
 bin/*
 **.swp
+**.swo
 processing*
 *.dot
 *.pdf
