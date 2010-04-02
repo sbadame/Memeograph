@@ -38,7 +38,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     PVector pos;
     PVector dir;
     PVector camNorth = new PVector(0,1,0);
-    PVector camEast = new PVector(1,0,0);
 
     public MemeoPApplet(List<DiGraph> tree, int width, int height){
         this.stacks = tree;
@@ -265,7 +264,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             float r = sqrt(y*y + z*z);
             float theta = atan2(y, z);
 
-            float theta_new = theta + ((dy < 0) ? dtheta : (-1*dtheta));
+            float theta_new = theta + ((dy > 0) ? dtheta : (-1*dtheta));
             y = sin(theta_new) * r;
             z = cos(theta_new) * r;
             pos.y = dir.y + y;
@@ -305,11 +304,12 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
     private void translateCameraY(float amount){
         PVector camera = PVector.sub(dir,pos);
-        PVector cross = camera.cross(camEast);
-        cross.normalize();
-        cross.mult(-amount);
-        pos.add(cross);
-        dir.add(cross);
+        PVector cross = camera.cross(camNorth);
+        PVector up = cross.cross(camera);
+        up.normalize();
+        up.mult(amount);
+        pos.add(up);
+        dir.add(up);
     }
 
     private void translateCameraX(float amount){
