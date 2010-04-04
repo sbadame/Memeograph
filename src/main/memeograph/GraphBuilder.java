@@ -1,24 +1,6 @@
 package memeograph;
 
-import com.sun.jdi.AbsentInformationException;
-import com.sun.jdi.BooleanValue;
-import com.sun.jdi.ByteValue;
-import com.sun.jdi.CharValue;
-import com.sun.jdi.ClassType;
-import com.sun.jdi.DoubleValue;
-import com.sun.jdi.Field;
-import com.sun.jdi.FloatValue;
-import com.sun.jdi.IncompatibleThreadStateException;
-import com.sun.jdi.IntegerType;
-import com.sun.jdi.IntegerValue;
-import com.sun.jdi.LocalVariable;
-import com.sun.jdi.LongValue;
-import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ShortValue;
-import com.sun.jdi.StackFrame;
-import com.sun.jdi.ThreadReference;
-import com.sun.jdi.Value;
-import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.*;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
