@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import javax.media.opengl.GLContext;
+import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.TreeChangeListener;
 import processing.core.PApplet;
@@ -50,7 +52,12 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     @Override
     public void setup(){
         //Full screen, go big or go home!
-        size(wanted_width, wanted_height, OPENGL);
+        try{
+            size(wanted_width, wanted_height, OPENGL);
+        }catch(GLException gle){
+            System.err.println("Warning: OPENGL creation failed, falling back to P3D");
+            size(wanted_width, wanted_height, P3D);
+        }
         background(102);
 
         font = createFont("SansSerif.bold", 18);
@@ -58,7 +65,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         textAlign(CENTER, CENTER);
 
         //Lets see if we can slow down the stacks rendering to 30fps
-        frameRate(20);
+        frameRate(25);
         pos = new PVector(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f));
         dir = new PVector(width/2.0f, height/2.0f, 0);
 
