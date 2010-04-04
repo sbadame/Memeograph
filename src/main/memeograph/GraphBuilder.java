@@ -1,12 +1,20 @@
 package memeograph;
 
 import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.BooleanValue;
+import com.sun.jdi.ByteValue;
+import com.sun.jdi.CharValue;
 import com.sun.jdi.ClassType;
+import com.sun.jdi.DoubleValue;
 import com.sun.jdi.Field;
+import com.sun.jdi.FloatValue;
 import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.IntegerType;
 import com.sun.jdi.IntegerValue;
 import com.sun.jdi.LocalVariable;
+import com.sun.jdi.LongValue;
 import com.sun.jdi.ObjectReference;
+import com.sun.jdi.ShortValue;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
@@ -160,6 +168,7 @@ public class GraphBuilder {
                         tree.setColor(new Color(iv.intValue()));
                     }else{
                         Value val = or.getValue(field);
+                        if(val == null || val.type() == null)continue;
                         if ( val != null && val.type() != null && val.type() instanceof ClassType ){
                              ObjectReference child = (ObjectReference) val;
                              if (or.referenceType().name().equals(child.referenceType().name())) {
@@ -171,6 +180,32 @@ public class GraphBuilder {
                             } else {
                                  tree.addSoftwareChild(exploreObject(child));
                             }
+                        }else if (val.type() instanceof IntegerType){
+                            IntegerValue iv = (IntegerValue)val;
+                            tree.addSoftwareChild(new DiGraph("int: " + new Integer(iv.intValue())));
+                        }else if (val.type() instanceof BooleanValue){
+                            BooleanValue iv = (BooleanValue)val;
+                            tree.addSoftwareChild(new DiGraph("bool: " + new Boolean(iv.booleanValue())));
+                        }else if (val.type() instanceof ByteValue){
+                            ByteValue iv = (ByteValue)val;
+                            tree.addSoftwareChild(new DiGraph("byte: " + new Byte(iv.byteValue())));
+                        }else if (val.type() instanceof CharValue){
+                            CharValue iv = (CharValue)val;
+                            tree.addSoftwareChild(new DiGraph("char: " + new Character(iv.charValue())));
+                        }else if (val.type() instanceof DoubleValue){
+                            DoubleValue iv = (DoubleValue)val;
+                            tree.addSoftwareChild(new DiGraph("double: " + new Double(iv.doubleValue())));
+                        }else if (val.type() instanceof FloatValue){
+                            FloatValue iv = (FloatValue)val;
+                            tree.addSoftwareChild(new DiGraph("float: " + new Float(iv.floatValue())));
+                        }else if (val.type() instanceof LongValue){
+                            LongValue iv = (LongValue)val;
+                            tree.addSoftwareChild(new DiGraph("long: " + new Long(iv.longValue())));
+                        }else if (val.type() instanceof ShortValue){
+                            ShortValue iv = (ShortValue)val;
+                            tree.addSoftwareChild(new DiGraph("short: " + new Short(iv.shortValue())));
+                        }else{
+                            System.err.println("Unknown data: " + val);
                         }
                     }
                 }
