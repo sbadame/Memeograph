@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import javax.media.opengl.GLContext;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.TreeChangeListener;
@@ -41,6 +40,13 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     PVector dir;
     PVector camNorth = new PVector(0,1,0);
 
+    //Text Rendering info
+    private final int renderfrontback = 1;
+    private final int rendertopbottom = 2;
+    private final int renderboth = 3;
+
+    private int rendermode = renderfrontback;
+
     public MemeoPApplet(List<DiGraph> tree, int width, int height){
         this.stacks = tree;
         this.wanted_height = height;
@@ -53,10 +59,10 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     public void setup(){
         //Full screen, go big or go home!
         try{
-            size(wanted_width, wanted_height, OPENGL);
-        }catch(GLException gle){
-            System.err.println("Warning: OPENGL creation failed, falling back to P3D");
             size(wanted_width, wanted_height, P3D);
+        }catch(GLException gle){
+            gle.printStackTrace();
+            System.exit(1);
         }
         background(102);
 
@@ -112,24 +118,42 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     private void drawNode(Node n){
+        pushMatrix();
         translate((float)n.x, (float)n.y, (float)n.z);
 
         fill(n.r, n.g, n.b);
         strokeWeight(1);
         box((float)n.width, 20f, 20f);
 
-        translate(0f, 0f, 11f);
-        fill(5);
-        text(n.data.getTreeName(), 0f, 0f);
+        if (rendermode == renderfrontback || rendermode == renderboth) {
+            pushMatrix();
+            translate(0f, 0f, 11f);
+            fill(5);
+            text(n.data.getTreeName(), 0f, 0f);
 
-        translate(0f, 0f, -22f);
+            translate(0f, 0f, -22f);
 
-        rotateY(PI);
-        text(n.data.getTreeName(), 0f, 0f);
-        rotateY(-PI);
-        translate(0f, 0f, 11f);
+            rotateY(PI);
+            text(n.data.getTreeName(), 0f, 0f);
+            popMatrix();
+        }
 
-        translate(-(float)n.x, -(float)n.y, -(float)n.z);
+        if (rendermode == 2 || rendermode == renderboth) {
+            pushMatrix();
+            translate(0f, 11f, 0f);
+            rotateX(-PI/2);
+            text(n.data.getTreeName(), 0f, 0f);
+            rotateX(PI/2);
+
+            translate(0f, -22f, 0f);
+
+            rotateX(-PI/2);
+            text(n.data.getTreeName(), 0f, 0f);
+
+            popMatrix();
+        }
+
+        popMatrix();
     }
 
     private void layout(List<DiGraph> t)
@@ -305,6 +329,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             case 'A': translateCameraX(-MOVE_TICK); break;
             case 'd':
             case 'D': translateCameraX(MOVE_TICK); break;
+            case 't':
+            case 'T': toggleRenderMode(); break;
             default: break;
         }
     }
@@ -326,6 +352,19 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         cross.mult(amount);
         pos.add(cross);
         dir.add(cross);
+    }
+
+    private void toggleRenderMode(){
+        if (rendermode == renderfrontback) {
+            System.out.println("Top bottom");
+            rendermode = rendertopbottom;
+        }else if (rendermode == rendertopbottom){
+            System.out.println("both");
+            rendermode = renderboth;
+        }else if (rendermode == renderboth){
+            System.out.println("fontback");
+            rendermode = renderfrontback;
+        }
     }
 
     @Override
