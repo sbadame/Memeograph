@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
+import javax.lang.model.type.ArrayType;
 
 public class GraphBuilder {
 
@@ -180,6 +181,8 @@ public class GraphBuilder {
                             } else {
                                  tree.addSoftwareChild(exploreObject(child));
                             }
+                        } else if (val.type() instanceof ArrayType){
+                            System.err.println("Todo: Figure out what to do with arrays");
                         }else if (val.type() instanceof IntegerType){
                             IntegerValue iv = (IntegerValue)val;
                             tree.addSoftwareChild(new DiGraph("int: " + new Integer(iv.intValue())));
