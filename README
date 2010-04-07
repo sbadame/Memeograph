@@ -1,2 +1,14 @@
 Draws the stack and the heap of a running Java program in 3D using
 force-directed layout
+
+Add a play and step button.
+
+vm.suspend()
+vm.createModificationWatchpointRequest(Field field) for every field of every object.
+event.enable() every event
+
+while (vm can run) {
+    vm.resume()
+    e = vm.eventQueue().remove()
+    processEvent(e)
+}
