@@ -43,7 +43,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     //Text Rendering info
     private final int renderfrontback = 1;
     private final int rendertopbottom = 2;
-    private final int renderboth = 3;
 
     private int rendermode = renderfrontback;
 
@@ -59,7 +58,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     public void setup(){
         //Full screen, go big or go home!
         try{
-            size(wanted_width, wanted_height, P3D);
+            //size(wanted_width, wanted_height, P3D);
+            size(wanted_width, wanted_height, OPENGL);
         }catch(GLException gle){
             gle.printStackTrace();
             System.exit(1);
@@ -125,7 +125,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         strokeWeight(1);
         box((float)n.width, 20f, 20f);
 
-        if (rendermode == renderfrontback || rendermode == renderboth) {
+        if ((rendermode & renderfrontback) != 0) {
             pushMatrix();
             translate(0f, 0f, 11f);
             fill(5);
@@ -138,9 +138,10 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             popMatrix();
         }
 
-        if (rendermode == 2 || rendermode == renderboth) {
+        if ((rendermode & rendertopbottom) != 0) {
             pushMatrix();
             translate(0f, 11f, 0f);
+            fill(5);
             rotateX(-PI/2);
             text(n.data.getTreeName(), 0f, 0f);
             rotateX(PI/2);
@@ -148,6 +149,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
             translate(0f, -22f, 0f);
 
             rotateX(-PI/2);
+            rotateY(PI);
             text(n.data.getTreeName(), 0f, 0f);
 
             popMatrix();
@@ -355,16 +357,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     }
 
     private void toggleRenderMode(){
-        if (rendermode == renderfrontback) {
-            System.out.println("Top bottom");
-            rendermode = rendertopbottom;
-        }else if (rendermode == rendertopbottom){
-            System.out.println("both");
-            rendermode = renderboth;
-        }else if (rendermode == renderboth){
-            System.out.println("fontback");
-            rendermode = renderfrontback;
-        }
+        rendermode = (rendermode + 1) % ((renderfrontback|rendertopbottom) + 1);
     }
 
     @Override
