@@ -44,14 +44,12 @@ public class Memeographer {
 
         //Step 2 - Get a Graph
         GraphBuilder grapher = new GraphBuilder(vm);
-        grapher.buildGraph();
-        Vector<DiGraph> stacks = grapher.getStacks();
 
         //Step 3 - Render the graph
         if (args != null && args.length > 0 && args[0].equals("dot")){
             outputDot(grapher);
         } else {
-            new MemeoFrame(stacks);
+            new MemeoFrame(grapher);
         }
     }
 

@@ -1,17 +1,16 @@
 package memeograph.ui;
 
 import java.awt.BorderLayout;
-import java.util.List;
 import javax.swing.JFrame;
-import memeograph.DiGraph;
+import memeograph.GraphBuilder;
 
 public class MemeoFrame extends JFrame{
 		
-    public MemeoFrame(List<DiGraph> stacks){
+    public MemeoFrame(GraphBuilder grapher){
         super("Memeographer!");
 
         setLayout(new BorderLayout());
-        MemeoPApplet papplet = new MemeoPApplet(stacks, 1024, 768);
+        MemeoPApplet papplet = new MemeoPApplet(grapher, 1024, 768);
         add(papplet, BorderLayout.CENTER);
 
         setSize(1024, 768);

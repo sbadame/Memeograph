@@ -1,6 +1,8 @@
 package memeograph;
 
 import com.sun.jdi.*;
+import com.sun.jdi.request.ModificationWatchpointRequest;
+import com.sun.jdi.request.StepRequest;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,9 +13,12 @@ import javax.lang.model.type.ArrayType;
 public class GraphBuilder {
 
     private VirtualMachine vm;
+    private ThreadReference mainthread;
 
     private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
     private Vector<DiGraph> stacks = new Vector<DiGraph>();
+
+    private boolean built = false;
 
     public GraphBuilder(VirtualMachine vm)
     {
@@ -26,10 +31,12 @@ public class GraphBuilder {
 
         //Now we go through all of the threads
         for (ThreadReference t : vm.allThreads()) {
-                buildStack(t);
+            if (t.name().equals("main")) {
+                mainthread = t;
+            }
+            buildStack(t);
         }
-
-        //vm.resume();
+        built = true;
     }
 
     /**
@@ -150,6 +157,7 @@ public class GraphBuilder {
                         IntegerValue iv = (IntegerValue)color_value;
                         tree.setColor(new Color(iv.intValue()));
                     }else{
+                        addModifactionWatchpoint(field);
                         Value val = or.getValue(field);
                         if(val == null || val.type() == null)continue;
                         if ( val != null && val.type() != null && val.type() instanceof ClassType ){
@@ -208,6 +216,31 @@ public class GraphBuilder {
 
     public HashMap<String, DiGraph> getGraphMap(){
             return treeMap;
+    }
+
+    private void addModifactionWatchpoint(Field field) {
+        ModificationWatchpointRequest r = vm.eventRequestManager().createModificationWatchpointRequest(field);
+        r.enable();
+    }
+
+  public void step(){
+      if (isBuilt()) {
+          throw new IllegalStateException("Can't call step in GraphBuilder before starting the VM");
+      }
+      vm.suspend();
+      StepRequest step = vm.eventRequestManager().createStepRequest(mainthread,
+                                                     StepRequest.STEP_LINE,
+                                                       StepRequest.STEP_OVER);
+      step.addCountFilter(1);
+      step.enable();
+      vm.resume();
+  }
+
+    /**
+     * @return the built
+     */
+    public boolean isBuilt() {
+        return built;
     }
 
 }

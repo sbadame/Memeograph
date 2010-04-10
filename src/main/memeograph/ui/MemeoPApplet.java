@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Vector;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
+import memeograph.GraphBuilder;
 import memeograph.TreeChangeListener;
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -25,6 +26,10 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
     private Map<DiGraph, Node> positions = new HashMap<DiGraph, Node>();
     private Grid rails  = new Grid();
+
+    GraphBuilder builder;
+    boolean isReady = false;
+    int elipseCount = 1;
 
     private List<DiGraph> stacks;
     private boolean treechanged = false;
@@ -46,8 +51,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
     private int rendermode = renderfrontback;
 
-    public MemeoPApplet(List<DiGraph> tree, int width, int height){
-        this.stacks = tree;
+    public MemeoPApplet(GraphBuilder grapher, int width, int height){
+        this.builder = grapher;
         this.wanted_height = height;
         this.wanted_width = width;
         addMouseWheelListener(this);
@@ -58,8 +63,8 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     public void setup(){
         //Full screen, go big or go home!
         try{
-            //size(wanted_width, wanted_height, P3D);
-            size(wanted_width, wanted_height, OPENGL);
+            size(wanted_width, wanted_height, P3D);
+            //size(wanted_width, wanted_height, OPENGL);
         }catch(GLException gle){
             gle.printStackTrace();
             System.exit(1);
@@ -82,6 +87,9 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
     @Override
     public void draw(){
+        if (!builder.isBuilt()) {
+        }
+
         background(102);
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
@@ -108,6 +116,14 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         for (Node n : positions.values()) {
             drawNode(n);
         }
+
+        //Draw the UI
+        //step in
+//      fill(0, 255, 0);
+//      ellipse(width-50, height-50, 50, 50);
+        //step over
+//      fill(0, 0, 255);
+//      ellipse(width-100, height-50, 50, 50);
 
     }
 
@@ -285,6 +301,17 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         throw new UnsupportedOperationException();
     }
 
+//  @Override
+//  public void mouseClicked()
+//  {
+//      float f =dist(mouseX, mouseY, width-50, height-50);
+//      float e =dist(mouseX, mouseY, width-100, height-50);
+//      if (f < 50) {
+//          System.out.println("Step");
+//      }else if (e < 50){
+//          System.out.println("in");
+//      }//otherwise do nothing
+//  }
 
     float dtheta = .03f;
     @Override
