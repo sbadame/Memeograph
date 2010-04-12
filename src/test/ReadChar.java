@@ -1,3 +1,4 @@
+import java.io.IOException;
 
 public class ReadChar{
     public static void main(String[] args){
@@ -14,8 +15,10 @@ public class ReadChar{
         l = new LList(7, l);
         l = new LList(8, l);
 
-        try { synchronized(l){l.wait();} }
-        catch (InterruptedException ex) {ex.printStackTrace(); }
+        try {
+            System.in.read();
+        } catch (IOException ioe) {
+        }
     }
 
 }

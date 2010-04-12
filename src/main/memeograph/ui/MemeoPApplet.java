@@ -94,7 +94,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
                 while(true){
                     builder.step();
                     try {
-                        Thread.sleep(3000);
+                        Thread.sleep(3);
                     } catch (InterruptedException ex) {
                         System.err.println("Can't sleep between steps");
                     }

@@ -29,6 +29,8 @@ public class GraphBuilder {
     private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
     private Vector<DiGraph> stacks = new Vector<DiGraph>();
 
+    private StepRequest step;
+
     private boolean built = false;
 
     public GraphBuilder(VirtualMachine vm)
@@ -55,7 +57,7 @@ public class GraphBuilder {
                         ThreadStartEvent tse = (ThreadStartEvent)event;
                         if (tse.thread().name().equals("main")) {
                            mainthread = tse.thread();
-                           mainthread.suspend(); //Wait for the stepping
+                           step = vm.eventRequestManager().createStepRequest(mainthread, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
                         }
                         buildStack(tse.thread());
                     }
@@ -258,10 +260,7 @@ public class GraphBuilder {
           return;
       }
       vm.suspend();
-      StepRequest step = vm.eventRequestManager().createStepRequest(mainthread,
-                                                     StepRequest.STEP_LINE,
-                                                       StepRequest.STEP_OVER);
-      step.addCountFilter(1);
+      step.disable();
       step.enable();
       vm.resume();
       EventQueue eventQueue = vm.eventQueue();
@@ -283,6 +282,8 @@ public class GraphBuilder {
                         System.out.println(event);
                     }
                 }
+
+                vm.resume();
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
