@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.GraphBuilder;
@@ -82,49 +84,77 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
         smooth();
+
+        //Build the graph in another thread
+        new Thread(){
+            @Override
+            public void run(){
+                builder.buildGraph();
+                stacks = builder.getStacks();
+                while(true){
+                    builder.step();
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException ex) {
+                        System.err.println("Can't sleep between steps");
+                    }
+                }
+            }
+        }.start();
     }
 
 
     @Override
     public void draw(){
-        if (!builder.isBuilt()) {
-        }
-
         background(102);
-        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
+        pushStyle();
+        pushMatrix();
 
-        //First check if we have to layout this stuff out
-        if (!laidout) {
-            treechanged = false;
-            layout(stacks);
-            System.out.println(rails);
-        }
+        if (builder.isBuilt()) {
+            camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
-        //jiggle our layout
-        adjust();
-
-        //Now draw the lines between the nodes
-        for (Node n : positions.values()) {
-            for (DiGraph kid : n.data.getChildren()) {
-                Node knode = positions.get(kid);
-                if (n != null && knode != null) 
-                    drawLine(n, knode);
+            //First check if we have to layout this stuff out
+            if (!laidout) {
+                treechanged = false;
+                layout(stacks);
+                System.out.println(rails);
             }
+
+            //jiggle our layout
+            adjust();
+
+            //Now draw the lines between the nodes
+            for (Node n : positions.values()) {
+                for (DiGraph kid : n.data.getChildren()) {
+                    Node knode = positions.get(kid);
+                    if (n != null && knode != null)
+                        drawLine(n, knode);
+                }
+            }
+
+            //Draw the nodes ontop of the lines. Awesome.
+            boolean x = true;
+            for (Node n : positions.values()) {
+                if (x) {
+                    x = false;
+                    //System.out.println(n.data.getTreeName());
+                }
+                drawNode(n);
+            }
+        }else{
+            elipseCount = (++elipseCount)%4;
+            StringBuilder loadingtxt = new StringBuilder("Building Graph");
+            for (int i = 0; i < elipseCount; i++) {
+                loadingtxt.append(".");
+            }
+
+            textMode(SCREEN);
+            textAlign(LEFT);
+            text(loadingtxt.toString(), width/2, height/2);
         }
 
-        //Draw the nodes ontop of the lines. Awesome.
-        for (Node n : positions.values()) {
-            drawNode(n);
-        }
-
-        //Draw the UI
-        //step in
-//      fill(0, 255, 0);
-//      ellipse(width-50, height-50, 50, 50);
-        //step over
-//      fill(0, 0, 255);
-//      ellipse(width-100, height-50, 50, 50);
-
+        popMatrix();
+        popStyle();
     }
 
     private void drawLine(Node from, Node to){
@@ -141,36 +171,41 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         strokeWeight(1);
         box((float)n.width, 20f, 20f);
 
+        float size = 0;
+        String data = null;
+
         if ((rendermode & renderfrontback) != 0) {
+            data = n.data.getTreeName();
+            size = textWidth(data);
+
             pushMatrix();
             translate(0f, 0f, 11f);
             fill(5);
-            text(n.data.getTreeName(), 0f, 0f);
+            text(data, 0, 0f);
 
             translate(0f, 0f, -22f);
 
             rotateY(PI);
-            text(n.data.getTreeName(), 0f, 0f);
+            text(data, 0f, 0f);
             popMatrix();
         }
 
         if ((rendermode & rendertopbottom) != 0) {
-            pushMatrix();
+            if (data == null){data = n.data.getTreeName(); size = textWidth(data);}
+
             translate(0f, 11f, 0f);
             fill(5);
             rotateX(-PI/2);
-            text(n.data.getTreeName(), 0f, 0f);
+            text(n.data.getTreeName(), -size/2, 0f);
             rotateX(PI/2);
 
             translate(0f, -22f, 0f);
 
             rotateX(-PI/2);
             rotateY(PI);
-            text(n.data.getTreeName(), 0f, 0f);
-
-            popMatrix();
+            textAlign(LEFT);
+            text(n.data.getTreeName(), -size/2, 0f);
         }
-
         popMatrix();
     }
 

@@ -1,4 +1,3 @@
-import java.util.Scanner;
 
 public class ReadChar{
     public static void main(String[] args){
@@ -15,11 +14,8 @@ public class ReadChar{
         l = new LList(7, l);
         l = new LList(8, l);
 
-        ReadChar r = new ReadChar();
-        System.out.println(r);
-        Scanner s = new Scanner(System.in);
-        System.out.println(s.nextInt());
-        System.out.println(r);
+        try { synchronized(l){l.wait();} }
+        catch (InterruptedException ex) {ex.printStackTrace(); }
     }
 
 }

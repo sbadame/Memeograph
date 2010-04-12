@@ -1,13 +1,24 @@
 package memeograph;
 
 import com.sun.jdi.*;
+import com.sun.jdi.event.Event;
+import com.sun.jdi.event.EventIterator;
+import com.sun.jdi.event.EventQueue;
+import com.sun.jdi.event.EventSet;
+import com.sun.jdi.event.StepEvent;
+import com.sun.jdi.event.ThreadStartEvent;
+import com.sun.jdi.event.WatchpointEvent;
+import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.ModificationWatchpointRequest;
 import com.sun.jdi.request.StepRequest;
+import com.sun.jdi.request.ThreadStartRequest;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.lang.model.type.ArrayType;
 
 public class GraphBuilder {
@@ -27,14 +38,32 @@ public class GraphBuilder {
 
     public void buildGraph()
     {
+        for (ThreadReference threadReference : vm.allThreads()) {
+           buildStack(threadReference);
+        }
         vm.suspend();
+        ThreadStartRequest threadStart = vm.eventRequestManager().createThreadStartRequest();
+        threadStart.enable();
+        vm.resume();
 
-        //Now we go through all of the threads
-        for (ThreadReference t : vm.allThreads()) {
-            if (t.name().equals("main")) {
-                mainthread = t;
+        try {
+            while(mainthread == null){
+                EventIterator eventIterator = vm.eventQueue().remove().eventIterator();
+                while(eventIterator.hasNext()){
+                    Event event = eventIterator.nextEvent();
+                    if (event instanceof ThreadStartEvent){
+                        ThreadStartEvent tse = (ThreadStartEvent)event;
+                        if (tse.thread().name().equals("main")) {
+                           mainthread = tse.thread();
+                           mainthread.suspend(); //Wait for the stepping
+                        }
+                        buildStack(tse.thread());
+                    }
+                }
+                vm.resume();
             }
-            buildStack(t);
+        } catch (InterruptedException ex) {
+            System.err.println("Couldn't wait for events");
         }
         built = true;
     }
@@ -107,7 +136,6 @@ public class GraphBuilder {
                     List<LocalVariable> locals = frame.visibleVariables();
                     LocalVariable[] localvars = locals.toArray(new LocalVariable[] {});
                     Arrays.sort(localvars);
-
                     for (LocalVariable var : localvars) {
                             Value val = frame.getValue(var);
                             if (val != null && val.type() != null && val.type() instanceof ClassType)
@@ -224,8 +252,10 @@ public class GraphBuilder {
     }
 
   public void step(){
-      if (isBuilt()) {
-          throw new IllegalStateException("Can't call step in GraphBuilder before starting the VM");
+      //VM should already be suspended
+      if (mainthread == null) {
+          System.err.println("Main thread has not been created");
+          return;
       }
       vm.suspend();
       StepRequest step = vm.eventRequestManager().createStepRequest(mainthread,
@@ -234,6 +264,29 @@ public class GraphBuilder {
       step.addCountFilter(1);
       step.enable();
       vm.resume();
+      EventQueue eventQueue = vm.eventQueue();
+      boolean waitingforstep = true;
+      while(waitingforstep){
+            try {
+                EventIterator eventIterator = eventQueue.remove().eventIterator();
+                
+                while(eventIterator.hasNext()){
+                    Event event = eventIterator.nextEvent();
+                    if (event instanceof WatchpointEvent) {
+                        WatchpointEvent we = (WatchpointEvent)event;
+                        System.out.println(we.field().name());
+                    }else if (event instanceof StepEvent){
+                        StepEvent se = (StepEvent)event;
+                        System.out.println(se.location());
+                        waitingforstep = false;
+                    }else{
+                        System.out.println(event);
+                    }
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+      }
   }
 
     /**

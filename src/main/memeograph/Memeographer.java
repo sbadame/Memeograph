@@ -36,12 +36,13 @@ public class Memeographer {
         }else{
            vm = createTargetVM(args);
         }
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException ioe) {}
-        if (vm == null)
-            throw new Error("No VM was found");
 
+//      try {
+//          Thread.sleep(2000);
+//      } catch (InterruptedException ioe) {}
+//      if (vm == null)
+//          throw new Error("No VM was found");
+//
         //Step 2 - Get a Graph
         GraphBuilder grapher = new GraphBuilder(vm);
 
@@ -95,7 +96,7 @@ public class Memeographer {
                             } catch (IOException ex) { }
                         }
                     }.start();
-                    vm.resume();
+                    //vm.resume();
                     return vm;
                 } catch (IOException ex) {
                 } catch (IllegalConnectorArgumentsException ex) {
