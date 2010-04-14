@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.GraphBuilder;
@@ -122,14 +120,25 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
 
         //Draw the UI
         //Play button
+        pushStyle();
         camera(); //Reset the view port and do the 2d drawing
         ellipseMode(CENTER);
-        fill(0,0,255);
-        ellipse(50, 50, 50, 50);
         fill(0,255,0);
+        ellipse(50, 50, 50, 50);
+        fill(0,0,255);
         ellipse(120, 50, 50, 50);
+
+        //Make the Text
+        fill(0);
+        textSize(35);
+        textAlign(CENTER);
+        text(stepText, 50, 65);
+        text(playText, 120, 64);
+        popStyle();
     }
 
+    String stepText = "S";
+    String playText = ">";
     Thread stepThread;
     boolean playing = false;
 
@@ -140,11 +149,13 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         float e =dist(mouseX, mouseY, 120, 50);
         if (f < 50) {
             if (stepThread == null) {
+                stepText = "";
                 stepThread = new Thread(){
                     @Override
                     public void run(){
                         builder.step();
                         stepThread = null;
+                        stepText = "S";
                     }
                 };
                 stepThread.start();
@@ -154,8 +165,10 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                 playing = false;
                 stepThread.interrupt();
                 stepThread = null;
+                playText = ">";
             }else{
                 if (stepThread == null) {
+                    playText = "||";
                     playing = true;
                     stepThread = new Thread(){
                         @Override
