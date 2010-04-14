@@ -44,15 +44,23 @@ public class GraphBuilder {
     public void addEventRequests()
     {
         MethodEntryRequest entry = vm.eventRequestManager().createMethodEntryRequest();
+        entry.addClassExclusionFilter("java.*");
+        entry.addClassExclusionFilter("sun.*");
+        entry.setSuspendPolicy(entry.SUSPEND_ALL);
         entry.enable();
 
         MethodExitRequest exit = vm.eventRequestManager().createMethodExitRequest();
+        exit.addClassExclusionFilter("java.*");
+        exit.addClassExclusionFilter("sun.*");
+        exit.setSuspendPolicy(entry.SUSPEND_ALL);
         exit.enable();
 
         ThreadStartRequest threadStart = vm.eventRequestManager().createThreadStartRequest();
+        threadStart.setSuspendPolicy(threadStart.SUSPEND_ALL);
         threadStart.enable();
 
         ThreadDeathRequest threadDeath = vm.eventRequestManager().createThreadDeathRequest();
+        threadDeath.setSuspendPolicy(threadDeath.SUSPEND_ALL);
         threadDeath.enable();
 
     }
@@ -237,107 +245,108 @@ public class GraphBuilder {
     }
 
     private void addModifactionWatchpoint(Field field) {
-        ModificationWatchpointRequest r = vm.eventRequestManager().createModificationWatchpointRequest(field);
-        r.enable();
+        //ModificationWatchpointRequest r = vm.eventRequestManager().createModificationWatchpointRequest(field);
+        //r.enable();
     }
 
   public void step(){
       //VM should already be suspended
-      built = false; //Tell that world that we're back to building...
       vm.resume();
       EventQueue eventQueue = vm.eventQueue();
-      boolean waitingforstep = true;
-      while(waitingforstep){
-            try {
-                EventIterator eventIterator = eventQueue.remove().eventIterator();
-                
-                while(eventIterator.hasNext()){
-                    Event event = eventIterator.nextEvent();
-                    if (event instanceof WatchpointEvent) {
-                        WatchpointEvent we = (WatchpointEvent)event;
-                    }else if (event instanceof StepEvent){
-                        StepEvent se = (StepEvent)event;
-                        System.out.println(se.location());
-                        waitingforstep = false;
-                    }else if (event instanceof MethodEntryEvent){
-                        System.out.println("Down");
-                        MethodEntryEvent mee = (MethodEntryEvent)event;
-                        DiGraph topframe = stacks.get(mee.thread());
-                        if (topframe == null) {
-                            System.err.println("Method entry in unknown thread: " + mee.thread().name());
-                        }else{
-                            DiGraph frame = topframe;
-                            while(frame.getSoftwareChildren().size() >  0){
-                                frame = frame.getSoftwareChildren().firstElement();
-                            }
-                            try {
-                                if (mee.thread().isSuspended()) {
-                                    DiGraph newframe = exploreStackFrame(mee.thread().frame(0), 0);
-                                    if (!treeMap.containsValue(newframe)) {
-                                        frame.addSoftwareChild(newframe);
-                                    }
-                                }else{
-                                    System.err.println("Thread: \"" + mee.thread().name() + "\" is not suspended");
-                                }
-                            } catch (IncompatibleThreadStateException ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }else if (event instanceof MethodExitEvent){
-                        System.out.println("Up");
-                        MethodExitEvent mee = (MethodExitEvent)event;
-                        DiGraph topframe = stacks.get(mee.thread());
-                        if (topframe == null) {
-                            System.err.println("Method exit in unknown thread: " + mee.thread().name());
-                        }else{
-                            DiGraph frame = topframe;
-                            while(frame.getSoftwareChildren().size() > 0){
-                                frame = frame.getSoftwareChildren().firstElement();
-                            }
-                            if (frame != topframe) {
-                                DiGraph parent = frame.getSoftwareParents().get(0);
-                                parent.removeSoftwareChildren();
-                            }
-                        }
-                    }else if (event instanceof ThreadStartEvent){
-                        ThreadStartEvent tse = (ThreadStartEvent)event;
-                        System.out.println(tse.thread().name());
-                        stacks.put(tse.thread(), new DiGraph(tse.thread().name()));
-                    }else if (event instanceof ThreadDeathEvent){
-                        ThreadDeathEvent tde = (ThreadDeathEvent)event;
-                        System.out.println(tde.thread().name());
-                        stacks.remove(tde.thread());
-                    }else if (event instanceof VMStartEvent){
-                        VMStartEvent se = (VMStartEvent)event;
-                        for (ThreadReference threadReference : vm.allThreads()) {
-                            stacks.put(threadReference, new DiGraph(threadReference.name()));
-                        }
-                        mainthread = se.thread();
-                        stacks.put(mainthread, new DiGraph(mainthread.name()));
-                        step = vm.eventRequestManager().createStepRequest(mainthread, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
-                        step.enable();
-                    }else{
-                        System.err.println("Got an unexpected event" + event);
-                    }
-                    //If we're still waiting for the step event, then that means
-                    // that we just hanlded some other event. All events cause the
-                    //vm to freeze. That means that we need to resume the VM
-                    if (waitingforstep) {
-                        vm.resume();
-                    }
-                }
-            } catch (InterruptedException ex) {
-               ex.printStackTrace();
-            }
+      try {
+          EventIterator eventIterator = eventQueue.remove().eventIterator();
+
+          while (eventIterator.hasNext()) {
+              Event event = eventIterator.nextEvent();
+              if (event instanceof WatchpointEvent) {
+                  WatchpointEvent we = (WatchpointEvent) event;
+              } else if (event instanceof StepEvent) {
+                  StepEvent se = (StepEvent) event;
+                  System.out.println(se.location());
+              } else if (event instanceof MethodEntryEvent) {
+                  System.out.println("Down");
+                  MethodEntryEvent mee = (MethodEntryEvent) event;
+                  DiGraph topframe = stacks.get(mee.thread());
+                  if (topframe == null) {
+                      System.err.println("Method entry in unknown thread: " + mee.thread().name());
+                  } else {
+                      DiGraph frame = topframe;
+                      while (frame.getSoftwareChildren().size() > 0) {
+                          frame = frame.getSoftwareChildren().firstElement();
+                      }
+                      try {
+                          if (mee.thread().isSuspended()) {
+                              DiGraph newframe = exploreStackFrame(mee.thread().frame(0), 0);
+                              newframe.setColor(Color.RED);
+                              if (newframe != frame) {
+                                  frame.addSoftwareChild(newframe);
+                              }
+                          } else {
+                              System.err.println("Thread: \"" + mee.thread().name() + "\" is not suspended");
+                          }
+                      } catch (IncompatibleThreadStateException ex) {
+                          ex.printStackTrace();
+                      }
+                  }
+              } else if (event instanceof MethodExitEvent) {
+                  System.out.println("Up");
+                  MethodExitEvent mee = (MethodExitEvent) event;
+                  DiGraph topframe = stacks.get(mee.thread());
+                  if (topframe == null) {
+                      System.err.println("Method exit in unknown thread: " + mee.thread().name());
+                  } else {
+                      DiGraph frame = topframe;
+                      while (frame.getSoftwareChildren().size() > 0) {
+                          frame = frame.getSoftwareChildren().firstElement();
+                      }
+                      if (frame != topframe) {
+                          DiGraph parent = frame.getSoftwareParents().get(0);
+                          parent.removeSoftwareChildren();
+                      }
+                  }
+              } else if (event instanceof ThreadStartEvent) {
+                  ThreadStartEvent tse = (ThreadStartEvent) event;
+                  System.out.println(tse.thread().name());
+                  stacks.put(tse.thread(), new DiGraph(tse.thread().name()));
+              } else if (event instanceof ThreadDeathEvent) {
+                  ThreadDeathEvent tde = (ThreadDeathEvent) event;
+                  System.out.println(tde.thread().name());
+                  stacks.remove(tde.thread());
+              } else if (event instanceof VMStartEvent) {
+                  VMStartEvent se = (VMStartEvent) event;
+                  for (ThreadReference threadReference : vm.allThreads()) {
+                      stacks.put(threadReference, new DiGraph(threadReference.name()));
+                  }
+                  //mainthread = se.thread();
+                  //stacks.put(mainthread, new DiGraph(mainthread.name()));
+                  //step = vm.eventRequestManager().createStepRequest(mainthread, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
+                  //step.enable();
+              } else {
+                  System.err.println("Got an unexpected event" + event);
+              }
+              //If we're still waiting for the step event, then that means
+              // that we just hanlded some other event. All events cause the
+              //vm to freeze. That means that we need to resume the VM
+
+              //if (waitingforstep) {
+              if (eventIterator.hasNext()) {
+                  vm.resume();
+              }
+          }
+      } catch (InterruptedException ex) {
+          ex.printStackTrace();
       }
-      built = true;
+
+      for (DiGraph g : stacks.values()) {
+         System.out.println(g);
+      }
   }
 
     /**
      * @return the built
      */
     public boolean isBuilt() {
-        return built;
+        return true;
     }
 
 }

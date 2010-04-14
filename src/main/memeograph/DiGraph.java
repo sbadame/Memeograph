@@ -21,11 +21,9 @@ public class DiGraph {
     private Vector<DiGraph> softwarechildren = new Vector<DiGraph>();
     private Vector<DiGraph> datachildren = new Vector<DiGraph>();
 
-    Vector<TreeChangeListener> listeners = new Vector<TreeChangeListener>();
-
     public DiGraph(String data, Iterable<DiGraph> softwarekids, Iterable<DiGraph> datakids)
     {
-        setData(data, false);
+        setData(data);
         if (softwarekids != null)
             for (DiGraph kid : softwarekids) {
                 //Avoid setting off the listeners
@@ -41,7 +39,7 @@ public class DiGraph {
     public DiGraph(String data) { this(data, null, null); }
     public DiGraph(Iterable<DiGraph> swkids, Iterable<DiGraph> datakids) { this(null, swkids, datakids); }
     public DiGraph(Object o) {
-        setData(o, false);
+        setData(o);
     }
 
     public DiGraph(){ }
@@ -49,23 +47,35 @@ public class DiGraph {
     @Override
     public String toString()
     {
+        return toString(new HashSet<DiGraph>());
+    }
+
+    public String toString(Set<DiGraph> seen)
+    {
+        seen.add(this);
         if (getData() != null && getSoftwareChildren().size() == 0)
-            return getData();
+            return "\"" + getData() + "\"";
 
         String swkids = "";
         for (DiGraph kid : getSoftwareChildren()) {
-            swkids += " " + kid;
+            if (seen.contains(kid))
+                swkids += " " + kid.getData();
+            else
+                swkids += " " + kid.toString(seen);
         }
 
         String dkids = "";
         for (DiGraph kid : getDataChildren()) {
-            dkids += " " + kid;
+            if (seen.contains(kid))
+                dkids += " " + kid.getData();
+            else
+                dkids += " " + kid.toString(seen);
         }
 
         if (getData() == null)
             return "(" + swkids.trim() + ")";
         else
-            return "(" + getData() + " -  ( " + swkids.trim() + " ) [ " + dkids.trim() + " ])" ;
+            return "(\"" + getData() + "\"   ( " + swkids.trim() + " ) [ " + dkids.trim() + " ])" ;
     }
 
     /**
@@ -77,11 +87,7 @@ public class DiGraph {
     }
 
     public void setData(Object o){
-         setData(o, true);
-    }
-
-    private void setData(Object o, boolean fireListener){
-         //Check if we already have data, if we do, remove it.
+        //Check if we already have data, if we do, remove it.
         if (!softwarechildren.isEmpty())
             removeSoftwareChildren();
 
@@ -90,8 +96,6 @@ public class DiGraph {
         } else {
             this.data = "";
         }
-        if (fireListener)
-            fireDataChangedEvent();
         listener.change();
     }
 
@@ -117,12 +121,8 @@ public class DiGraph {
 
     public void addSoftwareChild(DiGraph softwarechild)
     {
-        if (softwarechild == this) {
-            throw new IllegalArgumentException("Can't add yourself as a child");
-        }
         softwarechild.softwareparents.add(this);
         softwarechildren.add(softwarechild);
-        fireTreeAddedEvent(softwarechild);
         listener.change();
     }
 
@@ -131,7 +131,6 @@ public class DiGraph {
             child.softwareparents.remove(this);
         }
         softwarechildren.clear();
-        fireChildrenClearedEvent();
         listener.change();
     }
 
@@ -149,7 +148,6 @@ public class DiGraph {
 
         datachild.dataparents.add(this);
         datachildren.add(datachild);
-        fireTreeAddedEvent(datachild);
         listener.change();
     }
 
@@ -185,31 +183,6 @@ public class DiGraph {
         return depth;
     }*/
 
-    public void addTreeChangeListener(TreeChangeListener listener){
-        listeners.add(listener);
-    }
-
-    public void removeTreeChangeListener(TreeChangeListener listener){
-        listeners.remove(listener);
-    }
-
-    private void fireTreeAddedEvent(DiGraph child){
-        for (TreeChangeListener nodeChangeListener : listeners) {
-            nodeChangeListener.kidAdded(this, child);
-        }
-    }
-
-    private void fireChildrenClearedEvent(){
-        for (TreeChangeListener nodeChangeListener : listeners) {
-            nodeChangeListener.childrenRemoved(this);
-        }
-    }
-
-    private void fireDataChangedEvent() {
-        for (TreeChangeListener nodeChangeListener : listeners) {
-            nodeChangeListener.dataChanged(this);
-        }
-    }
 
     /**
      * @return the color

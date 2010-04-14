@@ -15,6 +15,7 @@ public class ReadChar{
         l = new LList(7, l);
         l = new LList(8, l);
 
+        System.out.println("HERE!");
         try {
             System.in.read();
         } catch (IOException ioe) {

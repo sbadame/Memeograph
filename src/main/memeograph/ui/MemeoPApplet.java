@@ -4,12 +4,13 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.GraphBuilder;
-import memeograph.TreeChangeListener;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PVector;
@@ -17,7 +18,7 @@ import processing.core.PVector;
 /**
  * Does the drawing and layout. Originally made by extending the moving eye example from processing.
  */
-public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWheelListener{
+public class MemeoPApplet extends PApplet implements MouseWheelListener{
     static int PADDING = 20;
     static float K = 0.01f; //Spring constant (Along the Y)
     static float M = 0.95f; //Magnet contents (Along the X)
@@ -90,7 +91,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
                 while(true){
                     builder.step();
                     try {
-                        Thread.sleep(3000);
+                        Thread.sleep(300);
                     } catch (InterruptedException ex) {
                         System.err.println("Can't sleep between steps");
                     }
@@ -204,15 +205,21 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     private void layout(Collection<DiGraph> t)
     {
         rails.clear();
+        positions.clear();
+        
         for (DiGraph stack : t) {
             layout(stack, -10, 0);
             
             DiGraph sf = stack;
             int y = 0;
+            Set<DiGraph> seen = new HashSet<DiGraph>();
             while (sf.getSoftwareChildren().size() >= 1){
                 sf = sf.getSoftwareChildren().firstElement();
+                if (seen.contains(sf)) break;
+                
                 y+=50;
                 layout(sf, -10, y);
+                seen.add(sf);
             }
 
             for (Vector<Node> rail : rails) {
@@ -317,18 +324,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         return total;
     }
 
-    public void kidAdded(DiGraph parent, DiGraph addedNode) {
-        throw new UnsupportedOperationException();
-    }
-
-    public void childrenRemoved(DiGraph parent) {
-        throw new UnsupportedOperationException();
-    }
-
-    public void dataChanged(DiGraph parent) {
-        throw new UnsupportedOperationException();
-    }
-
 //  @Override
 //  public void mouseClicked()
 //  {
@@ -342,6 +337,7 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
 //  }
 
     float dtheta = .03f;
+    
     @Override
     public void mouseDragged()
     {
