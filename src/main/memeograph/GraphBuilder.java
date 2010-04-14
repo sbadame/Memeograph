@@ -1,48 +1,21 @@
 package memeograph;
 
 import com.sun.jdi.*;
-import com.sun.jdi.event.Event;
-import com.sun.jdi.event.EventIterator;
-import com.sun.jdi.event.EventQueue;
-import com.sun.jdi.event.MethodEntryEvent;
-import com.sun.jdi.event.MethodExitEvent;
-import com.sun.jdi.event.StepEvent;
-import com.sun.jdi.event.ThreadDeathEvent;
-import com.sun.jdi.event.ThreadStartEvent;
-import com.sun.jdi.event.VMStartEvent;
-import com.sun.jdi.event.WatchpointEvent;
-import com.sun.jdi.request.MethodEntryRequest;
-import com.sun.jdi.request.MethodExitRequest;
-import com.sun.jdi.request.ModificationWatchpointRequest;
-import com.sun.jdi.request.StepRequest;
-import com.sun.jdi.request.ThreadDeathRequest;
-import com.sun.jdi.request.ThreadStartRequest;
+import com.sun.jdi.event.*;
+import com.sun.jdi.request.*;
 import java.awt.Color;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import javax.lang.model.type.ArrayType;
+import java.util.*;
 
 public class GraphBuilder {
 
     private VirtualMachine vm;
-    private ThreadReference mainthread;
 
     private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
     private HashMap<ThreadReference, DiGraph> stacks = new HashMap<ThreadReference, DiGraph>();
 
-    private StepRequest step;
-
-    private boolean built = false;
-
     public GraphBuilder(VirtualMachine vm)
     {
         this.vm = vm;
-    }
-
-    public void addEventRequests()
-    {
         MethodEntryRequest entry = vm.eventRequestManager().createMethodEntryRequest();
         entry.addClassExclusionFilter("java.*");
         entry.addClassExclusionFilter("sun.*");
@@ -62,7 +35,6 @@ public class GraphBuilder {
         ThreadDeathRequest threadDeath = vm.eventRequestManager().createThreadDeathRequest();
         threadDeath.setSuspendPolicy(threadDeath.SUSPEND_ALL);
         threadDeath.enable();
-
     }
 
     /**
@@ -341,12 +313,5 @@ public class GraphBuilder {
          System.out.println(g);
       }
   }
-
-    /**
-     * @return the built
-     */
-    public boolean isBuilt() {
-        return true;
-    }
 
 }

@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.GraphBuilder;
@@ -82,73 +84,104 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
         smooth();
 
-        //Build the graph in another thread
-        new Thread(){
-            @Override
-            public void run(){
-                builder.addEventRequests();
-                DiGraph.listener = MemeoPApplet.this;
-                while(true){
-                    builder.step();
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException ex) {
-                        System.err.println("Can't sleep between steps");
-                    }
-                }
-            }
-        }.start();
+       DiGraph.listener = MemeoPApplet.this;
     }
 
 
     @Override
     public void draw(){
         background(102);
-        pushStyle();
-        pushMatrix();
-        if (builder.isBuilt()) {
-            camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
+        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
-            //First check if we have to layout this stuff out
-            if (!laidout) {
-                layout(builder.getStacks());
-            }
-            //jiggle our layout
-            adjust();
+        //First check if we have to layout this stuff out
+        if (!laidout) {
+            layout(builder.getStacks());
+        }
+        //jiggle our layout
+        adjust();
 
-            //Now draw the lines between the nodes
-            for (Node n : positions.values()) {
-                for (DiGraph kid : n.data.getChildren()) {
-                    Node knode = positions.get(kid);
-                    if (n != null && knode != null)
-                        drawLine(n, knode);
-                }
+        //Now draw the lines between the nodes
+        for (Node n : positions.values()) {
+            for (DiGraph kid : n.data.getChildren()) {
+                Node knode = positions.get(kid);
+                if (n != null && knode != null)
+                    drawLine(n, knode);
             }
-
-            //Draw the nodes ontop of the lines. Awesome.
-            boolean x = true;
-            for (Node n : positions.values()) {
-                if (x) {
-                    x = false;
-                    //System.out.println(n.data.getTreeName());
-                }
-                drawNode(n);
-            }
-        }else{
-            elipseCount = (++elipseCount)%4;
-            StringBuilder loadingtxt = new StringBuilder("Building Graph");
-            for (int i = 0; i < elipseCount; i++) {
-                loadingtxt.append(".");
-            }
-
-            textMode(SCREEN);
-            textAlign(LEFT);
-            text(loadingtxt.toString(), width/2, height/2);
         }
 
-        popMatrix();
-        popStyle();
+        //Draw the nodes ontop of the lines. Awesome.
+        boolean x = true;
+        for (Node n : positions.values()) {
+            if (x) {
+                x = false;
+                //System.out.println(n.data.getTreeName());
+            }
+            drawNode(n);
+        }
+
+
+        //Draw the UI
+        //Play button
+        camera(); //Reset the view port and do the 2d drawing
+        ellipseMode(CENTER);
+        fill(0,0,255);
+        ellipse(50, 50, 50, 50);
+        fill(0,255,0);
+        ellipse(120, 50, 50, 50);
     }
+
+    Thread stepThread;
+    boolean playing = false;
+
+    @Override
+    public void mouseClicked()
+    {
+        float f =dist(mouseX, mouseY, 50, 50);
+        float e =dist(mouseX, mouseY, 120, 50);
+        if (f < 50) {
+            if (stepThread == null) {
+                stepThread = new Thread(){
+                    @Override
+                    public void run(){
+                        builder.step();
+                        stepThread = null;
+                    }
+                };
+                stepThread.start();
+            }
+        }else if (e < 50){
+            if (playing) {
+                playing = false;
+                stepThread.interrupt();
+                stepThread = null;
+            }else{
+                if (stepThread == null) {
+                    playing = true;
+                    stepThread = new Thread(){
+                        @Override
+                        public void run(){
+                            while(playing){
+                                builder.step();
+                                try {
+                                    Thread.sleep(300);
+                                } catch (InterruptedException ex) {
+                                    //I guess someone hit stop!
+                                    break;
+                                }
+                            }
+                            stepThread = null;
+                        }
+                    };
+                    stepThread.start();
+                }else{
+                    //If it's not playing, but is also not not null that means
+                    //That the step button was pressed and is currently running
+                    //Therefore, we shouldn't do anything
+                }
+            }
+        }
+    }
+
 
     private void drawLine(Node from, Node to){
         strokeWeight(5);
@@ -324,19 +357,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         return total;
     }
 
-//  @Override
-//  public void mouseClicked()
-//  {
-//      float f =dist(mouseX, mouseY, width-50, height-50);
-//      float e =dist(mouseX, mouseY, width-100, height-50);
-//      if (f < 50) {
-//          System.out.println("Step");
-//      }else if (e < 50){
-//          System.out.println("in");
-//      }//otherwise do nothing
-//  }
-
-    float dtheta = .03f;
+     float dtheta = .03f;
     
     @Override
     public void mouseDragged()
