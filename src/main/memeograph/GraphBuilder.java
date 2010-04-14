@@ -4,21 +4,24 @@ import com.sun.jdi.*;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventIterator;
 import com.sun.jdi.event.EventQueue;
-import com.sun.jdi.event.EventSet;
+import com.sun.jdi.event.MethodEntryEvent;
+import com.sun.jdi.event.MethodExitEvent;
 import com.sun.jdi.event.StepEvent;
+import com.sun.jdi.event.ThreadDeathEvent;
 import com.sun.jdi.event.ThreadStartEvent;
+import com.sun.jdi.event.VMStartEvent;
 import com.sun.jdi.event.WatchpointEvent;
 import com.sun.jdi.request.MethodEntryRequest;
+import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.ModificationWatchpointRequest;
 import com.sun.jdi.request.StepRequest;
+import com.sun.jdi.request.ThreadDeathRequest;
 import com.sun.jdi.request.ThreadStartRequest;
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.lang.model.type.ArrayType;
 
 public class GraphBuilder {
@@ -27,7 +30,7 @@ public class GraphBuilder {
     private ThreadReference mainthread;
 
     private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
-    private Vector<DiGraph> stacks = new Vector<DiGraph>();
+    private HashMap<ThreadReference, DiGraph> stacks = new HashMap<ThreadReference, DiGraph>();
 
     private StepRequest step;
 
@@ -38,36 +41,20 @@ public class GraphBuilder {
         this.vm = vm;
     }
 
-    public void buildGraph()
+    public void addEventRequests()
     {
-        for (ThreadReference threadReference : vm.allThreads()) {
-           buildStack(threadReference);
-        }
-        vm.suspend();
+        MethodEntryRequest entry = vm.eventRequestManager().createMethodEntryRequest();
+        entry.enable();
+
+        MethodExitRequest exit = vm.eventRequestManager().createMethodExitRequest();
+        exit.enable();
+
         ThreadStartRequest threadStart = vm.eventRequestManager().createThreadStartRequest();
         threadStart.enable();
-        vm.resume();
 
-        try {
-            while(mainthread == null){
-                EventIterator eventIterator = vm.eventQueue().remove().eventIterator();
-                while(eventIterator.hasNext()){
-                    Event event = eventIterator.nextEvent();
-                    if (event instanceof ThreadStartEvent){
-                        ThreadStartEvent tse = (ThreadStartEvent)event;
-                        if (tse.thread().name().equals("main")) {
-                           mainthread = tse.thread();
-                           step = vm.eventRequestManager().createStepRequest(mainthread, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
-                        }
-                        buildStack(tse.thread());
-                    }
-                }
-                vm.resume();
-            }
-        } catch (InterruptedException ex) {
-            System.err.println("Couldn't wait for events");
-        }
-        built = true;
+        ThreadDeathRequest threadDeath = vm.eventRequestManager().createThreadDeathRequest();
+        threadDeath.enable();
+
     }
 
     /**
@@ -104,7 +91,7 @@ public class GraphBuilder {
                tree.setColor(Color.red);
                //Now where to put this tree...?
                if (i ==  t.frameCount() - 1){ //The top most frame
-                   stacks.add(tree);
+                   stacks.put(t, tree);
                }else{ 
                    //Just add to the previous Stack Frame DiGraph
                    //add as a software child to go down the y direction
@@ -144,6 +131,7 @@ public class GraphBuilder {
                                     tree.addDataChild(exploreObject((ObjectReference)val));
                     }
             } catch (AbsentInformationException ex) {
+                return tree;
                     //Seems to only be thrown when we see a frame with no variables
                     //that we can access, not sure if this something need be looked into
                     //System.err.println("AbsentInformaionException at " + StackFrame2String(depth));
@@ -240,8 +228,8 @@ public class GraphBuilder {
             return graph;
     }*/
 
-    public Vector<DiGraph> getStacks(){
-        return stacks;
+    public Collection<DiGraph> getStacks(){
+        return stacks.values();
     }
 
     public HashMap<String, DiGraph> getGraphMap(){
@@ -255,13 +243,7 @@ public class GraphBuilder {
 
   public void step(){
       //VM should already be suspended
-      if (mainthread == null) {
-          System.err.println("Main thread has not been created");
-          return;
-      }
-      vm.suspend();
-      step.disable();
-      step.enable();
+      built = false; //Tell that world that we're back to building...
       vm.resume();
       EventQueue eventQueue = vm.eventQueue();
       boolean waitingforstep = true;
@@ -273,21 +255,82 @@ public class GraphBuilder {
                     Event event = eventIterator.nextEvent();
                     if (event instanceof WatchpointEvent) {
                         WatchpointEvent we = (WatchpointEvent)event;
-                        System.out.println(we.field().name());
                     }else if (event instanceof StepEvent){
                         StepEvent se = (StepEvent)event;
                         System.out.println(se.location());
                         waitingforstep = false;
+                    }else if (event instanceof MethodEntryEvent){
+                        System.out.println("Down");
+                        MethodEntryEvent mee = (MethodEntryEvent)event;
+                        DiGraph topframe = stacks.get(mee.thread());
+                        if (topframe == null) {
+                            System.err.println("Method entry in unknown thread: " + mee.thread().name());
+                        }else{
+                            DiGraph frame = topframe;
+                            while(frame.getSoftwareChildren().size() >  0){
+                                frame = frame.getSoftwareChildren().firstElement();
+                            }
+                            try {
+                                if (mee.thread().isSuspended()) {
+                                    DiGraph newframe = exploreStackFrame(mee.thread().frame(0), 0);
+                                    if (!treeMap.containsValue(newframe)) {
+                                        frame.addSoftwareChild(newframe);
+                                    }
+                                }else{
+                                    System.err.println("Thread: \"" + mee.thread().name() + "\" is not suspended");
+                                }
+                            } catch (IncompatibleThreadStateException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    }else if (event instanceof MethodExitEvent){
+                        System.out.println("Up");
+                        MethodExitEvent mee = (MethodExitEvent)event;
+                        DiGraph topframe = stacks.get(mee.thread());
+                        if (topframe == null) {
+                            System.err.println("Method exit in unknown thread: " + mee.thread().name());
+                        }else{
+                            DiGraph frame = topframe;
+                            while(frame.getSoftwareChildren().size() > 0){
+                                frame = frame.getSoftwareChildren().firstElement();
+                            }
+                            if (frame != topframe) {
+                                DiGraph parent = frame.getSoftwareParents().get(0);
+                                parent.removeSoftwareChildren();
+                            }
+                        }
+                    }else if (event instanceof ThreadStartEvent){
+                        ThreadStartEvent tse = (ThreadStartEvent)event;
+                        System.out.println(tse.thread().name());
+                        stacks.put(tse.thread(), new DiGraph(tse.thread().name()));
+                    }else if (event instanceof ThreadDeathEvent){
+                        ThreadDeathEvent tde = (ThreadDeathEvent)event;
+                        System.out.println(tde.thread().name());
+                        stacks.remove(tde.thread());
+                    }else if (event instanceof VMStartEvent){
+                        VMStartEvent se = (VMStartEvent)event;
+                        for (ThreadReference threadReference : vm.allThreads()) {
+                            stacks.put(threadReference, new DiGraph(threadReference.name()));
+                        }
+                        mainthread = se.thread();
+                        stacks.put(mainthread, new DiGraph(mainthread.name()));
+                        step = vm.eventRequestManager().createStepRequest(mainthread, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
+                        step.enable();
                     }else{
-                        System.out.println(event);
+                        System.err.println("Got an unexpected event" + event);
+                    }
+                    //If we're still waiting for the step event, then that means
+                    // that we just hanlded some other event. All events cause the
+                    //vm to freeze. That means that we need to resume the VM
+                    if (waitingforstep) {
+                        vm.resume();
                     }
                 }
-
-                vm.resume();
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+               ex.printStackTrace();
             }
       }
+      built = true;
   }
 
     /**

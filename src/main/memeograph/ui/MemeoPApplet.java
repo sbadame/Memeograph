@@ -2,12 +2,10 @@ package memeograph.ui;
 
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.GraphBuilder;
@@ -33,8 +31,6 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
     boolean isReady = false;
     int elipseCount = 1;
 
-    private List<DiGraph> stacks;
-    private boolean treechanged = false;
     private boolean laidout = false;
 
     private int wanted_width;
@@ -89,12 +85,12 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         new Thread(){
             @Override
             public void run(){
-                builder.buildGraph();
-                stacks = builder.getStacks();
+                builder.addEventRequests();
+                DiGraph.listener = MemeoPApplet.this;
                 while(true){
                     builder.step();
                     try {
-                        Thread.sleep(3);
+                        Thread.sleep(3000);
                     } catch (InterruptedException ex) {
                         System.err.println("Can't sleep between steps");
                     }
@@ -109,17 +105,13 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         background(102);
         pushStyle();
         pushMatrix();
-
         if (builder.isBuilt()) {
             camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
             //First check if we have to layout this stuff out
             if (!laidout) {
-                treechanged = false;
-                layout(stacks);
-                System.out.println(rails);
+                layout(builder.getStacks());
             }
-
             //jiggle our layout
             adjust();
 
@@ -209,14 +201,15 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         popMatrix();
     }
 
-    private void layout(List<DiGraph> t)
+    private void layout(Collection<DiGraph> t)
     {
+        rails.clear();
         for (DiGraph stack : t) {
             layout(stack, -10, 0);
             
             DiGraph sf = stack;
             int y = 0;
-            while (sf.getSoftwareChildren().size() == 1){
+            while (sf.getSoftwareChildren().size() >= 1){
                 sf = sf.getSoftwareChildren().firstElement();
                 y+=50;
                 layout(sf, -10, y);
@@ -435,5 +428,9 @@ public class MemeoPApplet extends PApplet implements TreeChangeListener, MouseWh
         
         pos.add(PVector.mult(camera, (float)notches * 100f));
         dir.add(PVector.mult(camera, (float)notches * 100f));
+    }
+
+    public void change(){
+        laidout = false;
     }
 }

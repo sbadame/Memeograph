@@ -2,14 +2,21 @@ package memeograph;
 
 import java.awt.Color;
 import java.util.*;
+import memeograph.ui.MemeoPApplet;
+
 
 /*
  * The data structure behind it all.
  */
 public class DiGraph {
 
+    public static MemeoPApplet listener;
+
     private String data = null;
     private Color color = null;
+
+    private Vector<DiGraph> softwareparents = new Vector<DiGraph>();
+    private Vector<DiGraph> dataparents = new Vector<DiGraph>();
 
     private Vector<DiGraph> softwarechildren = new Vector<DiGraph>();
     private Vector<DiGraph> datachildren = new Vector<DiGraph>();
@@ -85,6 +92,7 @@ public class DiGraph {
         }
         if (fireListener)
             fireDataChangedEvent();
+        listener.change();
     }
 
     public void setData(String data){
@@ -109,13 +117,22 @@ public class DiGraph {
 
     public void addSoftwareChild(DiGraph softwarechild)
     {
+        if (softwarechild == this) {
+            throw new IllegalArgumentException("Can't add yourself as a child");
+        }
+        softwarechild.softwareparents.add(this);
         softwarechildren.add(softwarechild);
         fireTreeAddedEvent(softwarechild);
+        listener.change();
     }
 
     public void removeSoftwareChildren(){
+        for (DiGraph child : softwarechildren) {
+            child.softwareparents.remove(this);
+        }
         softwarechildren.clear();
         fireChildrenClearedEvent();
+        listener.change();
     }
 
     public Vector<DiGraph> getDataChildren()
@@ -126,8 +143,14 @@ public class DiGraph {
 
     public void addDataChild(DiGraph datachild)
     {
+        if (datachild == this) {
+            throw new IllegalArgumentException("Can't add yourself as a child");
+        }
+
+        datachild.dataparents.add(this);
         datachildren.add(datachild);
         fireTreeAddedEvent(datachild);
+        listener.change();
     }
 
     public Vector<DiGraph> getChildren()
@@ -135,6 +158,14 @@ public class DiGraph {
         Vector<DiGraph> v = new Vector<DiGraph>(getSoftwareChildren());
         v.addAll(getDataChildren());
         return v;
+    }
+
+    public List<DiGraph> getSoftwareParents(){
+        return softwareparents;
+    }
+
+    public List<DiGraph> getDataParents(){
+        return dataparents;
     }
 
 

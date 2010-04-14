@@ -1,6 +1,5 @@
 package memeograph.ui;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
@@ -44,5 +43,9 @@ public class Grid implements Iterable<Vector<Node>> {
                 throw new UnsupportedOperationException("Can't remove from a grid using the Iterator.");
             }
         };
+    }
+
+    void clear() {
+        grid.clear();
     }
 }
