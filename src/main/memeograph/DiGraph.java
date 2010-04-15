@@ -145,7 +145,7 @@ public class DiGraph {
     }
 
 
-    public void addDataChild(DiGraph zchild)
+    public void addZChild(DiGraph zchild)
     {
         if (zchild == this) {
             throw new IllegalArgumentException("Can't add yourself as a child");

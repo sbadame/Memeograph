@@ -5,14 +5,13 @@ import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
 import java.awt.Color;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class GraphBuilder {
 
     private VirtualMachine vm;
 
-    private HashMap<String, DiGraph> treeMap = new HashMap<String, DiGraph>();
+    private HashMap<StackFrame, StackObject> stackMap = new HashMap<StackFrame, StackObject>();
+    private HashMap<ObjectReference, HeapObject> heapMap = new HashMap<ObjectReference, HeapObject>();
     private HashMap<ThreadReference, DiGraph> stacks = new HashMap<ThreadReference, DiGraph>();
 
     public GraphBuilder(VirtualMachine vm)
@@ -45,7 +44,7 @@ public class GraphBuilder {
     * The String representation of an Object. NOTE: This needs to be unique
     * for every object. Otherwise building the graph will probably go wrong.
     */
-    protected String getText(ObjectReference or){
+    protected String ObjectReference2String(ObjectReference or){
             return or.referenceType().name() + "<" + or.uniqueID() + ">";
     }
 
@@ -54,6 +53,9 @@ public class GraphBuilder {
     * for every object. Otherwise building the graph will probably go wrong.
     */
     protected String StackFrame2String(int depth, ThreadReference t) throws IncompatibleThreadStateException{
+        if (t == null) {
+            throw new NullPointerException("Thread Reference cannot be null.");
+        }
         int count = t.frameCount() - depth - 1;
         try {
             return "Thread(" + t.name() + ") StackFrame(" + count + ") " + t.frame(depth).location().method().name();
@@ -62,20 +64,19 @@ public class GraphBuilder {
         }
     }
 
-    private DiGraph getStackFrame(int depth, ThreadReference t) throws IncompatibleThreadStateException{
-        String key = StackFrame2String(depth, t);
-        if (!treeMap.containsKey(key)){
-                treeMap.put(key, new DiGraph(key));
+    private StackObject getStackFrame(StackFrame f, int depth) throws IncompatibleThreadStateException{
+        if (!stackMap.containsKey(f)){
+                stackMap.put(f, new StackObject(StackFrame2String(depth, f.thread())));
         }
-        return treeMap.get(key);
+        return stackMap.get(f);
     }
 
     
-    private DiGraph exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
-            DiGraph tree = getStackFrame(depth, frame.thread());
+    private StackObject exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
+            StackObject tree = getStackFrame(frame, depth);
             ObjectReference thisor = frame.thisObject();
             if (thisor != null) {
-                tree.addDataChild(exploreObject(thisor));
+                tree.addZChild(exploreObject(thisor));
             }
 
             try {
@@ -85,7 +86,7 @@ public class GraphBuilder {
                     for (LocalVariable var : localvars) {
                             Value val = frame.getValue(var);
                             if (val != null && val.type() != null && val.type() instanceof ClassType)
-                                    tree.addDataChild(exploreObject((ObjectReference)val));
+                                    tree.addZChild(exploreObject((ObjectReference)val));
                     }
             } catch (AbsentInformationException ex) {
                 return tree;
@@ -105,15 +106,14 @@ public class GraphBuilder {
             return true;
     }
 
-    private DiGraph exploreObject(ObjectReference or){
-            String txt = getText(or);
-            if (treeMap.containsKey(txt)){
-                    return treeMap.get(txt);
+    private HeapObject exploreObject(ObjectReference or){
+            if (heapMap.containsKey(or)){
+                DiGraph d = heapMap.get(or);
             }
 
-            DiGraph tree = new DiGraph();
-            tree.setData(txt);
-            treeMap.put(txt, tree); //Do this right off the bat to prevent infinite loop
+            HeapObject tree = new HeapObject(ObjectReference2String(or));
+
+            heapMap.put(or, tree); //Do this right off the bat to prevent infinite loop
                                                             //With cycling graphs
             if ( filterObject(or) ){
                 Field[] allFields = or.referenceType().allFields().toArray(new Field[] {});
@@ -138,59 +138,51 @@ public class GraphBuilder {
                         if ( val != null && val.type() != null && val.type() instanceof ClassType ){
                              ObjectReference child = (ObjectReference) val;
                              if (or.referenceType().name().equals(child.referenceType().name())) {
-                                 tree.addDataChild(exploreObject(child));
+                                 tree.addZChild(exploreObject(child));
                             } else if (((ClassType)or.type()).subclasses().contains(val.type())) {
-                                 tree.addDataChild(exploreObject(child));
+                                 tree.addZChild(exploreObject(child));
                             } else if (((ClassType)val.type()).subclasses().contains(or.type())) {
-                                 tree.addDataChild(exploreObject(child));
+                                 tree.addZChild(exploreObject(child));
                             } else {
-                                 tree.addYChild(exploreObject(child));
+                                 tree.addDataChild(exploreObject(child));
                             }
                         } else if (val.type() instanceof ArrayType){
                             System.err.println("Todo: Figure out what to do with arrays");
                         }else if (val.type() instanceof IntegerType){
                             IntegerValue iv = (IntegerValue)val;
-                            tree.addYChild(new DiGraph("int: " + new Integer(iv.intValue())));
+                            tree.addDataChild(new HeapObject("int: " + new Integer(iv.intValue())));
                         }else if (val.type() instanceof BooleanValue){
                             BooleanValue iv = (BooleanValue)val;
-                            tree.addYChild(new DiGraph("bool: " + new Boolean(iv.booleanValue())));
+                            tree.addDataChild(new HeapObject("bool: " + new Boolean(iv.booleanValue())));
                         }else if (val.type() instanceof ByteValue){
                             ByteValue iv = (ByteValue)val;
-                            tree.addYChild(new DiGraph("byte: " + new Byte(iv.byteValue())));
+                            tree.addDataChild(new HeapObject("byte: " + new Byte(iv.byteValue())));
                         }else if (val.type() instanceof CharValue){
                             CharValue iv = (CharValue)val;
-                            tree.addYChild(new DiGraph("char: " + new Character(iv.charValue())));
+                            tree.addDataChild(new HeapObject("char: " + new Character(iv.charValue())));
                         }else if (val.type() instanceof DoubleValue){
                             DoubleValue iv = (DoubleValue)val;
-                            tree.addYChild(new DiGraph("double: " + new Double(iv.doubleValue())));
+                            tree.addDataChild(new HeapObject("double: " + new Double(iv.doubleValue())));
                         }else if (val.type() instanceof FloatValue){
                             FloatValue iv = (FloatValue)val;
-                            tree.addYChild(new DiGraph("float: " + new Float(iv.floatValue())));
+                            tree.addDataChild(new HeapObject("float: " + new Float(iv.floatValue())));
                         }else if (val.type() instanceof LongValue){
                             LongValue iv = (LongValue)val;
-                            tree.addYChild(new DiGraph("long: " + new Long(iv.longValue())));
+                            tree.addDataChild(new HeapObject("long: " + new Long(iv.longValue())));
                         }else if (val.type() instanceof ShortValue){
                             ShortValue iv = (ShortValue)val;
-                            tree.addYChild(new DiGraph("short: " + new Short(iv.shortValue())));
+                            tree.addDataChild(new HeapObject("short: " + new Short(iv.shortValue())));
                         }else{
                             System.err.println("Unknown data: " + val);
                         }
                     }
                 }
             }
-            return treeMap.get(txt);
+            return tree;
     }
-
-    /*public DiGraph getGraph(){
-            return graph;
-    }*/
 
     public Collection<DiGraph> getStacks(){
         return stacks.values();
-    }
-
-    public HashMap<String, DiGraph> getGraphMap(){
-            return treeMap;
     }
 
     private void addModifactionWatchpoint(Field field) {

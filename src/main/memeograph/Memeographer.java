@@ -47,7 +47,8 @@ public class Memeographer {
 
         //Step 3 - Render the graph
         if (args != null && args.length > 0 && args[0].equals("dot")){
-            outputDot(grapher);
+            throw new RuntimeException("Dot not available right now");
+            //outputDot(grapher);
         } else {
             new MemeoFrame(grapher);
         }
@@ -123,23 +124,23 @@ public class Memeographer {
        return null;
     }
 
-    private static void outputDot(GraphBuilder grapher) {
-        HashMap<String, DiGraph> graphMap = grapher.getGraphMap();
-        try {
-            PrintWriter out = new PrintWriter(new FileWriter("output.dot"), true);
-            out.println("digraph memeograph {");
-
-            for (DiGraph t : graphMap.values()) {
-                for (DiGraph child : t.getYChildren()) {
-                    out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
-                }
-            }
-
-            out.println("}");
-            out.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+//  private static void outputDot(GraphBuilder grapher) {
+//      HashMap<String, DiGraph> graphMap = grapher.getGraphMap();
+//      try {
+//          PrintWriter out = new PrintWriter(new FileWriter("output.dot"), true);
+//          out.println("digraph memeograph {");
+//
+//          for (DiGraph t : graphMap.values()) {
+//              for (DiGraph child : t.getYChildren()) {
+//                  out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
+//              }
+//          }
+//
+//          out.println("}");
+//          out.close();
+//      } catch (IOException ex) {
+//          ex.printStackTrace();
+//      }
+//  }
 
 }
