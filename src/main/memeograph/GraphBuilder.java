@@ -18,12 +18,14 @@ public class GraphBuilder {
         this.vm = vm;
         MethodEntryRequest entry = vm.eventRequestManager().createMethodEntryRequest();
         entry.addClassExclusionFilter("java.*");
+        entry.addClassExclusionFilter("javax.*");
         entry.addClassExclusionFilter("sun.*");
         entry.setSuspendPolicy(entry.SUSPEND_ALL);
         entry.enable();
 
         MethodExitRequest exit = vm.eventRequestManager().createMethodExitRequest();
         exit.addClassExclusionFilter("java.*");
+        exit.addClassExclusionFilter("javax.*");
         exit.addClassExclusionFilter("sun.*");
         exit.setSuspendPolicy(entry.SUSPEND_ALL);
         exit.enable();
@@ -56,33 +58,6 @@ public class GraphBuilder {
         } catch (IncompatibleThreadStateException itse) {
             return "Thread(" + t.name() + ") StackFrame(" + count + ")";
         }
-    }
-
-
-    /**
-     * Traverses the frames of this thread until it reaches local 
-     * variables
-     */
-    private void buildStack(ThreadReference t) {
-       try {
-           int i = 0;
-           for (StackFrame frame: t.frames()) {
-               DiGraph tree = exploreStackFrame(frame, i);
-               tree.setColor(Color.red);
-               //Now where to put this tree...?
-               if (i ==  t.frameCount() - 1){ //The top most frame
-                   stacks.put(t, tree);
-               }else{ 
-                   //Just add to the previous Stack Frame DiGraph
-                   //add as a software child to go down the y direction
-                   getStackFrame(i+1, t).addSoftwareChild(tree);
-               }
-               i++;
-           }
-       } catch (IncompatibleThreadStateException itse) {
-           System.err.println("Why in the world do we have an IncompatibleThreadStateException?");
-           itse.printStackTrace();
-       }
     }
 
     private DiGraph getStackFrame(int depth, ThreadReference t) throws IncompatibleThreadStateException{
