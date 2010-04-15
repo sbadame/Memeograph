@@ -5,6 +5,8 @@ import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
 import java.awt.Color;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GraphBuilder {
 
@@ -217,39 +219,59 @@ public class GraphBuilder {
                   if (topframe == null) {
                       System.err.println("Method entry in unknown thread: " + mee.thread().name());
                   } else {
-                      DiGraph frame = topframe;
-                      while (frame.getSoftwareChildren().size() > 0) {
-                          frame = frame.getSoftwareChildren().firstElement();
-                      }
-                      try {
-                          if (mee.thread().isSuspended()) {
-                              DiGraph newframe = exploreStackFrame(mee.thread().frame(0), 0);
-                              newframe.setColor(Color.RED);
-                              if (newframe != frame) {
-                                  frame.addSoftwareChild(newframe);
+                      if (!mee.thread().isSuspended()) {
+                          System.err.println("Thread: " + mee.thread() + " is not suspended");
+                      }else{
+                          try {
+                              /*So we have a problem here:
+                               frame(0) refers to the most current frame
+                               The first element in the digraph represents
+                               */
+                              int frameCount = 0;
+                              DiGraph bottomframe = topframe;
+                              while(bottomframe.getSoftwareChildren().isEmpty() == false ){
+                                  DiGraph bottomer = bottomframe.getSoftwareChildren().firstElement();
+                                  if (bottomframe == bottomer) {
+                                    throw new RuntimeException("Cycle in stack");
+                                  }
+                                  bottomframe = bottomer;
+                                  frameCount++;
                               }
-                          } else {
-                              System.err.println("Thread: \"" + mee.thread().name() + "\" is not suspended");
+                              int diff = mee.thread().frameCount() - frameCount;
+                              for(int i = diff-1; i >= 0; i--){
+                                  DiGraph bottomer = exploreStackFrame(mee.thread().frame(i), i);
+                                  bottomer.setColor(Color.RED);
+                                  bottomframe.addSoftwareChild(bottomer);
+                                  bottomframe = bottomer;
+                              }
+                          } catch (IncompatibleThreadStateException ex) {
+                              ex.printStackTrace();
                           }
-                      } catch (IncompatibleThreadStateException ex) {
-                          ex.printStackTrace();
                       }
                   }
               } else if (event instanceof MethodExitEvent) {
                   System.out.println("Up");
                   MethodExitEvent mee = (MethodExitEvent) event;
                   DiGraph topframe = stacks.get(mee.thread());
-                  if (topframe == null) {
-                      System.err.println("Method exit in unknown thread: " + mee.thread().name());
-                  } else {
-                      DiGraph frame = topframe;
-                      while (frame.getSoftwareChildren().size() > 0) {
-                          frame = frame.getSoftwareChildren().firstElement();
+                  if (mee.thread().isSuspended() ) {
+                      if (topframe == null) {
+                          System.err.println("Method exit in unknown thread: " + mee.thread().name());
+                      } else {
+                            try {
+                                int framecount = mee.thread().frameCount();
+                                DiGraph bottom = topframe;
+                                while(framecount > 0){
+                                    bottom = bottom.getSoftwareChildren().firstElement();
+                                    framecount--;
+                                }
+                                bottom.removeSoftwareChildren();
+                            } catch (IncompatibleThreadStateException ex) {
+                                ex.printStackTrace();
+                            }
+
                       }
-                      if (frame != topframe) {
-                          DiGraph parent = frame.getSoftwareParents().get(0);
-                          parent.removeSoftwareChildren();
-                      }
+                  }else{
+                      System.err.println("Thread: " + mee.thread().name()+ " is not suspended.");
                   }
               } else if (event instanceof ThreadStartEvent) {
                   ThreadStartEvent tse = (ThreadStartEvent) event;
