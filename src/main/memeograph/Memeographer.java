@@ -130,7 +130,7 @@ public class Memeographer {
             out.println("digraph memeograph {");
 
             for (DiGraph t : graphMap.values()) {
-                for (DiGraph child : t.getSoftwareChildren()) {
+                for (DiGraph child : t.getYChildren()) {
                     out.println("  \"" + t.getData() + "\" -> \"" + child.getData() + "\";");
                 }
             }

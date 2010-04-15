@@ -144,34 +144,34 @@ public class GraphBuilder {
                             } else if (((ClassType)val.type()).subclasses().contains(or.type())) {
                                  tree.addDataChild(exploreObject(child));
                             } else {
-                                 tree.addSoftwareChild(exploreObject(child));
+                                 tree.addYChild(exploreObject(child));
                             }
                         } else if (val.type() instanceof ArrayType){
                             System.err.println("Todo: Figure out what to do with arrays");
                         }else if (val.type() instanceof IntegerType){
                             IntegerValue iv = (IntegerValue)val;
-                            tree.addSoftwareChild(new DiGraph("int: " + new Integer(iv.intValue())));
+                            tree.addYChild(new DiGraph("int: " + new Integer(iv.intValue())));
                         }else if (val.type() instanceof BooleanValue){
                             BooleanValue iv = (BooleanValue)val;
-                            tree.addSoftwareChild(new DiGraph("bool: " + new Boolean(iv.booleanValue())));
+                            tree.addYChild(new DiGraph("bool: " + new Boolean(iv.booleanValue())));
                         }else if (val.type() instanceof ByteValue){
                             ByteValue iv = (ByteValue)val;
-                            tree.addSoftwareChild(new DiGraph("byte: " + new Byte(iv.byteValue())));
+                            tree.addYChild(new DiGraph("byte: " + new Byte(iv.byteValue())));
                         }else if (val.type() instanceof CharValue){
                             CharValue iv = (CharValue)val;
-                            tree.addSoftwareChild(new DiGraph("char: " + new Character(iv.charValue())));
+                            tree.addYChild(new DiGraph("char: " + new Character(iv.charValue())));
                         }else if (val.type() instanceof DoubleValue){
                             DoubleValue iv = (DoubleValue)val;
-                            tree.addSoftwareChild(new DiGraph("double: " + new Double(iv.doubleValue())));
+                            tree.addYChild(new DiGraph("double: " + new Double(iv.doubleValue())));
                         }else if (val.type() instanceof FloatValue){
                             FloatValue iv = (FloatValue)val;
-                            tree.addSoftwareChild(new DiGraph("float: " + new Float(iv.floatValue())));
+                            tree.addYChild(new DiGraph("float: " + new Float(iv.floatValue())));
                         }else if (val.type() instanceof LongValue){
                             LongValue iv = (LongValue)val;
-                            tree.addSoftwareChild(new DiGraph("long: " + new Long(iv.longValue())));
+                            tree.addYChild(new DiGraph("long: " + new Long(iv.longValue())));
                         }else if (val.type() instanceof ShortValue){
                             ShortValue iv = (ShortValue)val;
-                            tree.addSoftwareChild(new DiGraph("short: " + new Short(iv.shortValue())));
+                            tree.addYChild(new DiGraph("short: " + new Short(iv.shortValue())));
                         }else{
                             System.err.println("Unknown data: " + val);
                         }
@@ -229,8 +229,8 @@ public class GraphBuilder {
                                */
                               int frameCount = 0;
                               DiGraph bottomframe = topframe;
-                              while(bottomframe.getSoftwareChildren().isEmpty() == false ){
-                                  DiGraph bottomer = bottomframe.getSoftwareChildren().firstElement();
+                              while(bottomframe.getYChildren().isEmpty() == false ){
+                                  DiGraph bottomer = bottomframe.getYChildren().firstElement();
                                   if (bottomframe == bottomer) {
                                     throw new RuntimeException("Cycle in stack");
                                   }
@@ -241,7 +241,7 @@ public class GraphBuilder {
                               for(int i = diff-1; i >= 0; i--){
                                   DiGraph bottomer = exploreStackFrame(mee.thread().frame(i), i);
                                   bottomer.setColor(Color.RED);
-                                  bottomframe.addSoftwareChild(bottomer);
+                                  bottomframe.addYChild(bottomer);
                                   bottomframe = bottomer;
                               }
                           } catch (IncompatibleThreadStateException ex) {
@@ -261,10 +261,10 @@ public class GraphBuilder {
                                 int framecount = mee.thread().frameCount();
                                 DiGraph bottom = topframe;
                                 while(framecount > 0){
-                                    bottom = bottom.getSoftwareChildren().firstElement();
+                                    bottom = bottom.getYChildren().firstElement();
                                     framecount--;
                                 }
-                                bottom.removeSoftwareChildren();
+                                bottom.removeYChildren();
                             } catch (IncompatibleThreadStateException ex) {
                                 ex.printStackTrace();
                             }

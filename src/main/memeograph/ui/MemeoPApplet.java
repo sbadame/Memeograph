@@ -112,7 +112,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         for (Node n : positions.values()) {
             if (x) {
                 x = false;
-                //System.out.println(n.data.getTreeName());
+                //System.out.println(n.data.getDiGraphName());
             }
             drawNode(n);
         }
@@ -214,7 +214,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         String data = null;
 
         if ((rendermode & renderfrontback) != 0) {
-            data = n.data.getTreeName();
+            data = n.data.getDiGraphName();
             size = textWidth(data);
 
             pushMatrix();
@@ -230,12 +230,12 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         }
 
         if ((rendermode & rendertopbottom) != 0) {
-            if (data == null){data = n.data.getTreeName(); size = textWidth(data);}
+            if (data == null){data = n.data.getDiGraphName(); size = textWidth(data);}
 
             translate(0f, 11f, 0f);
             fill(5);
             rotateX(-PI/2);
-            text(n.data.getTreeName(), -size/2, 0f);
+            text(n.data.getDiGraphName(), -size/2, 0f);
             rotateX(PI/2);
 
             translate(0f, -22f, 0f);
@@ -243,7 +243,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
             rotateX(-PI/2);
             rotateY(PI);
             textAlign(LEFT);
-            text(n.data.getTreeName(), -size/2, 0f);
+            text(n.data.getDiGraphName(), -size/2, 0f);
         }
         popMatrix();
     }
@@ -259,8 +259,8 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
             DiGraph sf = stack;
             int y = 0;
             Set<DiGraph> seen = new HashSet<DiGraph>();
-            while (sf.getSoftwareChildren().size() >= 1){
-                sf = sf.getSoftwareChildren().firstElement();
+            while (sf.getYChildren().size() >= 1){
+                sf = sf.getYChildren().firstElement();
                 if (seen.contains(sf)) break;
                 
                 y+=50;
@@ -284,16 +284,16 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     {
         if (positions.get(t) != null) return;
         Node n = new Node(t, 0, y*50, z*50);
-        n.width = textWidth(t.getTreeName());
+        n.width = textWidth(t.getDiGraphName());
 
         positions.put(t, n);
         rails.add(z, y, n);
 
-        for (DiGraph kid : t.getDataChildren()) {
+        for (DiGraph kid : t.getZChildren()) {
             layout(kid, z-1, y);
         }
 
-        for (DiGraph kid : t.getSoftwareChildren()) {
+        for (DiGraph kid : t.getYChildren()) {
             layout(kid, z, y+1);
         }
     }

@@ -7,6 +7,11 @@ import memeograph.ui.MemeoPApplet;
 
 /*
  * The data structure behind it all.
+ * This represents a node in our giant graph.
+ * Kids can be added in the y or z direction. Subclasses decide how to organize
+ * the data. This just stores it all.
+ * This is a sort of doubly linked Node. Every DiGraph node has a reference
+ * to its parent.
  */
 public class DiGraph {
 
@@ -15,29 +20,29 @@ public class DiGraph {
     private String data = null;
     private Color color = null;
 
-    private Vector<DiGraph> softwareparents = new Vector<DiGraph>();
-    private Vector<DiGraph> dataparents = new Vector<DiGraph>();
+    private Vector<DiGraph> yparents = new Vector<DiGraph>();
+    private Vector<DiGraph> zparents = new Vector<DiGraph>();
 
-    private Vector<DiGraph> softwarechildren = new Vector<DiGraph>();
-    private Vector<DiGraph> datachildren = new Vector<DiGraph>();
+    private Vector<DiGraph> yChildren = new Vector<DiGraph>();
+    private Vector<DiGraph> zchildren = new Vector<DiGraph>();
 
-    public DiGraph(String data, Iterable<DiGraph> softwarekids, Iterable<DiGraph> datakids)
+    public DiGraph(String data, Iterable<DiGraph> ykids, Iterable<DiGraph> zkids)
     {
         setData(data);
-        if (softwarekids != null)
-            for (DiGraph kid : softwarekids) {
+        if (ykids != null)
+            for (DiGraph kid : ykids) {
                 //Avoid setting off the listeners
-                softwarechildren.add(kid);
+                yChildren.add(kid);
             }
 
-        if (datakids !=  null)
-            for (DiGraph kid : datakids) {
-                datachildren.add(kid);
+        if (zkids !=  null)
+            for (DiGraph kid : zkids) {
+                zchildren.add(kid);
             }
     }
 
     public DiGraph(String data) { this(data, null, null); }
-    public DiGraph(Iterable<DiGraph> swkids, Iterable<DiGraph> datakids) { this(null, swkids, datakids); }
+    public DiGraph(Iterable<DiGraph> ykids, Iterable<DiGraph> zkids) { this(null, ykids, zkids); }
     public DiGraph(Object o) {
         setData(o);
     }
@@ -53,11 +58,11 @@ public class DiGraph {
     public String toString(Set<DiGraph> seen)
     {
         seen.add(this);
-        if (getData() != null && getSoftwareChildren().size() == 0)
+        if (getData() != null && getYChildren().size() == 0)
             return "\"" + getData() + "\"";
 
         String swkids = "";
-        for (DiGraph kid : getSoftwareChildren()) {
+        for (DiGraph kid : getYChildren()) {
             if (seen.contains(kid))
                 swkids += " " + kid.getData();
             else
@@ -65,7 +70,7 @@ public class DiGraph {
         }
 
         String dkids = "";
-        for (DiGraph kid : getDataChildren()) {
+        for (DiGraph kid : getZChildren()) {
             if (seen.contains(kid))
                 dkids += " " + kid.getData();
             else
@@ -88,8 +93,8 @@ public class DiGraph {
 
     public void setData(Object o){
         //Check if we already have data, if we do, remove it.
-        if (!softwarechildren.isEmpty())
-            removeSoftwareChildren();
+        if (!yChildren.isEmpty())
+            removeYChildren();
 
         if (o != null) {
             this.data = o.toString();
@@ -103,7 +108,7 @@ public class DiGraph {
         this.data = data;
     }
 
-    public String getTreeName()
+    public String getDiGraphName()
     {
         if (getData() != null)
             return getData();
@@ -112,76 +117,59 @@ public class DiGraph {
     }
 
     /**
-     * @return the softwarekids
+     * @return the ykids
      */
-    public Vector<DiGraph> getSoftwareChildren()
+    public Vector<DiGraph> getYChildren()
     {
-        return softwarechildren;
+        return yChildren;
     }
 
-    public void addSoftwareChild(DiGraph softwarechild)
+    public void addYChild(DiGraph ychild)
     {
-        softwarechild.softwareparents.add(this);
-        softwarechildren.add(softwarechild);
+        ychild.yparents.add(this);
+        yChildren.add(ychild);
         listener.change();
     }
 
-    public void removeSoftwareChildren(){
-        for (DiGraph child : softwarechildren) {
-            child.softwareparents.remove(this);
+    public void removeYChildren(){
+        for (DiGraph child : yChildren) {
+            child.yparents.remove(this);
         }
-        softwarechildren.clear();
+        yChildren.clear();
         listener.change();
     }
 
-    public Vector<DiGraph> getDataChildren()
+    public Vector<DiGraph> getZChildren()
     {
-        return datachildren;
+        return zchildren;
     }
 
 
-    public void addDataChild(DiGraph datachild)
+    public void addDataChild(DiGraph zchild)
     {
-        if (datachild == this) {
+        if (zchild == this) {
             throw new IllegalArgumentException("Can't add yourself as a child");
         }
 
-        datachild.dataparents.add(this);
-        datachildren.add(datachild);
+        zchild.zparents.add(this);
+        zchildren.add(zchild);
         listener.change();
     }
 
     public Vector<DiGraph> getChildren()
     {
-        Vector<DiGraph> v = new Vector<DiGraph>(getSoftwareChildren());
-        v.addAll(getDataChildren());
+        Vector<DiGraph> v = new Vector<DiGraph>(getYChildren());
+        v.addAll(getZChildren());
         return v;
     }
 
-    public List<DiGraph> getSoftwareParents(){
-        return softwareparents;
+    public List<DiGraph> getYParents(){
+        return yparents;
     }
 
     public List<DiGraph> getDataParents(){
-        return dataparents;
+        return zparents;
     }
-
-
-    /*
-    public int depth()
-    {
-        int depth = 1;
-        if (softwarechildren != null) {
-            for (DiGraph kid : softwarechildren) {
-                int kd = kid.depth();
-                if (1 + kd > depth) {
-                    depth = 1 + kd;
-                }
-            }
-        }
-
-        return depth;
-    }*/
 
 
     /**
