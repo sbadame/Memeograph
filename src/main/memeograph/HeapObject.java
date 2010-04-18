@@ -1,5 +1,6 @@
 package memeograph;
 
+
 public class HeapObject extends DiGraph{
 
     public HeapObject(String name){
@@ -10,4 +11,7 @@ public class HeapObject extends DiGraph{
         addYChild(child);
     }
 
+    public Iterable<HeapObject> getDataChildren(){
+        return getYIterator();
+    }
 }

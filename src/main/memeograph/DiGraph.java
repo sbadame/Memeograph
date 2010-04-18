@@ -13,15 +13,15 @@ import memeograph.ui.MemeoPApplet;
  * This is a sort of doubly linked Node. Every DiGraph node has a reference
  * to its parent.
  */
-public class DiGraph {
+public abstract class DiGraph{
 
     public static MemeoPApplet listener;
 
     private String data = null;
     private Color color = null;
 
-    private Vector<DiGraph> yparents = new Vector<DiGraph>();
-    private Vector<DiGraph> zparents = new Vector<DiGraph>();
+    protected Vector<DiGraph> yparents = new Vector<DiGraph>();
+    protected Vector<DiGraph> zparents = new Vector<DiGraph>();
 
     private Vector<DiGraph> yChildren = new Vector<DiGraph>();
     private Vector<DiGraph> zchildren = new Vector<DiGraph>();
@@ -108,7 +108,7 @@ public class DiGraph {
         this.data = data;
     }
 
-    public String getDiGraphName()
+    public String name()
     {
         if (getData() != null)
             return getData();
@@ -122,6 +122,26 @@ public class DiGraph {
     public Vector<DiGraph> getYChildren()
     {
         return yChildren;
+    }
+
+    public <E extends DiGraph> Iterable<E> getYIterator(){
+        final Iterator<DiGraph> iterator = yChildren.iterator();
+        return new Iterable<E>() {
+            public Iterator<E> iterator() {
+                return new Iterator<E>(){
+                    public boolean hasNext() {
+                        return iterator.hasNext();
+                    }
+                    public E next() {
+                        DiGraph next = iterator.next();
+                        return (E) next;
+                    }
+                    public void remove() {
+                        iterator.remove();
+                    }
+                };
+            }
+        };
     }
 
     public void addYChild(DiGraph ychild)
@@ -163,11 +183,11 @@ public class DiGraph {
         return v;
     }
 
-    public List<DiGraph> getYParents(){
+    public List<DiGraph> getDiGraphParents(){
         return yparents;
     }
 
-    public List<DiGraph> getDataParents(){
+    public List<DiGraph> getZParents(){
         return zparents;
     }
 

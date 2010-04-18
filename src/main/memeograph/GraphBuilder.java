@@ -12,7 +12,8 @@ public class GraphBuilder {
 
     private HashMap<StackFrame, StackObject> stackMap = new HashMap<StackFrame, StackObject>();
     private HashMap<ObjectReference, HeapObject> heapMap = new HashMap<ObjectReference, HeapObject>();
-    private HashMap<ThreadReference, DiGraph> stacks = new HashMap<ThreadReference, DiGraph>();
+    private HashMap<ThreadReference, ThreadHeader> stacks = new HashMap<ThreadReference, ThreadHeader>();
+    private SuperHeader supernode = new SuperHeader("Memeographer!");
 
     public GraphBuilder(VirtualMachine vm)
     {
@@ -90,10 +91,6 @@ public class GraphBuilder {
                     }
             } catch (AbsentInformationException ex) {
                 return tree;
-                    //Seems to only be thrown when we see a frame with no variables
-                    //that we can access, not sure if this something need be looked into
-                    //System.err.println("AbsentInformaionException at " + StackFrame2String(depth));
-                    //System.err.println(ex);
             }
             return tree;
     }
@@ -181,8 +178,8 @@ public class GraphBuilder {
             return tree;
     }
 
-    public Collection<DiGraph> getStacks(){
-        return stacks.values();
+    public SuperHeader getSuperNode(){
+        return supernode;
     }
 
     private void addModifactionWatchpoint(Field field) {
@@ -207,8 +204,8 @@ public class GraphBuilder {
               } else if (event instanceof MethodEntryEvent) {
                   System.out.println("Down");
                   MethodEntryEvent mee = (MethodEntryEvent) event;
-                  DiGraph topframe = stacks.get(mee.thread());
-                  if (topframe == null) {
+                  ThreadHeader thread = stacks.get(mee.thread());
+                  if (thread == null) {
                       System.err.println("Method entry in unknown thread: " + mee.thread().name());
                   } else {
                       if (!mee.thread().isSuspended()) {
@@ -220,9 +217,13 @@ public class GraphBuilder {
                                The first element in the digraph represents
                                */
                               int frameCount = 0;
-                              DiGraph bottomframe = topframe;
-                              while(bottomframe.getYChildren().isEmpty() == false ){
-                                  DiGraph bottomer = bottomframe.getYChildren().firstElement();
+                              StackObject bottomframe = null;
+                              if (thread.hasFrame()) {
+                                  bottomframe = thread.getFrame();
+                              }
+
+                              while(bottomframe != null && bottomframe.hasNextFrame() ){
+                                  StackObject bottomer = bottomframe.nextFrame();
                                   if (bottomframe == bottomer) {
                                     throw new RuntimeException("Cycle in stack");
                                   }
@@ -231,9 +232,13 @@ public class GraphBuilder {
                               }
                               int diff = mee.thread().frameCount() - frameCount;
                               for(int i = diff-1; i >= 0; i--){
-                                  DiGraph bottomer = exploreStackFrame(mee.thread().frame(i), i);
+                                  StackObject bottomer = exploreStackFrame(mee.thread().frame(i), i);
                                   bottomer.setColor(Color.RED);
-                                  bottomframe.addYChild(bottomer);
+                                  if (bottomframe == null) {
+                                      thread.setFrame(bottomer);
+                                  }else{
+                                      bottomframe.setNextFrame(bottomer);
+                                  }
                                   bottomframe = bottomer;
                               }
                           } catch (IncompatibleThreadStateException ex) {
@@ -244,19 +249,19 @@ public class GraphBuilder {
               } else if (event instanceof MethodExitEvent) {
                   System.out.println("Up");
                   MethodExitEvent mee = (MethodExitEvent) event;
-                  DiGraph topframe = stacks.get(mee.thread());
+                  ThreadHeader thread = stacks.get(mee.thread());
                   if (mee.thread().isSuspended() ) {
-                      if (topframe == null) {
+                      if (thread == null) {
                           System.err.println("Method exit in unknown thread: " + mee.thread().name());
                       } else {
                             try {
                                 int framecount = mee.thread().frameCount();
-                                DiGraph bottom = topframe;
+                                StackObject bottom = thread.getFrame();
                                 while(framecount > 0){
-                                    bottom = bottom.getYChildren().firstElement();
+                                    bottom = bottom.nextFrame();
                                     framecount--;
                                 }
-                                bottom.removeYChildren();
+                                bottom.removeNextFrame();
                             } catch (IncompatibleThreadStateException ex) {
                                 ex.printStackTrace();
                             }
@@ -267,16 +272,22 @@ public class GraphBuilder {
                   }
               } else if (event instanceof ThreadStartEvent) {
                   ThreadStartEvent tse = (ThreadStartEvent) event;
-                  System.out.println(tse.thread().name());
-                  stacks.put(tse.thread(), new DiGraph(tse.thread().name()));
+                  if (!stacks.containsKey(tse.thread())) {
+                      System.out.println("Starting: " + tse.thread().name());
+                      ThreadHeader threadheader = new ThreadHeader(tse.thread());
+                      stacks.put(tse.thread(), threadheader);
+                      supernode.addThread(threadheader);
+                  }
               } else if (event instanceof ThreadDeathEvent) {
                   ThreadDeathEvent tde = (ThreadDeathEvent) event;
-                  System.out.println(tde.thread().name());
+                  System.out.println("Thread \""+tde.thread().name() + "\" has died.");
                   stacks.remove(tde.thread());
               } else if (event instanceof VMStartEvent) {
                   VMStartEvent se = (VMStartEvent) event;
                   for (ThreadReference threadReference : vm.allThreads()) {
-                      stacks.put(threadReference, new DiGraph(threadReference.name()));
+                      ThreadHeader threadHeader = new ThreadHeader(threadReference);
+                      stacks.put(threadReference, threadHeader);
+                      supernode.addYChild(threadHeader);
                   }
                   //mainthread = se.thread();
                   //stacks.put(mainthread, new DiGraph(mainthread.name()));
@@ -289,7 +300,6 @@ public class GraphBuilder {
               // that we just hanlded some other event. All events cause the
               //vm to freeze. That means that we need to resume the VM
 
-              //if (waitingforstep) {
               if (eventIterator.hasNext()) {
                   vm.resume();
               }
@@ -298,9 +308,12 @@ public class GraphBuilder {
           ex.printStackTrace();
       }
 
-      for (DiGraph g : stacks.values()) {
-         System.out.println(g);
+      System.out.println("Stacks");
+      for (ThreadHeader threadHeader : supernode.getThreads()) {
+          System.out.println("\t" + threadHeader.name());
       }
   }
 
 }
+
+
