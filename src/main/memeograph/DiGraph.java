@@ -24,7 +24,7 @@ public abstract class DiGraph{
     protected Vector<DiGraph> zparents = new Vector<DiGraph>();
 
     private Vector<DiGraph> yChildren = new Vector<DiGraph>();
-    private Vector<DiGraph> zchildren = new Vector<DiGraph>();
+    private Vector<DiGraph> zChildren = new Vector<DiGraph>();
 
     public DiGraph(String data, Iterable<DiGraph> ykids, Iterable<DiGraph> zkids)
     {
@@ -37,7 +37,7 @@ public abstract class DiGraph{
 
         if (zkids !=  null)
             for (DiGraph kid : zkids) {
-                zchildren.add(kid);
+                zChildren.add(kid);
             }
     }
 
@@ -116,16 +116,8 @@ public abstract class DiGraph{
             return "";
     }
 
-    /**
-     * @return the ykids
-     */
-    public Vector<DiGraph> getYChildren()
-    {
-        return yChildren;
-    }
-
-    public <E extends DiGraph> Iterable<E> getYIterator(){
-        final Iterator<DiGraph> iterator = yChildren.iterator();
+    private static <E> Iterable<E> getIterator(List<E> list){
+        final Iterator<E> iterator = list.iterator();
         return new Iterable<E>() {
             public Iterator<E> iterator() {
                 return new Iterator<E>(){
@@ -133,8 +125,7 @@ public abstract class DiGraph{
                         return iterator.hasNext();
                     }
                     public E next() {
-                        DiGraph next = iterator.next();
-                        return (E) next;
+                        return (E)iterator.next();
                     }
                     public void remove() {
                         iterator.remove();
@@ -143,6 +134,23 @@ public abstract class DiGraph{
             }
         };
     }
+
+    public <Y extends DiGraph> Iterable<Y> getYIterator(){
+        return (Iterable<Y>) getIterator(yChildren);
+    }
+
+    public <Z extends DiGraph> Iterable<Z> getZIterator(){
+        return (Iterable<Z>) getIterator(zChildren);
+    }
+
+    /**
+     * @return the ykids
+     */
+    public Vector<DiGraph> getYChildren()
+    {
+        return yChildren;
+    }
+
 
     public void addYChild(DiGraph ychild)
     {
@@ -161,7 +169,7 @@ public abstract class DiGraph{
 
     public Vector<DiGraph> getZChildren()
     {
-        return zchildren;
+        return zChildren;
     }
 
 
@@ -172,7 +180,7 @@ public abstract class DiGraph{
         }
 
         zchild.zparents.add(this);
-        zchildren.add(zchild);
+        zChildren.add(zchild);
         listener.change();
     }
 

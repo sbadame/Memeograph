@@ -1,6 +1,7 @@
 package memeograph;
 
 import com.sun.jdi.*;
+import com.sun.jdi.Value;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
 import java.awt.Color;
@@ -11,13 +12,13 @@ public class GraphBuilder {
     private VirtualMachine vm;
 
     private HashMap<StackFrame, StackObject> stackMap = new HashMap<StackFrame, StackObject>();
-    private HashMap<ObjectReference, HeapObject> heapMap = new HashMap<ObjectReference, HeapObject>();
     private HashMap<ThreadReference, ThreadHeader> stacks = new HashMap<ThreadReference, ThreadHeader>();
     private SuperHeader supernode = new SuperHeader("Memeographer!");
 
     public GraphBuilder(VirtualMachine vm)
     {
         this.vm = vm;
+
         MethodEntryRequest entry = vm.eventRequestManager().createMethodEntryRequest();
         entry.addClassExclusionFilter("java.*");
         entry.addClassExclusionFilter("javax.*");
@@ -41,14 +42,7 @@ public class GraphBuilder {
         threadDeath.enable();
     }
 
-    /**
-    * The String representation of an Object. NOTE: This needs to be unique
-    * for every object. Otherwise building the graph will probably go wrong.
-    */
-    protected String ObjectReference2String(ObjectReference or){
-            return or.referenceType().name() + "<" + or.uniqueID() + ">";
-    }
-
+    
     /**
     * The String representation of a Stack Frame. NOTE: This needs to be unique
     * for every object. Otherwise building the graph will probably go wrong.
@@ -77,7 +71,7 @@ public class GraphBuilder {
             StackObject tree = getStackFrame(frame, depth);
             ObjectReference thisor = frame.thisObject();
             if (thisor != null) {
-                tree.addZChild(exploreObject(thisor));
+                tree.addHeapObject(HeapObject.getHeapObject(thisor));
             }
 
             try {
@@ -87,7 +81,7 @@ public class GraphBuilder {
                     for (LocalVariable var : localvars) {
                             Value val = frame.getValue(var);
                             if (val != null && val.type() != null && val.type() instanceof ClassType)
-                                    tree.addZChild(exploreObject((ObjectReference)val));
+                                    tree.addHeapObject(HeapObject.getHeapObject((ObjectReference)val));
                     }
             } catch (AbsentInformationException ex) {
                 return tree;
@@ -95,114 +89,29 @@ public class GraphBuilder {
             return tree;
     }
 
-    protected boolean filterObject(ObjectReference o){
-            if (o.referenceType().name().startsWith("java.")) return false;
-            if (o.referenceType().name().startsWith("com.sun.")) return false;
-            if (o.referenceType().name().startsWith("sun.")) return false;
-            if (o.referenceType().name().startsWith("javax.")) return false;
-            return true;
-    }
-
-    private HeapObject exploreObject(ObjectReference or){
-            if (heapMap.containsKey(or)){
-                DiGraph d = heapMap.get(or);
-            }
-
-            HeapObject tree = new HeapObject(ObjectReference2String(or));
-
-            heapMap.put(or, tree); //Do this right off the bat to prevent infinite loop
-                                                            //With cycling graphs
-            if ( filterObject(or) ){
-                Field[] allFields = or.referenceType().allFields().toArray(new Field[] {});
-                Arrays.sort(allFields);
-
-                for (Field field : allFields) {
-                    if (field.name().equals("memeographname") && field.typeName().equals("java.lang.String") ){
-                        if (or.getValue(field) == null){ continue; }
-                        String treetxt = or.getValue(field).toString();
-                        treetxt = treetxt.substring(1, treetxt.length()-1);
-                        tree.setData(treetxt);
-                    }else if (field.name().equals("memeographcolor") && field.typeName().equals("java.awt.Color")){
-                        ObjectReference colorref = (ObjectReference) or.getValue(field);
-                        if (colorref == null) { continue; } //Got this Nullpointer some how...
-                        Value color_value = colorref.getValue(colorref.referenceType().fieldByName("value"));
-                        IntegerValue iv = (IntegerValue)color_value;
-                        tree.setColor(new Color(iv.intValue()));
-                    }else{
-                        addModifactionWatchpoint(field);
-                        Value val = or.getValue(field);
-                        if(val == null || val.type() == null)continue;
-                        if ( val != null && val.type() != null && val.type() instanceof ClassType ){
-                             ObjectReference child = (ObjectReference) val;
-                             if (or.referenceType().name().equals(child.referenceType().name())) {
-                                 tree.addZChild(exploreObject(child));
-                            } else if (((ClassType)or.type()).subclasses().contains(val.type())) {
-                                 tree.addZChild(exploreObject(child));
-                            } else if (((ClassType)val.type()).subclasses().contains(or.type())) {
-                                 tree.addZChild(exploreObject(child));
-                            } else {
-                                 tree.addDataChild(exploreObject(child));
-                            }
-                        } else if (val.type() instanceof ArrayType){
-                            System.err.println("Todo: Figure out what to do with arrays");
-                        }else if (val.type() instanceof IntegerType){
-                            IntegerValue iv = (IntegerValue)val;
-                            tree.addDataChild(new HeapObject("int: " + new Integer(iv.intValue())));
-                        }else if (val.type() instanceof BooleanValue){
-                            BooleanValue iv = (BooleanValue)val;
-                            tree.addDataChild(new HeapObject("bool: " + new Boolean(iv.booleanValue())));
-                        }else if (val.type() instanceof ByteValue){
-                            ByteValue iv = (ByteValue)val;
-                            tree.addDataChild(new HeapObject("byte: " + new Byte(iv.byteValue())));
-                        }else if (val.type() instanceof CharValue){
-                            CharValue iv = (CharValue)val;
-                            tree.addDataChild(new HeapObject("char: " + new Character(iv.charValue())));
-                        }else if (val.type() instanceof DoubleValue){
-                            DoubleValue iv = (DoubleValue)val;
-                            tree.addDataChild(new HeapObject("double: " + new Double(iv.doubleValue())));
-                        }else if (val.type() instanceof FloatValue){
-                            FloatValue iv = (FloatValue)val;
-                            tree.addDataChild(new HeapObject("float: " + new Float(iv.floatValue())));
-                        }else if (val.type() instanceof LongValue){
-                            LongValue iv = (LongValue)val;
-                            tree.addDataChild(new HeapObject("long: " + new Long(iv.longValue())));
-                        }else if (val.type() instanceof ShortValue){
-                            ShortValue iv = (ShortValue)val;
-                            tree.addDataChild(new HeapObject("short: " + new Short(iv.shortValue())));
-                        }else{
-                            System.err.println("Unknown data: " + val);
-                        }
-                    }
-                }
-            }
-            return tree;
-    }
-
+    
+    
     public SuperHeader getSuperNode(){
         return supernode;
-    }
-
-    private void addModifactionWatchpoint(Field field) {
-        //ModificationWatchpointRequest r = vm.eventRequestManager().createModificationWatchpointRequest(field);
-        //r.enable();
     }
 
   public void step(){
       //VM should already be suspended
       vm.resume();
       EventQueue eventQueue = vm.eventQueue();
+      System.out.println("STEPPING");
       try {
           EventIterator eventIterator = eventQueue.remove().eventIterator();
 
           while (eventIterator.hasNext()) {
               Event event = eventIterator.nextEvent();
-              if (event instanceof WatchpointEvent) {
-                  WatchpointEvent we = (WatchpointEvent) event;
+              if (event instanceof ModificationWatchpointEvent) {
+                  ModificationWatchpointEvent mwe = (ModificationWatchpointEvent)event;
+                  System.out.println(mwe.field().name() + ": "+ mwe.valueCurrent() + " -> " + mwe.valueToBe());
+                  continue;
               } else if (event instanceof StepEvent) {
                   StepEvent se = (StepEvent) event;
-                  System.out.println(se.location());
               } else if (event instanceof MethodEntryEvent) {
-                  System.out.println("Down");
                   MethodEntryEvent mee = (MethodEntryEvent) event;
                   ThreadHeader thread = stacks.get(mee.thread());
                   if (thread == null) {
@@ -247,7 +156,6 @@ public class GraphBuilder {
                       }
                   }
               } else if (event instanceof MethodExitEvent) {
-                  System.out.println("Up");
                   MethodExitEvent mee = (MethodExitEvent) event;
                   ThreadHeader thread = stacks.get(mee.thread());
                   if (mee.thread().isSuspended() ) {
@@ -308,10 +216,6 @@ public class GraphBuilder {
           ex.printStackTrace();
       }
 
-      System.out.println("Stacks");
-      for (ThreadHeader threadHeader : supernode.getThreads()) {
-          System.out.println("\t" + threadHeader.name());
-      }
   }
 
 }
