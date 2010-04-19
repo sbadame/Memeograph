@@ -6,7 +6,7 @@ public class Leaf extends BST {
     public Leaf() {
         super();
         memeographname = "Leaf()";
-        memeographcolor = Color.GREEN;
+        //memeographcolor = Color.GREEN;
     }
 
     @Override
