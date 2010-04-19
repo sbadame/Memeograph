@@ -96,7 +96,7 @@ public class GraphBuilder {
         return supernode;
     }
 
-  public void step(){
+    synchronized public void step(){
       //VM should already be suspended
 
       // Make sure all threads can run.
@@ -116,28 +116,16 @@ public class GraphBuilder {
       System.out.println("STEPPING");
       try {
           EventIterator eventIterator = eventQueue.remove().eventIterator();
-          System.out.println();
+          System.out.println("Got a bunch of events!");
           
           while (eventIterator.hasNext()) {
               Event event = eventIterator.nextEvent();
+              System.out.println(event);
               if (event instanceof ModificationWatchpointEvent) {
                   ModificationWatchpointEvent mwe = (ModificationWatchpointEvent)event;
                   System.out.println(mwe.field() + ": "+ mwe.valueCurrent() + " -> " + mwe.valueToBe());
               } else if (event instanceof MethodEntryEvent) {
                   MethodEntryEvent mee = (MethodEntryEvent) event;
-                  while (!mee.thread().isSuspended()) {
-                      switch (mee.thread().status()) {
-                          case ThreadReference.THREAD_STATUS_MONITOR: System.out.println("THREAD_STATUS_MONITOR"); break;
-                          case ThreadReference.THREAD_STATUS_NOT_STARTED: System.out.println("THREAD_STATUS_NOT_STARTED"); break;
-                          case ThreadReference.THREAD_STATUS_RUNNING: System.out.println("THREAD_STATUS_RUNNING"); break;
-                          case ThreadReference.THREAD_STATUS_SLEEPING: System.out.println("THREAD_STATUS_SLEEPING"); break;
-                          case ThreadReference.THREAD_STATUS_UNKNOWN: System.out.println("THREAD_STATUS_UNKNOWN"); break;
-                          case ThreadReference.THREAD_STATUS_WAIT: System.out.println("THREAD_STATUS_WAIT"); break;
-                          case ThreadReference.THREAD_STATUS_ZOMBIE: System.out.println("THREAD_STATUS_ZOMBIE"); break;
-                      }
-                      mee.thread().suspend();
-                  }
-
                   ThreadHeader thread = stacks.get(mee.thread());
 
                   try {
