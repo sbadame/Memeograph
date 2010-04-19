@@ -126,6 +126,10 @@ public class HeapObject extends DiGraph{
         if (!heapMap.containsKey(val)) { return; }
     }
 
+
+
+
+
     private HeapObject(){
         super();
     }
@@ -153,5 +157,4 @@ public class HeapObject extends DiGraph{
     public Iterable<HeapObject> getSoftwareChildren(){
         return getYIterator();
     }
-
   }

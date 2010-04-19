@@ -6,6 +6,8 @@ import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
 import java.awt.Color;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GraphBuilder {
 
@@ -96,23 +98,58 @@ public class GraphBuilder {
 
   public void step(){
       //VM should already be suspended
+
+      // Make sure all threads can run.
+      for (ThreadGroupReference tgr : vm.topLevelThreadGroups()) {
+          for (ThreadReference t : tgr.threads()) {
+              for (int i = 0; i < t.suspendCount(); i++)
+                  t.resume();
+          }
+      }
+
+      // Run them
       vm.resume();
+
+
+      // Now run until you get some events.
       EventQueue eventQueue = vm.eventQueue();
       System.out.println("STEPPING");
       try {
           EventIterator eventIterator = eventQueue.remove().eventIterator();
-
+          System.out.println();
+          
           while (eventIterator.hasNext()) {
               Event event = eventIterator.nextEvent();
               if (event instanceof ModificationWatchpointEvent) {
                   ModificationWatchpointEvent mwe = (ModificationWatchpointEvent)event;
                   System.out.println(mwe.field() + ": "+ mwe.valueCurrent() + " -> " + mwe.valueToBe());
-                  continue;
-              } else if (event instanceof StepEvent) {
-                  StepEvent se = (StepEvent) event;
               } else if (event instanceof MethodEntryEvent) {
                   MethodEntryEvent mee = (MethodEntryEvent) event;
+                  while (!mee.thread().isSuspended()) {
+                      switch (mee.thread().status()) {
+                          case ThreadReference.THREAD_STATUS_MONITOR: System.out.println("THREAD_STATUS_MONITOR"); break;
+                          case ThreadReference.THREAD_STATUS_NOT_STARTED: System.out.println("THREAD_STATUS_NOT_STARTED"); break;
+                          case ThreadReference.THREAD_STATUS_RUNNING: System.out.println("THREAD_STATUS_RUNNING"); break;
+                          case ThreadReference.THREAD_STATUS_SLEEPING: System.out.println("THREAD_STATUS_SLEEPING"); break;
+                          case ThreadReference.THREAD_STATUS_UNKNOWN: System.out.println("THREAD_STATUS_UNKNOWN"); break;
+                          case ThreadReference.THREAD_STATUS_WAIT: System.out.println("THREAD_STATUS_WAIT"); break;
+                          case ThreadReference.THREAD_STATUS_ZOMBIE: System.out.println("THREAD_STATUS_ZOMBIE"); break;
+                      }
+                      mee.thread().suspend();
+                  }
+
                   ThreadHeader thread = stacks.get(mee.thread());
+
+                  try {
+                      System.out.print("MethodEntry: ");
+                      for (int i = mee.thread().frameCount()-1; i >= 0; i--) {
+                          System.out.print(mee.thread().frame(i).location() + "-> ");
+                      }
+                      System.out.println("[]");
+                  } catch (IncompatibleThreadStateException ex) {
+                      System.err.println("BAD TRHEAD STATE??!?");
+                      ex.printStackTrace();
+                  }
                   if (thread == null) {
                       System.err.println("Method entry in unknown thread: " + mee.thread().name());
                   } else {
@@ -157,6 +194,16 @@ public class GraphBuilder {
               } else if (event instanceof MethodExitEvent) {
                   MethodExitEvent mee = (MethodExitEvent) event;
                   ThreadHeader thread = stacks.get(mee.thread());
+                  try {
+                      System.out.print("MethodExit: ");
+                      for (int i = mee.thread().frameCount()-1; i >= 0; i--) {
+                          System.out.print(mee.thread().frame(i).location() + "-> ");
+                      }
+                      System.out.println("[]");
+                  } catch (IncompatibleThreadStateException ex) {
+                      System.err.println("BAD TRHEAD STATE??!?");
+                      ex.printStackTrace();
+                  }
                   if (mee.thread().isSuspended() ) {
                       if (thread == null) {
                           System.err.println("Method exit in unknown thread: " + mee.thread().name());
@@ -196,19 +243,8 @@ public class GraphBuilder {
                       stacks.put(threadReference, threadHeader);
                       supernode.addYChild(threadHeader);
                   }
-                  //mainthread = se.thread();
-                  //stacks.put(mainthread, new DiGraph(mainthread.name()));
-                  //step = vm.eventRequestManager().createStepRequest(mainthread, StepRequest.STEP_LINE, StepRequest.STEP_INTO);
-                  //step.enable();
               } else {
                   System.err.println("Got an unexpected event" + event);
-              }
-              //If we're still waiting for the step event, then that means
-              // that we just hanlded some other event. All events cause the
-              //vm to freeze. That means that we need to resume the VM
-
-              if (eventIterator.hasNext()) {
-                  vm.resume();
               }
           }
       } catch (InterruptedException ex) {

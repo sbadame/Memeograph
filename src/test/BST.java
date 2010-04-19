@@ -1,27 +1,36 @@
 import java.awt.Color;
 
 public class BST {
-    BST left, right;
-    int data;
+    final BST left, right;
+    final int data;
 
-    public BST() {}
-
-    public BST(int data) {
+    private BST(int data, BST left, BST right) {
         this.data = data;
+        this.left = left;
+        this.right = right;
 
         memeographname = "BST(" + data + ")";
+    }
+
+    public BST() {
+        data = 0;
+        left = right = null;
+    }
+
+    public BST(int data) {
+        this.data = data;        
         left = new Leaf();
         right = new Leaf();
+
+        memeographname = "BST(" + data + ")";
     }
 
     public BST insert(int n)
     {
         if (n < data)
-            left = left.insert(n);
+            return new BST(data, left.insert(n), right);
         else
-            right = right.insert(n);
-
-        return this;
+            return new BST(data, left, right.insert(n));
     }
 
     protected Color memeographcolor = new Color(205, 183, 158);
