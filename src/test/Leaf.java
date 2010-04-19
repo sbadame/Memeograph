@@ -2,6 +2,7 @@ import java.awt.Color;
 
 public class Leaf extends BST {
 
+
     public Leaf() {
         super();
         memeographname = "Leaf()";

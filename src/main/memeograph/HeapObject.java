@@ -1,16 +1,19 @@
 package memeograph;
 
 import com.sun.jdi.*;
+import com.sun.jdi.Value;
 import com.sun.jdi.request.ModificationWatchpointRequest;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class HeapObject extends DiGraph{
 
     //Keeps a pool of heap objects
-    private static HashMap<Value, HeapObject> heapMap = new HashMap<Value, HeapObject>();
+    public static HashMap<Value, HeapObject> heapMap = new HashMap<Value, HeapObject>();
 
    /**
-    * The String representation of a value
+    * The String representation of a fieldvalue
     */
     public static HeapObject getHeapObject(Value val){
         if (heapMap.containsKey(val)) {
@@ -18,41 +21,52 @@ public class HeapObject extends DiGraph{
         }
         HeapObject heapObject = new HeapObject();
         heapMap.put(val, heapObject);
-        if (val instanceof ObjectReference) {
+        if (val instanceof ArrayReference){
+            //We have to check ArrayReference first since ArrayReference extends ObjectReference
+            ArrayReference ar = (ArrayReference)val;
+            String name = ar.type().name();
+            name = name.substring(0, name.length()-1) + ar.length() + "]";
+            heapObject.setName(name);
+            for (Value value : ar.getValues()) {
+                heapObject.addSoftwareChild(getHeapObject(value));
+            }
+        }else if (val instanceof ObjectReference) {
             ObjectReference or = (ObjectReference) val;
             ClassType ct = (ClassType) val.type();
             heapObject.setName(or.referenceType().name() + "<" + or.uniqueID() + ">");
-
-            for (Field field : ct.allFields()) {
+            List<Field> allFields = ct.allFields();
+            Field[] fieldArray = allFields.toArray(new Field[]{});
+            Arrays.sort(fieldArray);
+            for (Field field : fieldArray) {
                 addWatchpoint(field);
                 System.out.println(field);
-                Value value = or.getValue(field);
-                if (value == null) { continue; }
-                System.out.println("\t" + "Field is not null");
+                Value fieldvalue = or.getValue(field);
                 //Check if this field is a special case
-                SpecialFieldCase specialCase = SpecialFieldCase.getSpecialCase(field, val);
+                SpecialField specialCase = SpecialField.getSpecialField(field, val);
                 if (specialCase != null) {
-                    specialCase.apply(heapObject, field, val);
+                    specialCase.apply(heapObject, field, fieldvalue);
+                    System.out.println("\t" + "Field is a special case");
                     continue;
+                }else{
+                    System.out.println("\t" + "Field is not a special case");
                 }
-                System.out.println("\t" + "Field is not a special case");
-                if (value instanceof ObjectReference){
+                if (fieldvalue == null) { System.out.println("\tField is null"); continue; }
+                System.out.println("\t" + "Field is not null");
+                if (fieldvalue instanceof ObjectReference){
                     System.out.println("\t" + "Field is a data child");
-                    ObjectReference objectref = (ObjectReference)value;
+                    ObjectReference objectref = (ObjectReference)fieldvalue;
                     if (filterObject(objectref)) {continue;}
                     if (isDataChild(or, objectref)) {
-                        heapObject.addDataChild(getHeapObject(value));
+                        heapObject.addDataChild(getHeapObject(fieldvalue));
                     }else{
-                        heapObject.addSoftwareChild(getHeapObject(value));
+                        heapObject.addSoftwareChild(getHeapObject(fieldvalue));
                     }
                 }else{
                     System.out.println("\t" + "Field is not a data child");
-                    heapObject.addSoftwareChild(getHeapObject(value));
+                    heapObject.addSoftwareChild(getHeapObject(fieldvalue));
                 }
             }
 
-        }else if (val instanceof ArrayReference){
-            heapObject.setName("Array");
         }else if (val.type() instanceof IntegerType){
             IntegerValue iv = (IntegerValue)val;
             heapObject.setName("int: " + iv.intValue());

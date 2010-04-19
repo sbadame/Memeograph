@@ -7,12 +7,12 @@ import com.sun.jdi.ObjectReference;
 import java.awt.Color;
 
 
-public abstract class SpecialFieldCase {
+public abstract class SpecialField {
 
-    public static SpecialFieldCase[] SPECIAL_CASES = new SpecialFieldCase[]{new ColorCase(), new NameCase()};
+    public static SpecialField[] SPECIAL_CASES = new SpecialField[]{new ColorCase(), new NameCase()};
 
-    public static SpecialFieldCase getSpecialCase(Field f, Value v){
-        for (SpecialFieldCase specialFieldCase : SPECIAL_CASES) {
+    public static SpecialField getSpecialField(Field f, Value v){
+        for (SpecialField specialFieldCase : SPECIAL_CASES) {
             if (specialFieldCase.isSpecialCase(f, v)) {
                 return specialFieldCase;
             }
@@ -24,16 +24,16 @@ public abstract class SpecialFieldCase {
     public abstract void apply(HeapObject ho, Field f, Value v);
 }
 
-class ColorCase extends SpecialFieldCase{
+class ColorCase extends SpecialField{
 
     @Override
     public boolean isSpecialCase(Field f, Value v) {
-        return f.name().equals("memeograpgcolor") && f.typeName().equals("java.awt.Color");
+        return f.name().equals("memeographcolor") && f.typeName().equals("java.awt.Color");
     }
 
     @Override
     public void apply(HeapObject ho, Field f, Value v) {
-        if (v == null) { return; } //Got this Nullpointer some how...
+        if (v == null) {System.out.println("\tvalue is null"); return; } //Got this Nullpointer some how...
         ObjectReference colorref = (ObjectReference)v;
         if (colorref == null) {return;}
         Value color_value = colorref.getValue(colorref.referenceType().fieldByName("value"));
@@ -44,7 +44,7 @@ class ColorCase extends SpecialFieldCase{
 
 }
 
-class NameCase extends SpecialFieldCase{
+class NameCase extends SpecialField{
 
     @Override
     public boolean isSpecialCase(Field f, Value v) {
@@ -53,6 +53,9 @@ class NameCase extends SpecialFieldCase{
 
     @Override
     public void apply(HeapObject ho, Field f, Value v) {
+       if (v == null) {
+          return;
+       }
        String txt = v.toString();
        txt = txt.substring(1, txt.length()-1);
        ho.setData(txt);

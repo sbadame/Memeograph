@@ -73,16 +73,15 @@ public class GraphBuilder {
             if (thisor != null) {
                 tree.addHeapObject(HeapObject.getHeapObject(thisor));
             }
-
             try {
-                    List<LocalVariable> locals = frame.visibleVariables();
-                    LocalVariable[] localvars = locals.toArray(new LocalVariable[] {});
-                    Arrays.sort(localvars);
-                    for (LocalVariable var : localvars) {
-                            Value val = frame.getValue(var);
-                            if (val != null && val.type() != null && val.type() instanceof ClassType)
-                                    tree.addHeapObject(HeapObject.getHeapObject((ObjectReference)val));
-                    }
+                List<LocalVariable> locals = frame.visibleVariables();
+                LocalVariable[] localvars = locals.toArray(new LocalVariable[] {});
+                Arrays.sort(localvars);
+                for (LocalVariable var : localvars) {
+                        Value val = frame.getValue(var);
+                        if (val != null && val.type() != null)
+                                tree.addHeapObject(HeapObject.getHeapObject(val));
+                }
             } catch (AbsentInformationException ex) {
                 return tree;
             }
@@ -107,7 +106,7 @@ public class GraphBuilder {
               Event event = eventIterator.nextEvent();
               if (event instanceof ModificationWatchpointEvent) {
                   ModificationWatchpointEvent mwe = (ModificationWatchpointEvent)event;
-                  System.out.println(mwe.field().name() + ": "+ mwe.valueCurrent() + " -> " + mwe.valueToBe());
+                  System.out.println(mwe.field() + ": "+ mwe.valueCurrent() + " -> " + mwe.valueToBe());
                   continue;
               } else if (event instanceof StepEvent) {
                   StepEvent se = (StepEvent) event;
