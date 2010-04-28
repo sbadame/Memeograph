@@ -5,6 +5,8 @@ import com.sun.jdi.Value;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GraphBuilder {
 
@@ -12,7 +14,10 @@ public class GraphBuilder {
 
     private HashMap<StackFrame, StackObject> stackMap = new HashMap<StackFrame, StackObject>();
     private HashMap<ThreadReference, ThreadHeader> stacks = new HashMap<ThreadReference, ThreadHeader>();
+
+    //Interrogate code
     private SuperHeader supernode = new SuperHeader("Memeographer!");
+    private HeapObjectFactory hof = new HeapObjectFactory();
 
     public GraphBuilder(VirtualMachine vm)
     {
@@ -41,7 +46,60 @@ public class GraphBuilder {
         threadDeath.enable();
     }
 
-    
+    /*
+     * Clear the system of any memory of a graph, then interrogate the
+     * system for its current state
+     */
+    public void interrogate(){
+        reset();
+
+        //Go through all of the threads
+        for (ThreadReference thread : vm.allThreads()) {
+            try {
+                ThreadHeader header = new ThreadHeader(thread);
+                supernode.addThread(header);
+                StackObject prev = null;
+                for (int depth = thread.frameCount() - 1; depth > 0; depth--) {
+                    StackObject so = exploreStackFrame(thread.frame(depth), depth);
+                    if (prev != null) {
+                        prev.setNextFrame(so);
+                    }
+                    prev = so;
+                }
+            } catch (IncompatibleThreadStateException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void reset(){
+        supernode.removeChildren();
+        hof.reset();
+        stackMap.clear();
+        stacks.clear();
+    }
+
+    private StackObject exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
+            StackObject tree = getStackFrame(frame, depth);
+            ObjectReference thisor = frame.thisObject();
+            if (thisor != null) {
+                tree.addHeapObject(hof.getHeapObject(thisor));
+            }
+            try {
+                List<LocalVariable> locals = frame.visibleVariables();
+                LocalVariable[] localvars = locals.toArray(new LocalVariable[] {});
+                Arrays.sort(localvars);
+                for (LocalVariable var : localvars) {
+                        Value val = frame.getValue(var);
+                        if (val != null && val.type() != null)
+                                tree.addHeapObject(hof.getHeapObject(val));
+                }
+            } catch (AbsentInformationException ex) {
+                return tree;
+            }
+            return tree;
+    }
+
     /**
     * The String representation of a Stack Frame. NOTE: This needs to be unique
     * for every object. Otherwise building the graph will probably go wrong.
@@ -65,30 +123,6 @@ public class GraphBuilder {
         return stackMap.get(f);
     }
 
-    
-    private StackObject exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
-            StackObject tree = getStackFrame(frame, depth);
-            ObjectReference thisor = frame.thisObject();
-            if (thisor != null) {
-                tree.addHeapObject(HeapObject.getHeapObject(thisor));
-            }
-            try {
-                List<LocalVariable> locals = frame.visibleVariables();
-                LocalVariable[] localvars = locals.toArray(new LocalVariable[] {});
-                Arrays.sort(localvars);
-                for (LocalVariable var : localvars) {
-                        Value val = frame.getValue(var);
-                        if (val != null && val.type() != null)
-                                tree.addHeapObject(HeapObject.getHeapObject(val));
-                }
-            } catch (AbsentInformationException ex) {
-                return tree;
-            }
-            return tree;
-    }
-
-    
-    
     public SuperHeader getSuperNode(){
         return supernode;
     }
@@ -97,25 +131,7 @@ public class GraphBuilder {
         try {
             //Read in this set of events
             EventSet eventSet = vm.eventQueue().remove();
-            EventIterator eventIterator = eventSet.eventIterator();
-            while(eventIterator.hasNext()){
-                Event event = eventIterator.nextEvent();
-                if (event instanceof MethodEntryEvent) {
-                    handleMethodEntry((MethodEntryEvent)event);
-                }else if (event instanceof MethodExitEvent){
-                    handleMethodExit((MethodExitEvent)event);
-                }else if (event instanceof ThreadStartEvent){
-                    handleThreadStart((ThreadStartEvent)event);
-                }else if (event instanceof ThreadDeathEvent){
-                    handleThreadDeath((ThreadDeathEvent)event);
-                }else if (event instanceof VMStartEvent){
-                    handleVMStartEvent((VMStartEvent)event);
-                }else if (event instanceof ModificationWatchpointEvent){
-                    handleModificationWatchpointEvent((ModificationWatchpointEvent)event);
-                }else{
-                    System.err.println("Got an unexpected event: " + event);
-                }
-            }
+            interrogate();
             //Resume the VM
             eventSet.resume();
         } catch (InterruptedException ex) {

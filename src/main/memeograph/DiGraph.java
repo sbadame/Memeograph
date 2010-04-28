@@ -213,4 +213,11 @@ public abstract class DiGraph{
     public void setColor(Color color) {
         this.color = color;
     }
+
+    void removeChildren() {
+        yChildren.clear();
+        zChildren.clear();
+        yparents.remove(this);
+        zparents.remove(this);
+    }
 }
