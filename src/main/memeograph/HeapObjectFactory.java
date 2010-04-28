@@ -51,13 +51,18 @@ public class HeapObjectFactory {
                     System.out.println("\t" + "Field is not a special case");
                 }
                 if (fieldvalue == null) { System.out.println("\tField is null"); continue; }
+                if (fieldvalue == val) {
+                    System.out.println("\tField is referring to self");
+                    continue;
+                }
                 System.out.println("\t" + "Field is not null");
                 if (fieldvalue instanceof ObjectReference){
                     System.out.println("\t" + "Field is a data child");
                     ObjectReference objectref = (ObjectReference)fieldvalue;
                     if (filterObject(objectref)) {continue;}
                     if (isDataChild(or, objectref)) {
-                        heapObject.addDataChild(getHeapObject(fieldvalue));
+                        HeapObject newho = getHeapObject(fieldvalue);
+                        heapObject.addDataChild(newho);
                     }else{
                         heapObject.addSoftwareChild(getHeapObject(fieldvalue));
                     }
