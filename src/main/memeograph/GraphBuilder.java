@@ -22,28 +22,24 @@ public class GraphBuilder {
     public GraphBuilder(VirtualMachine vm)
     {
         this.vm = vm;
-
-        MethodEntryRequest entry = vm.eventRequestManager().createMethodEntryRequest();
-        entry.addClassExclusionFilter("java.*");
-        entry.addClassExclusionFilter("javax.*");
-        entry.addClassExclusionFilter("sun.*");
-        entry.setSuspendPolicy(entry.SUSPEND_ALL);
-        entry.enable();
-
-        MethodExitRequest exit = vm.eventRequestManager().createMethodExitRequest();
-        exit.addClassExclusionFilter("java.*");
-        exit.addClassExclusionFilter("javax.*");
-        exit.addClassExclusionFilter("sun.*");
-        exit.setSuspendPolicy(entry.SUSPEND_ALL);
-        exit.enable();
-
-        ThreadStartRequest threadStart = vm.eventRequestManager().createThreadStartRequest();
-        threadStart.setSuspendPolicy(threadStart.SUSPEND_ALL);
-        threadStart.enable();
-
-        ThreadDeathRequest threadDeath = vm.eventRequestManager().createThreadDeathRequest();
-        threadDeath.setSuspendPolicy(threadDeath.SUSPEND_ALL);
-        threadDeath.enable();
+        hof.addFilter("java");
+        hof.addFilter("sun");
+        try {
+            EventSet eset = vm.eventQueue().remove();
+            EventIterator eventIterator = eset.eventIterator();
+            while(eventIterator.hasNext()){
+                Event event = eventIterator.nextEvent();
+                if (event instanceof VMStartEvent) {
+                    VMStartEvent vmse = (VMStartEvent) event;
+                    StepRequest createStepRequest = vm.eventRequestManager().createStepRequest(vmse.thread(),
+                                                                                               StepRequest.STEP_MIN,
+                                                                                               StepRequest.STEP_INTO);
+                    createStepRequest.enable();
+                }
+            }
+            eset.resume();
+        } catch (InterruptedException ex) {
+        }
     }
 
     /*

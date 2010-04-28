@@ -101,7 +101,6 @@ public abstract class DiGraph{
         } else {
             this.data = "";
         }
-        listener.change();
     }
 
     public void setData(String data){
@@ -156,7 +155,6 @@ public abstract class DiGraph{
     {
         ychild.yparents.add(this);
         yChildren.add(ychild);
-        listener.change();
     }
 
     public void removeYChildren(){
@@ -164,7 +162,6 @@ public abstract class DiGraph{
             child.yparents.remove(this);
         }
         yChildren.clear();
-        listener.change();
     }
 
     public Vector<DiGraph> getZChildren()
@@ -181,7 +178,6 @@ public abstract class DiGraph{
 
         zchild.zparents.add(this);
         zChildren.add(zchild);
-        listener.change();
     }
 
     public Vector<DiGraph> getChildren()

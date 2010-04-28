@@ -157,6 +157,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                     @Override
                     public void run(){
                         builder.step();
+                        laidout = false;
                         stepThread = null;
                         stepText = "S";
                     }
@@ -178,6 +179,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                         public void run(){
                             while(playing){
                                 builder.step();
+                                laidout = false;
                                 try {
                                     Thread.sleep(300);
                                 } catch (InterruptedException ex) {
@@ -466,7 +468,4 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         dir.add(PVector.mult(camera, (float)notches * 100f));
     }
 
-    public void change(){
-        laidout = false;
-    }
 }
