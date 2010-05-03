@@ -37,9 +37,4 @@ public class StackObject extends DiGraph{
     public void addHeapObject(HeapObject h){
         addZChild(h);
     }
-
-    public Iterable<HeapObject> getHeapObjects(){
-        return getZIterator();
-    }
-
 }

@@ -62,7 +62,9 @@
 
 	<target name="-compile-main">
 		<mkdir dir="bin/main" />
-		<javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6"/>
+		<javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6">
+                    <compilerarg value="-Xlint:unchecked" />
+                </javac>
 	</target>
 
 	<target name="-compile-test">

@@ -5,8 +5,6 @@ import com.sun.jdi.Value;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class GraphBuilder {
 
@@ -34,6 +32,9 @@ public class GraphBuilder {
                     StepRequest createStepRequest = vm.eventRequestManager().createStepRequest(vmse.thread(),
                                                                                                StepRequest.STEP_MIN,
                                                                                                StepRequest.STEP_INTO);
+                    createStepRequest.addClassExclusionFilter("java.*");
+                    createStepRequest.addClassExclusionFilter("javax.*");
+                    createStepRequest.addClassExclusionFilter("sun.*");
                     createStepRequest.enable();
                 }
             }
@@ -47,7 +48,12 @@ public class GraphBuilder {
      * system for its current state
      */
     public void interrogate(){
-        reset();
+        hof = new HeapObjectFactory();
+        hof.addFilter("java");
+        hof.addFilter("sun");
+        supernode = new SuperHeader("Memeographer!");
+        stackMap = new HashMap<StackFrame, StackObject>();
+        stacks = new HashMap<ThreadReference, ThreadHeader>();
 
         //Go through all of the threads
         for (ThreadReference thread : vm.allThreads()) {
@@ -55,10 +61,14 @@ public class GraphBuilder {
                 ThreadHeader header = new ThreadHeader(thread);
                 supernode.addThread(header);
                 StackObject prev = null;
+
                 for (int depth = thread.frameCount() - 1; depth > 0; depth--) {
                     StackObject so = exploreStackFrame(thread.frame(depth), depth);
+                    //System.out.println("StackObject: " + so);
                     if (prev != null) {
                         prev.setNextFrame(so);
+                    } else {
+                        header.setFrame(so);
                     }
                     prev = so;
                 }
@@ -66,13 +76,8 @@ public class GraphBuilder {
                 ex.printStackTrace();
             }
         }
-    }
 
-    private void reset(){
-        supernode.removeChildren();
-        hof.reset();
-        stackMap.clear();
-        stacks.clear();
+        //System.out.println("Super Node! is: " + supernode);
     }
 
     private StackObject exploreStackFrame(StackFrame frame, int depth) throws IncompatibleThreadStateException{
@@ -134,121 +139,6 @@ public class GraphBuilder {
             System.err.println("Couldn't retreive the eventset in the queue");
             ex.printStackTrace();
         }
-    }
-
-    private void handleMethodEntry(MethodEntryEvent mee) {
-      ThreadHeader thread = stacks.get(mee.thread());
-      try {
-          System.out.print("MethodEntry: ");
-          for (int i = mee.thread().frameCount()-1; i >= 0; i--) {
-              System.out.print(mee.thread().frame(i).location() + "-> ");
-          }
-          System.out.println("[]");
-      } catch (IncompatibleThreadStateException ex) {
-          System.err.println("BAD TRHEAD STATE??!?");
-          ex.printStackTrace();
-      }
-      if (thread == null) {
-          System.err.println("Method entry in unknown thread: " + mee.thread().name());
-      } else {
-          if (!mee.thread().isSuspended()) {
-              System.err.println("Thread: " + mee.thread() + " is not suspended");
-          }else{
-              try {
-                  /*So we have a problem here:
-                   frame(0) refers to the most current frame
-                   The first element in the digraph represents
-                   */
-                  int frameCount = 0;
-                  StackObject bottomframe = null;
-                  if (thread.hasFrame()) {
-                      bottomframe = thread.getFrame();
-                  }
-
-                  while(bottomframe != null && bottomframe.hasNextFrame() ){
-                      StackObject bottomer = bottomframe.nextFrame();
-                      if (bottomframe == bottomer) {
-                        throw new RuntimeException("Cycle in stack");
-                      }
-                      bottomframe = bottomer;
-                      frameCount++;
-                  }
-                  int diff = mee.thread().frameCount() - frameCount;
-                  for(int i = diff-1; i >= 0; i--){
-                      StackObject bottomer = exploreStackFrame(mee.thread().frame(i), i);
-                      bottomer.setColor(java.awt.Color.RED);
-                      if (bottomframe == null) {
-                          thread.setFrame(bottomer);
-                      }else{
-                          bottomframe.setNextFrame(bottomer);
-                      }
-                      bottomframe = bottomer;
-                  }
-              } catch (IncompatibleThreadStateException ex) {
-                  ex.printStackTrace();
-              }
-          }
-      }
-    }
-
-    private void handleMethodExit(MethodExitEvent mee) {
-      ThreadHeader thread = stacks.get(mee.thread());
-      try {
-          System.out.print("MethodExit: ");
-          for (int i = mee.thread().frameCount()-1; i >= 0; i--) {
-              System.out.print(mee.thread().frame(i).location() + "-> ");
-          }
-          System.out.println("[]");
-      } catch (IncompatibleThreadStateException ex) {
-          System.err.println("BAD TRHEAD STATE??!?");
-          ex.printStackTrace();
-      }
-      if (mee.thread().isSuspended() ) {
-          if (thread == null) {
-              System.err.println("Method exit in unknown thread: " + mee.thread().name());
-          } else {
-                try {
-                    int framecount = mee.thread().frameCount();
-                    StackObject bottom = thread.getFrame();
-                    while(framecount > 0){
-                        bottom = bottom.nextFrame();
-                        framecount--;
-                    }
-                    bottom.removeNextFrame();
-                } catch (IncompatibleThreadStateException ex) {
-                    ex.printStackTrace();
-                }
-
-          }
-      }else{
-          System.err.println("Thread: " + mee.thread().name()+ " is not suspended.");
-      }
-    }
-
-    private void handleThreadStart(ThreadStartEvent tse) {
-      if (!stacks.containsKey(tse.thread())) {
-          System.out.println("Starting: " + tse.thread().name());
-          ThreadHeader threadheader = new ThreadHeader(tse.thread());
-          stacks.put(tse.thread(), threadheader);
-          supernode.addThread(threadheader);
-      }
-    }
-
-    private void handleThreadDeath(ThreadDeathEvent tde){
-      System.out.println("Thread \""+tde.thread().name() + "\" has died.");
-      stacks.remove(tde.thread());
-    }
-
-    private void handleVMStartEvent(VMStartEvent se){
-      for (ThreadReference threadReference : vm.allThreads()) {
-          ThreadHeader threadHeader = new ThreadHeader(threadReference);
-          stacks.put(threadReference, threadHeader);
-          supernode.addYChild(threadHeader);
-      }
-    }
-
-    private void handleModificationWatchpointEvent(ModificationWatchpointEvent mwe) {
-        System.out.println(mwe.field() + ": " + mwe.valueCurrent() + " -> " + mwe.valueToBe());
     }
 }
 

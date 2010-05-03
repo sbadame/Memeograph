@@ -65,8 +65,8 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     public void setup(){
         //Full screen, go big or go home!
         try{
-            size(wanted_width, wanted_height, P3D);
-            //size(wanted_width, wanted_height, OPENGL);
+            //size(wanted_width, wanted_height, P3D);
+            size(wanted_width, wanted_height, OPENGL);
         }catch(GLException gle){
             gle.printStackTrace();
             System.exit(1);
@@ -258,7 +258,8 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         rails.clear();
         positions.clear();
         
-        for (ThreadHeader thread : digraph.getThreads()) {
+        for (DiGraph d : digraph.getThreads()) {
+            ThreadHeader thread = (ThreadHeader)d;
             layout(thread, -10, 0);
 
             if (thread.hasFrame() == false) {

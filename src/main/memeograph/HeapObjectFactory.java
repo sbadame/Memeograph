@@ -39,25 +39,28 @@ public class HeapObjectFactory {
             Field[] fieldArray = allFields.toArray(new Field[]{});
             Arrays.sort(fieldArray);
             for (Field field : fieldArray) {
-                System.out.println(field);
+                //System.out.println(field);
                 Value fieldvalue = or.getValue(field);
                 //Check if this field is a special case
                 SpecialField specialCase = SpecialField.getSpecialField(field, val);
                 if (specialCase != null) {
                     specialCase.apply(heapObject, field, fieldvalue);
-                    System.out.println("\t" + "Field is a special case");
+                    //System.out.println("\t" + "Field is a special case");
                     continue;
                 }else{
-                    System.out.println("\t" + "Field is not a special case");
+                    //System.out.println("\t" + "Field is not a special case");
                 }
-                if (fieldvalue == null) { System.out.println("\tField is null"); continue; }
-                if (fieldvalue == val) {
-                    System.out.println("\tField is referring to self");
+                if (fieldvalue == null) {
+                    //System.out.println("\tField is null");
                     continue;
                 }
-                System.out.println("\t" + "Field is not null");
+                if (fieldvalue == val) {
+                    //System.out.println("\tField is referring to self");
+                    continue;
+                }
+                //System.out.println("\t" + "Field is not null");
                 if (fieldvalue instanceof ObjectReference){
-                    System.out.println("\t" + "Field is a data child");
+                    //System.out.println("\t" + "Field is a data child");
                     ObjectReference objectref = (ObjectReference)fieldvalue;
                     if (filterObject(objectref)) {continue;}
                     if (isDataChild(or, objectref)) {
@@ -67,37 +70,37 @@ public class HeapObjectFactory {
                         heapObject.addSoftwareChild(getHeapObject(fieldvalue));
                     }
                 }else{
-                    System.out.println("\t" + "Field is not a data child");
+                    //System.out.println("\t" + "Field is not a data child");
                     heapObject.addSoftwareChild(getHeapObject(fieldvalue));
                 }
             }
 
-        }else if (val.type() instanceof IntegerType){
+        }else if (val instanceof IntegerValue){
             IntegerValue iv = (IntegerValue)val;
             heapObject.setName("int: " + iv.intValue());
-        }else if (val.type() instanceof BooleanValue){
+        }else if (val instanceof BooleanValue){
             BooleanValue iv = (BooleanValue)val;
             heapObject.setName("bool: " + iv.booleanValue());
-        }else if (val.type() instanceof ByteValue){
+        }else if (val instanceof ByteValue){
             ByteValue iv = (ByteValue)val;
             heapObject.setName("byte: " + iv.byteValue());
-        }else if (val.type() instanceof CharValue){
+        }else if (val instanceof CharValue){
             CharValue iv = (CharValue)val;
             heapObject.setName("char: " + iv.charValue());
-        }else if (val.type() instanceof DoubleValue){
+        }else if (val instanceof DoubleValue){
             DoubleValue iv = (DoubleValue)val;
             heapObject.setName("double: " + iv.doubleValue());
-        }else if (val.type() instanceof FloatValue){
+        }else if (val instanceof FloatValue){
             FloatValue iv = (FloatValue)val;
             heapObject.setName("float: " + iv.floatValue());
-        }else if (val.type() instanceof LongValue){
+        }else if (val instanceof LongValue){
             LongValue iv = (LongValue)val;
             heapObject.setName("long: " + iv.longValue());
-        }else if (val.type() instanceof ShortValue){
+        }else if (val instanceof ShortValue){
             ShortValue iv = (ShortValue)val;
             heapObject.setName("short: " + iv.shortValue());
         }else{
-            System.err.println("Unknown data: " + val);
+            System.err.println("Unknown data: " + val.type() + " " + val);
         }
         return heapObject;
 
@@ -130,9 +133,4 @@ public class HeapObjectFactory {
        System.out.println("\t" + isDataChild);
        return isDataChild;
    }
-
-    void reset() {
-        heapMap.clear();
-    }
-
 }

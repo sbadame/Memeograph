@@ -134,14 +134,6 @@ public abstract class DiGraph{
         };
     }
 
-    public <Y extends DiGraph> Iterable<Y> getYIterator(){
-        return (Iterable<Y>) getIterator(yChildren);
-    }
-
-    public <Z extends DiGraph> Iterable<Z> getZIterator(){
-        return (Iterable<Z>) getIterator(zChildren);
-    }
-
     /**
      * @return the ykids
      */

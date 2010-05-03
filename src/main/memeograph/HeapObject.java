@@ -18,15 +18,7 @@ public class HeapObject extends DiGraph{
         addZChild(child);
     }
 
-    public Iterable<HeapObject> getDataChildren(){
-        return getZIterator();
-    }
-
     public void addSoftwareChild(HeapObject ho){
         addYChild(ho);
-    }
-
-    public Iterable<HeapObject> getSoftwareChildren(){
-        return getYIterator();
     }
   }

@@ -6,8 +6,8 @@ public class SuperHeader extends DiGraph{
         super(name);
     }
 
-    public Iterable<ThreadHeader> getThreads(){
-        return getYIterator();
+    public Iterable<DiGraph> getThreads(){
+        return getYChildren();
     }
 
     public void addThread(ThreadHeader header){
