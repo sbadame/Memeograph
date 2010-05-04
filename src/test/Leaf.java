@@ -10,6 +10,7 @@ public class Leaf extends BST {
 
     @Override
     public BST insert(int n) {
+        memeopoint = true;
         return new BST(n);
     }
 

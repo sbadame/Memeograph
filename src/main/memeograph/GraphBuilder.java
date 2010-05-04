@@ -4,6 +4,7 @@ import com.sun.jdi.*;
 import com.sun.jdi.Value;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
+import com.sun.tools.jdi.EventSetImpl;
 import java.util.*;
 
 public class GraphBuilder {
@@ -20,25 +21,13 @@ public class GraphBuilder {
     public GraphBuilder(VirtualMachine vm)
     {
        this.vm = vm;
-       try {
-            EventSet eset = vm.eventQueue().remove();
-            EventIterator eventIterator = eset.eventIterator();
-            while(eventIterator.hasNext()){
-                Event event = eventIterator.nextEvent();
-                if (event instanceof VMStartEvent) {
-                    VMStartEvent vmse = (VMStartEvent) event;
-                    StepRequest createStepRequest = vm.eventRequestManager().createStepRequest(vmse.thread(),
-                                                                                               StepRequest.STEP_MIN,
-                                                                                               StepRequest.STEP_INTO);
-                    createStepRequest.addClassExclusionFilter("java.*");
-                    createStepRequest.addClassExclusionFilter("javax.*");
-                    createStepRequest.addClassExclusionFilter("sun.*");
-                    createStepRequest.enable();
-                }
-            }
-            eset.resume();
-        } catch (InterruptedException ex) {
-        }
+
+       //We need this catch the loading of classes
+       ClassPrepareRequest classEvent = vm.eventRequestManager().createClassPrepareRequest();
+       classEvent.addClassExclusionFilter("java.*");
+       classEvent.addClassExclusionFilter("javax.*");
+       classEvent.addClassExclusionFilter("sun.*");
+       classEvent.enable();
     }
 
     /*
@@ -129,11 +118,34 @@ public class GraphBuilder {
 
     public void step(){
         try {
-            //Read in this set of events
-            EventSet eventSet = vm.eventQueue().remove();
+            boolean looking_for_pause = true;
+            while(looking_for_pause){
+                //Read in this set of events
+                EventSet eventSet = vm.eventQueue().remove();
+                EventIterator eventIterator = eventSet.eventIterator();
+                while(eventIterator.hasNext()){
+                    Event event = eventIterator.nextEvent();
+                    if (event instanceof VMStartEvent){
+                        System.out.println("VM started");
+                    }else if (event instanceof ModificationWatchpointEvent) {
+                        looking_for_pause = false;
+                    }else if (event instanceof ClassPrepareEvent){
+                        ClassPrepareEvent cpe = (ClassPrepareEvent) event;
+                        System.out.println(cpe.referenceType().name());
+                        for (Field field : cpe.referenceType().allFields()) {
+                            if (field.name().equals("memeopoint")) {
+                                ModificationWatchpointRequest mwr = vm.eventRequestManager().createModificationWatchpointRequest(field);
+                                mwr.enable();
+                            }
+                        }
+                    }else{
+                        System.err.println("Caught the wrong watchpoint" + event.getClass().getName());
+                    }
+                }
+                eventSet.resume();
+            }
             interrogate();
             //Resume the VM
-            eventSet.resume();
         } catch (InterruptedException ex) {
             System.err.println("Couldn't retreive the eventset in the queue");
             ex.printStackTrace();

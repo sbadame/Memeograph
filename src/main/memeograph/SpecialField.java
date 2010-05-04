@@ -6,10 +6,9 @@ import com.sun.jdi.IntegerValue;
 import com.sun.jdi.ObjectReference;
 import java.awt.Color;
 
-
 public abstract class SpecialField {
 
-    public static SpecialField[] SPECIAL_CASES = new SpecialField[]{new ColorCase(), new NameCase()};
+    public static SpecialField[] SPECIAL_CASES = new SpecialField[]{new ColorCase(), new NameCase(), new PausePoint()};
 
     public static SpecialField getSpecialField(Field f, Value v){
         for (SpecialField specialFieldCase : SPECIAL_CASES) {
@@ -60,5 +59,17 @@ class NameCase extends SpecialField{
        txt = txt.substring(1, txt.length()-1);
        ho.setData(txt);
     }
+
+}
+
+class PausePoint extends SpecialField{
+
+    @Override
+    public boolean isSpecialCase(Field f, Value v) {
+        return f.name().equals("memeopoint");
+    }
+
+    @Override
+    public void apply(HeapObject ho, Field f, Value v) {}
 
 }
