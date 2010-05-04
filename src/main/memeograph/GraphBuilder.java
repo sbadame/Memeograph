@@ -4,19 +4,12 @@ import com.sun.jdi.*;
 import com.sun.jdi.Value;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;
-import com.sun.tools.jdi.EventSetImpl;
 import java.util.*;
 
 public class GraphBuilder {
 
     private VirtualMachine vm;
-
-    private HashMap<StackFrame, StackObject> stackMap = new HashMap<StackFrame, StackObject>();
-    private HashMap<ThreadReference, ThreadHeader> stacks = new HashMap<ThreadReference, ThreadHeader>();
-
-    //Interrogate code
-    private SuperHeader supernode = new SuperHeader("Memeographer!");
-    private HeapObjectFactory hof = new HeapObjectFactory();
+    private Graph currentgraph;
 
     public GraphBuilder(VirtualMachine vm)
     {
@@ -28,18 +21,15 @@ public class GraphBuilder {
        classEvent.addClassExclusionFilter("javax.*");
        classEvent.addClassExclusionFilter("sun.*");
        classEvent.enable();
+       step();
     }
 
     /*
      * Clear the system of any memory of a graph, then interrogate the
      * system for its current state
      */
-    public void interrogate(){
-        hof = new HeapObjectFactory(new String[]{"java", "sun"});
-        supernode = new SuperHeader("Memeographer!");
-        stackMap = new HashMap<StackFrame, StackObject>();
-        stacks = new HashMap<ThreadReference, ThreadHeader>();
-
+    private void interrogate(){
+        currentgraph = new Graph();
         //Go through all of the threads
         for (ThreadReference thread : vm.allThreads()) {
             if (thread.threadGroup().name().equals("system")) {
@@ -47,7 +37,7 @@ public class GraphBuilder {
             }
             try {
                 ThreadHeader header = new ThreadHeader(thread);
-                supernode.addThread(header);
+                currentgraph.getSuperNode().addThread(header);
                 StackObject prev = null;
 
                 for (int depth = thread.frameCount() - 1; depth > 0; depth--) {
@@ -72,7 +62,7 @@ public class GraphBuilder {
             StackObject tree = getStackFrame(frame, depth);
             ObjectReference thisor = frame.thisObject();
             if (thisor != null) {
-                tree.addHeapObject(hof.getHeapObject(thisor));
+                tree.addHeapObject(currentgraph.getHeapObject(thisor));
             }
             try {
                 List<LocalVariable> locals = frame.visibleVariables();
@@ -81,7 +71,7 @@ public class GraphBuilder {
                 for (LocalVariable var : localvars) {
                         Value val = frame.getValue(var);
                         if (val != null && val.type() != null)
-                                tree.addHeapObject(hof.getHeapObject(val));
+                                tree.addHeapObject(currentgraph.getHeapObject(val));
                 }
             } catch (AbsentInformationException ex) {
                 return tree;
@@ -93,7 +83,7 @@ public class GraphBuilder {
     * The String representation of a Stack Frame. NOTE: This needs to be unique
     * for every object. Otherwise building the graph will probably go wrong.
     */
-    protected String StackFrame2String(int depth, ThreadReference t) throws IncompatibleThreadStateException{
+    private String StackFrame2String(int depth, ThreadReference t) throws IncompatibleThreadStateException{
         if (t == null) {
             throw new NullPointerException("Thread Reference cannot be null.");
         }
@@ -106,17 +96,17 @@ public class GraphBuilder {
     }
 
     private StackObject getStackFrame(StackFrame f, int depth) throws IncompatibleThreadStateException{
-        if (!stackMap.containsKey(f)){
-                stackMap.put(f, new StackObject(StackFrame2String(depth, f.thread())));
+        if (!currentgraph.getStackMap().containsKey(f)){
+                currentgraph.getStackMap().put(f, new StackObject(StackFrame2String(depth, f.thread())));
         }
-        return stackMap.get(f);
+        return currentgraph.getStackMap().get(f);
     }
 
-    public SuperHeader getSuperNode(){
-        return supernode;
+    public Graph currentGraph(){
+        return currentgraph;
     }
 
-    public void step(){
+    public Graph step(){
         try {
             boolean looking_for_pause = true;
             while(looking_for_pause){
@@ -131,7 +121,6 @@ public class GraphBuilder {
                         looking_for_pause = false;
                     }else if (event instanceof ClassPrepareEvent){
                         ClassPrepareEvent cpe = (ClassPrepareEvent) event;
-                        System.out.println(cpe.referenceType().name());
                         for (Field field : cpe.referenceType().allFields()) {
                             if (field.name().equals("memeopoint")) {
                                 ModificationWatchpointRequest mwr = vm.eventRequestManager().createModificationWatchpointRequest(field);
@@ -150,6 +139,7 @@ public class GraphBuilder {
             System.err.println("Couldn't retreive the eventset in the queue");
             ex.printStackTrace();
         }
+        return currentGraph();
     }
 }
 

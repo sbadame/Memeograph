@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
+import memeograph.Graph;
 import memeograph.GraphBuilder;
 import memeograph.StackObject;
 import memeograph.SuperHeader;
@@ -29,6 +30,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     private Map<DiGraph, Node> positions = new HashMap<DiGraph, Node>();
 
     GraphBuilder builder;
+    Graph graph;
     boolean isReady = false;
     int elipseCount = 1;
 
@@ -50,8 +52,9 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
 
     private int rendermode = renderfrontback;
 
-    public MemeoPApplet(GraphBuilder grapher, int width, int height){
-        this.builder = grapher;
+    public MemeoPApplet(GraphBuilder builder, int width, int height){
+        this.builder = builder;
+        this.graph = builder.currentGraph();
         this.wanted_height = height;
         this.wanted_width = width;
         addMouseWheelListener(this);
@@ -94,7 +97,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         //First check if we have to layout this stuff out
         if (!laidout) {
             HashMap<DiGraph, Node> hashMap = new HashMap<DiGraph, Node>();
-            layout(builder.getSuperNode(), hashMap);
+            layout(graph.getSuperNode(), hashMap);
             positions = hashMap;
         }
 
@@ -175,7 +178,6 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                         public void run(){
                             while(playing){
                                 step();
-                                laidout = false;
                                 try {
                                     Thread.sleep(300);
                                 } catch (InterruptedException ex) {
@@ -197,10 +199,10 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     }
 
     private void step(){
-        builder.step();
+        graph = builder.step();
 
         //Layout the new tree
-        SuperHeader newTree = builder.getSuperNode();
+        SuperHeader newTree = graph.getSuperNode();
         HashMap<DiGraph, Node> newPositions = new HashMap<DiGraph, Node>();
         layout(newTree, newPositions);
 
@@ -212,9 +214,13 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
 
         //find the new Nodes and fade them in
         addFadeInAnimations(positions, newPositions);
+
+        laidout = false;
     }
 
     private void addFadeOutAnimations(Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
+        //Find all of the nodes that need to be faded out
+
     }
 
     private void addMoveAnimations(Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
