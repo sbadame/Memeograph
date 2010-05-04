@@ -19,10 +19,8 @@ public class GraphBuilder {
 
     public GraphBuilder(VirtualMachine vm)
     {
-        this.vm = vm;
-        hof.addFilter("java");
-        hof.addFilter("sun");
-        try {
+       this.vm = vm;
+       try {
             EventSet eset = vm.eventQueue().remove();
             EventIterator eventIterator = eset.eventIterator();
             while(eventIterator.hasNext()){
@@ -48,15 +46,16 @@ public class GraphBuilder {
      * system for its current state
      */
     public void interrogate(){
-        hof = new HeapObjectFactory();
-        hof.addFilter("java");
-        hof.addFilter("sun");
+        hof = new HeapObjectFactory(new String[]{"java", "sun"});
         supernode = new SuperHeader("Memeographer!");
         stackMap = new HashMap<StackFrame, StackObject>();
         stacks = new HashMap<ThreadReference, ThreadHeader>();
 
         //Go through all of the threads
         for (ThreadReference thread : vm.allThreads()) {
+            if (thread.threadGroup().name().equals("system")) {
+                continue;
+            }
             try {
                 ThreadHeader header = new ThreadHeader(thread);
                 supernode.addThread(header);

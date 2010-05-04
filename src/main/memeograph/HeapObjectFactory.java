@@ -6,10 +6,12 @@ import java.util.*;
 public class HeapObjectFactory {
 
     private HashMap<Value, HeapObject> heapMap = new HashMap<Value, HeapObject>();
-    private ArrayList<String> filters = new ArrayList<String>();
+    private String[] filters = new String[0];
 
-    public HeapObjectFactory(){
+    public HeapObjectFactory(){}
 
+    HeapObjectFactory(String[] filters) {
+        this.filters = filters;
     }
 
     public HeapObject getHeapObject(Value val){
@@ -105,10 +107,6 @@ public class HeapObjectFactory {
         return heapObject;
 
     }
-
-   public void addFilter(String filter){
-       filters.add(filter);
-   }
 
    private boolean filterObject(ObjectReference o){
        String name = o.referenceType().name();
