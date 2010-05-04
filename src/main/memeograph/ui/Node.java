@@ -8,21 +8,21 @@ import memeograph.DiGraph;
  * The class that graphically represents a Node in our tree
  */
 public class Node {
-    public double x, y, z;
+    public float x, y, z;
     public int r,g,b;
 
-    public double fx;
-    public double vx=0;
-    public double opacity = 1;
+    public float fx;
+    public float vx=0;
+    public float opacity = 1;
     public double width = 70;
     public DiGraph data;
     
-    public Node(DiGraph data, double x, double y)
+    public Node(DiGraph data, float x, float y)
     {
-        this(data, x, y, 0.0);
+        this(data, x, y, 0f);
     }
 
-    public Node(DiGraph data, double x, double y, double z)
+    public Node(DiGraph data, float x, float y, float z)
     {
         this.data = data;
         this.x = x;
@@ -43,7 +43,7 @@ public class Node {
     }
 
 
-    public void setOpacity(double opacity){
+    public void setOpacity(float opacity){
 	this.opacity = opacity;
 
     }
