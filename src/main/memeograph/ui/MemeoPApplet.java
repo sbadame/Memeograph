@@ -1,10 +1,13 @@
 package memeograph.ui;
 
-import memeograph.ui.animation.Animation;
 import com.sun.jdi.StackFrame;
+import memeograph.HeapObject;
+import memeograph.ui.animation.Animation;
 import com.sun.jdi.ThreadReference;
+import com.sun.jdi.Value;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +20,7 @@ import memeograph.GraphBuilder;
 import memeograph.StackObject;
 import memeograph.SuperHeader;
 import memeograph.ThreadHeader;
+import memeograph.ui.animation.FadeOut;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PVector;
@@ -25,6 +29,7 @@ import processing.core.PVector;
  * Does the drawing and layout. Originally made by extending the moving eye example from processing.
  */
 public class MemeoPApplet extends PApplet implements MouseWheelListener{
+    private static final int animationtimeMillis = 3 * 1000;
     static int PADDING = 20;
     static float K = 0.01f; //Spring constant (Along the Y)
     static float M = 0.95f; //Magnet contents (Along the X)
@@ -36,16 +41,11 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     GraphBuilder builder;
     Graph graph;
 
-    public enum AnimationType{FADE_IN, FADE_OUT, MOVE}
+    public enum AnimationType{FADE_IN, FADE_OUT, MOVE, NONE}
     HashMap<AnimationType, List<Animation>> animations;
-
-    boolean isReady = false;
-    int elipseCount = 1;
-
-    private boolean laidout = false;
-
-    private int wanted_width;
-    private int wanted_height;
+    private AnimationType currentAnimationState = AnimationType.NONE;
+    private int start_time = -1;
+    private Runnable animationFinalizer = new Runnable(){public void run(){}};
 
     PFont font;
 
@@ -59,11 +59,9 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     private final int rendertopbottom = 2;
     private int rendermode = renderfrontback;
 
-    public MemeoPApplet(GraphBuilder builder, int width, int height){
+    public MemeoPApplet(GraphBuilder builder){
         this.builder = builder;
         this.graph = builder.currentGraph();
-        this.wanted_height = height;
-        this.wanted_width = width;
         addMouseWheelListener(this);
     }
 
@@ -72,7 +70,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     public void setup(){
         //Full screen, go big or go home!
         try{
-            size(wanted_width, wanted_height, P3D);
+            size(1024, 768, P3D);
             //size(wanted_width, wanted_height, OPENGL);
         }catch(GLException gle){
             gle.printStackTrace();
@@ -101,11 +99,29 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         background(102);
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
-        //First check if we have to layout this stuff out
-        if (!laidout) {
-            HashMap<DiGraph, Node> hashMap = new HashMap<DiGraph, Node>();
-            layout(graph.getSuperNode(), hashMap);
-            positions = hashMap;
+        //Are we currently animating? If so, tick ahead
+        if (currentAnimationState != AnimationType.NONE) {
+           int elapsed = millis() - start_time;
+           if (start_time < 0) {
+               //First time running in this animation state
+               start_time = millis();
+            }else if (elapsed < animationtimeMillis){
+                //Interpolate!
+                for (Animation animation : animations.get(AnimationType.FADE_OUT)) {
+                    animation.tick(elapsed/(float)animationtimeMillis);
+                }
+            }else /*(elapsed >= animationtimeMillis) is implied here */{
+                //Move onto the next stage
+               if (currentAnimationState == AnimationType.FADE_OUT) {
+                   currentAnimationState = AnimationType.MOVE;
+               }else if (currentAnimationState == AnimationType.MOVE){
+                   currentAnimationState = AnimationType.FADE_IN;
+               }else if (currentAnimationState == AnimationType.FADE_IN){
+                   currentAnimationState = AnimationType.NONE;
+                   animationFinalizer.run();
+               }
+               start_time = -1;
+            }
         }
 
         //Now draw the lines between the nodes
@@ -122,7 +138,6 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         for (Node n : positions.values()) {
             if (x) {
                 x = false;
-                //System.out.println(n.data.name());
             }
             drawNode(n);
         }
@@ -155,8 +170,8 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     @Override
     public void mouseClicked()
     {
-        float f =dist(mouseX, mouseY, 50, 50);
-        float e =dist(mouseX, mouseY, 120, 50);
+        float f = dist(mouseX, mouseY, 50, 50);
+        float e = dist(mouseX, mouseY, 120, 50);
         if (f < 50) {
             if (stepThread == null) {
                 stepText = "";
@@ -206,30 +221,61 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     }
 
     private void step(){
-        Graph newgraph = builder.step();
+        final Graph newgraph = builder.step();
 
         //Layout the new tree
         SuperHeader newTree = graph.getSuperNode();
-        HashMap<DiGraph, Node> newPositions = new HashMap<DiGraph, Node>();
+        final HashMap<DiGraph, Node> newPositions = new HashMap<DiGraph, Node>();
         layout(newTree, newPositions);
 
         //Find the Nodes that were removed, fade them out
         addFadeOutAnimations(newgraph, positions, newPositions);
 
-        //create the animations for moving the nodes to their new position
+        //create the fade_anims for moving the nodes to their new position
         addMoveAnimations(newgraph, positions, newPositions);
 
         //find the new Nodes and fade them in
         addFadeInAnimations(newgraph, positions, newPositions);
 
-        laidout = false;
+        animationFinalizer = new Runnable(){
+            public void run(){
+                graph = newgraph;
+                positions = newPositions;
+            }
+        };
     }
 
     //Find all of the nodes that need to be faded out
     private void addFadeOutAnimations(Graph newgraph, Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
-        //Threads first
+        ArrayList<Animation> fade_anims = new ArrayList<Animation>();
+
+        //Threads 
         HashSet<ThreadReference> removedThreads = new HashSet<ThreadReference>(graph.threads().keySet());
         removedThreads.removeAll(newgraph.threads().keySet());
+
+        for (ThreadReference thread : removedThreads) {
+            ThreadHeader threadheader = graph.threads().get(thread);
+            fade_anims.add(new FadeOut(positions.get(threadheader)));
+        }
+
+        //Frames
+        HashSet<StackFrame> removedFrames = new HashSet<StackFrame>(graph.getStackMap().keySet());
+        removedFrames.removeAll(newgraph.getStackMap().keySet());
+
+        for (StackFrame sframe : removedFrames) {
+            StackObject so = graph.getStackMap().get(sframe);
+            fade_anims.add(new FadeOut(positions.get(so)));
+        }
+
+        //Values
+        HashSet<Value> removedValues = new HashSet<Value>(graph.getHeapMap().keySet());
+        removedValues.removeAll(newgraph.getHeapMap().keySet());
+        for (Value value : removedValues) {
+            HeapObject ho = graph.getHeapMap().get(value);
+            fade_anims.add(new FadeOut(positions.get(ho)));
+        }
+
+        animations.put(AnimationType.FADE_OUT, fade_anims);
     }
 
     private void addMoveAnimations(Graph newgraph, Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
@@ -313,7 +359,6 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
 
         }
 
-        laidout = true;
     }
 
     private void layout(DiGraph t, int z, int y, Map<DiGraph, Node> map)

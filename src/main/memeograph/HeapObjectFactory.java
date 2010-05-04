@@ -108,6 +108,7 @@ public class HeapObjectFactory {
 
     }
 
+
    private boolean filterObject(ObjectReference o){
        String name = o.referenceType().name();
        for (String filter : filters) {
@@ -131,4 +132,8 @@ public class HeapObjectFactory {
        System.out.println("\t" + isDataChild);
        return isDataChild;
    }
+
+    public Map<Value, HeapObject> getHeapMap(){
+        return heapMap;
+    }
 }

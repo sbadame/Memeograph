@@ -10,7 +10,7 @@ public class MemeoFrame extends JFrame{
         super("Memeographer!");
 
         setLayout(new BorderLayout());
-        MemeoPApplet papplet = new MemeoPApplet(grapher, 1024, 768);
+        MemeoPApplet papplet = new MemeoPApplet(grapher);
         add(papplet, BorderLayout.CENTER);
 
         setSize(1024, 768);

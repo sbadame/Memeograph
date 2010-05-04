@@ -4,6 +4,7 @@ import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.Value;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Graph {
     private HashMap<StackFrame, StackObject> stackMap = new HashMap<StackFrame, StackObject>();
@@ -28,5 +29,9 @@ public class Graph {
 
     public HashMap<ThreadReference, ThreadHeader> threads(){
         return threads;
+    }
+
+    public Map<Value, HeapObject> getHeapMap(){
+        return hof.getHeapMap();
     }
 }
