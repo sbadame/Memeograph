@@ -116,7 +116,6 @@ public class GraphBuilder {
                 while(eventIterator.hasNext()){
                     Event event = eventIterator.nextEvent();
                     if (event instanceof VMStartEvent){
-                        System.out.println("VM started");
                     }else if (event instanceof ModificationWatchpointEvent) {
                         looking_for_pause = false;
                     }else if (event instanceof ClassPrepareEvent){
@@ -134,7 +133,6 @@ public class GraphBuilder {
                 eventSet.resume();
             }
             interrogate();
-            //Resume the VM
         } catch (InterruptedException ex) {
             System.err.println("Couldn't retreive the eventset in the queue");
             ex.printStackTrace();

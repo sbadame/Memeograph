@@ -20,7 +20,9 @@ import memeograph.GraphBuilder;
 import memeograph.StackObject;
 import memeograph.SuperHeader;
 import memeograph.ThreadHeader;
+import memeograph.ui.animation.FadeIn;
 import memeograph.ui.animation.FadeOut;
+import memeograph.ui.animation.MoveAnimation;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PVector;
@@ -255,7 +257,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
 
         for (ThreadReference thread : removedThreads) {
             ThreadHeader threadheader = graph.threads().get(thread);
-            fade_anims.add(new FadeOut(positions.get(threadheader)));
+            fade_anims.add(new FadeOut(o.get(threadheader)));
         }
 
         //Frames
@@ -264,7 +266,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
 
         for (StackFrame sframe : removedFrames) {
             StackObject so = graph.getStackMap().get(sframe);
-            fade_anims.add(new FadeOut(positions.get(so)));
+            fade_anims.add(new FadeOut(o.get(so)));
         }
 
         //Values
@@ -272,16 +274,75 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         removedValues.removeAll(newgraph.getHeapMap().keySet());
         for (Value value : removedValues) {
             HeapObject ho = graph.getHeapMap().get(value);
-            fade_anims.add(new FadeOut(positions.get(ho)));
+            fade_anims.add(new FadeOut(o.get(ho)));
         }
 
         animations.put(AnimationType.FADE_OUT, fade_anims);
     }
 
     private void addMoveAnimations(Graph newgraph, Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
+        ArrayList<Animation> move_anims = new ArrayList<Animation>();
+
+        //Threads
+        for (ThreadReference tr : graph.threads().keySet()) {
+            if (newgraph.threads().containsKey(tr)) {
+                ThreadHeader th = graph.threads().get(tr);
+                Node newNode = n.get(th);
+                move_anims.add(new MoveAnimation(o.get(th), newNode.x, newNode.y));
+            }
+        }
+
+        //Frames
+        for (StackFrame stackFrame : graph.getStackMap().keySet()) {
+            if (newgraph.getStackMap().containsKey(stackFrame)){
+                StackObject so = graph.getStackMap().get(stackFrame);
+                Node newNode = n.get(so);
+                move_anims.add(new MoveAnimation(o.get(so), newNode.x, newNode.y));
+            }
+        }
+
+        //Values
+        for (Value value : graph.getHeapMap().keySet()) {
+            if (newgraph.getHeapMap().containsKey(value)) {
+                HeapObject ho = graph.getHeapMap().get(value);
+                Node newNode = n.get(ho);
+                move_anims.add(new MoveAnimation(o.get(ho), newNode.x, newNode.y));
+            }
+        }
+
+        animations.put(AnimationType.MOVE, move_anims);
     }
 
     private void addFadeInAnimations(Graph newgraph, Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
+        ArrayList<Animation> fade_anims = new ArrayList<Animation>();
+
+        //Threads
+        HashSet<ThreadReference> removedThreads = new HashSet<ThreadReference>(graph.threads().keySet());
+        removedThreads.removeAll(newgraph.threads().keySet());
+
+        for (ThreadReference thread : removedThreads) {
+            ThreadHeader threadheader = graph.threads().get(thread);
+            fade_anims.add(new FadeIn(o.get(threadheader)));
+        }
+
+        //Frames
+        HashSet<StackFrame> removedFrames = new HashSet<StackFrame>(graph.getStackMap().keySet());
+        removedFrames.removeAll(newgraph.getStackMap().keySet());
+
+        for (StackFrame sframe : removedFrames) {
+            StackObject so = graph.getStackMap().get(sframe);
+            fade_anims.add(new FadeIn(o.get(so)));
+        }
+
+        //Values
+        HashSet<Value> removedValues = new HashSet<Value>(graph.getHeapMap().keySet());
+        removedValues.removeAll(newgraph.getHeapMap().keySet());
+        for (Value value : removedValues) {
+            HeapObject ho = graph.getHeapMap().get(value);
+            fade_anims.add(new FadeIn(o.get(ho)));
+        }
+
+        animations.put(AnimationType.FADE_IN, fade_anims);
     }
 
     private void drawLine(Node from, Node to){
