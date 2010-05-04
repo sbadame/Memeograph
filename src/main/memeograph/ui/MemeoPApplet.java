@@ -96,8 +96,10 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         //First check if we have to layout this stuff out
         if (!laidout) {
             HashMap<DiGraph, Node> hashMap = new HashMap<DiGraph, Node>();
-            layout(builder.getSuperNode(), hashMap);
+            Grid newrails = new Grid();
+            layout(builder.getSuperNode(), hashMap, newrails);
             positions = hashMap;
+            rails = newrails;
         }
 
         //Now draw the lines between the nodes
@@ -252,13 +254,11 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         popMatrix();
     }
 
-    private void layout(SuperHeader digraph, Map<DiGraph, Node> map)
+    private void layout(SuperHeader digraph, Map<DiGraph, Node> map, Grid rls)
     {
-        rails.clear();
-        
         for (DiGraph d : digraph.getThreads()) {
             ThreadHeader thread = (ThreadHeader)d;
-            layout(thread, -10, 0, map);
+            layout(thread, -10, 0, map, rls);
             if (thread.hasFrame() == false) {
                 continue;
             }
@@ -270,11 +270,11 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                 sf = sf.nextFrame();
                 if (seen.contains(sf)) break;
                 y+=50;
-                layout(sf, -10, y, map);
+                layout(sf, -10, y, map, rls);
                 seen.add(sf);
             }
 
-            for (Vector<Node> rail : rails) {
+            for (Vector<Node> rail : rls) {
                 double x = 0;
                 for (Node n : rail) {
                     n.x = x;
@@ -286,21 +286,21 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         laidout = true;
     }
 
-    private void layout(DiGraph t, int z, int y, Map<DiGraph, Node> map)
+    private void layout(DiGraph t, int z, int y, Map<DiGraph, Node> map, Grid rls)
     {
         if (map.get(t) != null) return;
         Node n = new Node(t, 0, y*50, z*50);
         n.width = textWidth(t.name());
 
         map.put(t, n);
-        rails.add(z, y, n);
+        rls.add(z, y, n);
 
         for (DiGraph kid : t.getZChildren()) {
-            layout(kid, z-1, y, map);
+            layout(kid, z-1, y, map, rls);
         }
 
         for (DiGraph kid : t.getYChildren()) {
-            layout(kid, z, y+1, map);
+            layout(kid, z, y+1, map, rls);
         }
 
     }
