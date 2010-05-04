@@ -28,7 +28,6 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     static int MOVE_TICK = 50;
 
     private Map<DiGraph, Node> positions = new HashMap<DiGraph, Node>();
-    private Grid rails  = new Grid();
 
     GraphBuilder builder;
     boolean isReady = false;
@@ -96,10 +95,8 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         //First check if we have to layout this stuff out
         if (!laidout) {
             HashMap<DiGraph, Node> hashMap = new HashMap<DiGraph, Node>();
-            Grid newrails = new Grid();
-            layout(builder.getSuperNode(), hashMap, newrails);
+            layout(builder.getSuperNode(), hashMap);
             positions = hashMap;
-            rails = newrails;
         }
 
         //Now draw the lines between the nodes
@@ -254,11 +251,11 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         popMatrix();
     }
 
-    private void layout(SuperHeader digraph, Map<DiGraph, Node> map, Grid rls)
+    private void layout(SuperHeader digraph, Map<DiGraph, Node> map)
     {
         for (DiGraph d : digraph.getThreads()) {
             ThreadHeader thread = (ThreadHeader)d;
-            layout(thread, -10, 0, map, rls);
+            layout(thread, -10, 0, map);
             if (thread.hasFrame() == false) {
                 continue;
             }
@@ -270,37 +267,29 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                 sf = sf.nextFrame();
                 if (seen.contains(sf)) break;
                 y+=50;
-                layout(sf, -10, y, map, rls);
+                layout(sf, -10, y, map);
                 seen.add(sf);
             }
 
-            for (Vector<Node> rail : rls) {
-                double x = 0;
-                for (Node n : rail) {
-                    n.x = x;
-                    x += n.width + 50;
-                }
-            }
         }
 
         laidout = true;
     }
 
-    private void layout(DiGraph t, int z, int y, Map<DiGraph, Node> map, Grid rls)
+    private void layout(DiGraph t, int z, int y, Map<DiGraph, Node> map)
     {
         if (map.get(t) != null) return;
         Node n = new Node(t, 0, y*50, z*50);
         n.width = textWidth(t.name());
 
         map.put(t, n);
-        rls.add(z, y, n);
 
         for (DiGraph kid : t.getZChildren()) {
-            layout(kid, z-1, y, map, rls);
+            layout(kid, z-1, y, map);
         }
 
         for (DiGraph kid : t.getYChildren()) {
-            layout(kid, z, y+1, map, rls);
+            layout(kid, z, y+1, map);
         }
 
     }
