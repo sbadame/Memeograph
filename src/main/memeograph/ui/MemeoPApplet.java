@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import javax.media.opengl.GLException;
 import memeograph.DiGraph;
 import memeograph.GraphBuilder;
@@ -154,8 +153,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                 stepThread = new Thread(){
                     @Override
                     public void run(){
-                        builder.step();
-                        laidout = false;
+                        step();
                         stepThread = null;
                         stepText = "S";
                     }
@@ -176,7 +174,7 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
                         @Override
                         public void run(){
                             while(playing){
-                                builder.step();
+                                step();
                                 laidout = false;
                                 try {
                                     Thread.sleep(300);
@@ -198,6 +196,32 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         }
     }
 
+    private void step(){
+        builder.step();
+
+        //Layout the new tree
+        SuperHeader newTree = builder.getSuperNode();
+        HashMap<DiGraph, Node> newPositions = new HashMap<DiGraph, Node>();
+        layout(newTree, newPositions);
+
+        //Find the Nodes that were removed, fade them out
+        addFadeOutAnimations(positions, newPositions);
+
+        //create the animations for moving the nodes to their new position
+        addMoveAnimations(positions, newPositions);
+
+        //find the new Nodes and fade them in
+        addFadeInAnimations(positions, newPositions);
+    }
+
+    private void addFadeOutAnimations(Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
+    }
+
+    private void addMoveAnimations(Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
+    }
+
+    private void addFadeInAnimations(Map<DiGraph, Node> o, Map<DiGraph, Node> n ) {
+    }
 
     private void drawLine(Node from, Node to){
         strokeWeight(5);
@@ -382,5 +406,6 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
         pos.add(PVector.mult(camera, (float)notches * 100f));
         dir.add(PVector.mult(camera, (float)notches * 100f));
     }
+
 
 }
