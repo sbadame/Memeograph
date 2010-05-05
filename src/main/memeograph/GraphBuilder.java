@@ -11,6 +11,9 @@ public class GraphBuilder {
     private VirtualMachine vm;
     private Graph currentgraph;
 
+    private EventSet event_set = null;
+    private Iterator<Event> event_iter = null;
+
     public GraphBuilder(VirtualMachine vm)
     {
        this.vm = vm;
@@ -21,6 +24,13 @@ public class GraphBuilder {
        classEvent.addClassExclusionFilter("javax.*");
        classEvent.addClassExclusionFilter("sun.*");
        classEvent.enable();
+
+        try {
+            event_set = vm.eventQueue().remove();
+            event_iter = event_set.iterator();
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
        step();
     }
 
@@ -108,36 +118,35 @@ public class GraphBuilder {
 
     public Graph step(){
         try {
-            boolean looking_for_pause = true;
-            while(looking_for_pause){
-                //Read in this set of events
-                EventSet eventSet = vm.eventQueue().remove();
-                EventIterator eventIterator = eventSet.eventIterator();
-                while(eventIterator.hasNext()){
-                    Event event = eventIterator.nextEvent();
-                    if (event instanceof VMStartEvent){
-                    }else if (event instanceof ModificationWatchpointEvent) {
-                        looking_for_pause = false;
-                    }else if (event instanceof ClassPrepareEvent){
-                        ClassPrepareEvent cpe = (ClassPrepareEvent) event;
-                        for (Field field : cpe.referenceType().allFields()) {
-                            if (field.name().equals("memeopoint")) {
-                                ModificationWatchpointRequest mwr = vm.eventRequestManager().createModificationWatchpointRequest(field);
-                                mwr.enable();
-                            }
+            while(event_iter.hasNext()){
+                Event event = event_iter.next();
+                if (event instanceof VMStartEvent){
+                }else if (event instanceof ModificationWatchpointEvent) {
+                    interrogate();
+                    return currentGraph();
+                }else if (event instanceof ClassPrepareEvent){
+                    ClassPrepareEvent cpe = (ClassPrepareEvent) event;
+                    for (Field field : cpe.referenceType().allFields()) {
+                        if (field.name().equals("memeopoint")) {
+                            ModificationWatchpointRequest mwr = vm.eventRequestManager().createModificationWatchpointRequest(field);
+                            mwr.enable();
                         }
-                    }else{
-                        System.err.println("Caught the wrong watchpoint" + event.getClass().getName());
                     }
+                }else{
+                    System.err.println("Caught the wrong watchpoint" + event.getClass().getName());
                 }
-                eventSet.resume();
             }
-            interrogate();
-        } catch (InterruptedException ex) {
-            System.err.println("Couldn't retreive the eventset in the queue");
-            ex.printStackTrace();
+            //Looks like we need to try again
+            event_set.resume();
+            event_set = vm.eventQueue().remove();
+            event_iter = event_set.iterator();
+            return step();
+        }catch(InterruptedException ei){
+            System.err.println("Couldn't wait for remove()");
+            ei.printStackTrace();
         }
-        return currentGraph();
+        //This should NEVER happen
+        throw new RuntimeException("Couldn't step");
     }
 }
 
