@@ -72,8 +72,8 @@ public class MemeoPApplet extends PApplet implements MouseWheelListener{
     public void setup(){
         //Full screen, go big or go home!
         try{
-            size(1024, 768, P3D);
-            //size(wanted_width, wanted_height, OPENGL);
+            //size(1024, 768, P3D);
+            size(1024, 768, OPENGL);
         }catch(GLException gle){
             gle.printStackTrace();
             System.exit(1);
