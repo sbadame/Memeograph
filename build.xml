@@ -2,14 +2,14 @@
 <project name="Memeograph" default="build" basedir=".">
 
 	<!-- Define all of our properties here -->
-    <property name="testclass" value="ReadChar" />
-    <property name="args" value="-cp ${basedir}/bin/test ${testclass}" />
+    <property name="SuTclass" value="ReadChar" />
+    <property name="args" value="-cp ${basedir}/bin/sut ${SuTclass}" />
 
     <!-- the port# that Memeograph will connect to -->
     <property name="port" value="8000" />
 
-    <!-- the port # that the test program will listen for a connection from -->
-    <property name="testport" value="${port}" />
+    <!-- the port # that the SuT program will listen for a connection from -->
+    <property name="SuTport" value="${port}" />
 
 	<!-- the type of transport that we are using -->
 	<property name="transport" value="dt_socket" />
@@ -22,21 +22,21 @@
 	</path>
 
 	<!-- Define all of our run targets here -->
-
-	<target name="run-test" depends="build">
-		<java fork="true" classname="${testclass}" >
+	<target name="run-sut" depends="build" description="Runs the ReadChar program">
+		<java fork="true" classname="${SuTclass}" >
 			<jvmarg value="-Xdebug" />
-			<jvmarg value="-Xrunjdwp:transport=${transport},address=${testport},server=y,suspend=n"/>
+			<jvmarg value="-Xrunjdwp:transport=${transport},address=${SuTport},server=y,suspend=n"/>
 			<classpath>
-				<path location="bin/test"/>
+				<path location="bin/sut"/>
 			</classpath>
 		</java>
 	</target>
 
-	<target name="run" depends="build">
+    <target name="run" depends="build" description="Memeographer using the ReadChar program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
         <java fork="true" classname="memeograph.Memeographer">
+          <jvmarg value="-Xcheck:jni" />
           <sysproperty key="java.library.path" path="${basedir}/natives" />
-          <arg value="${args}" />
+          <arg value="+jdbgrapher.savefile=graph.object ${args}" />
           <classpath>
               <path location="bin/main" />
               <path refid="lib.path" />
@@ -44,7 +44,29 @@
         </java>
     </target>
 
-    <target name="pdf" depends="build">
+    <target name="run-fromgraph" depends="build" description="Loads a graph from file: graph.object. And then shows off the graph.">
+        <java fork="true" classname="memeograph.Memeographer">
+          <sysproperty key="java.library.path" path="${basedir}/natives" />
+          <arg value="+fileloader.file=graph.object +grapher=memeograph.builder.filebuilder.GraphFileLoader ${args}" />
+          <classpath>
+              <path location="bin/main" />
+              <path refid="lib.path" />
+          </classpath>
+        </java>
+    </target>
+
+    <target name="run-dot" depends="build" description="Runs ReadChar and then generates dot output. If you use linux, have dot installed and have gnome-open installed then it will also generate the graph and display it to you. ">
+        <java fork="true" classname="memeograph.Memeographer">
+          <sysproperty key="java.library.path" path="${basedir}/natives" />
+          <arg value="+displayer=memeograph.displayer.dot.DOTDisplayer ${args}" />
+          <classpath>
+              <path location="bin/main" />
+              <path refid="lib.path" />
+          </classpath>
+        </java>
+    </target>
+
+    <target name="pdf" depends="build" description="An old target that converts dot files to pdfs.">
     <java fork="true" classname="memeograph.Memeographer">
         <arg value="dot" />
         <classpath>
@@ -58,24 +80,52 @@
     </target>
 
 	<!-- Define all of our build targets here -->
-	<target name="build" depends="-compile-main,-compile-test" />
+        <target name="build" depends="-compile-main,-compile-sut,-compile-test"  description ="Builds the project, the tests and the SuT examples."/>
 
 	<target name="-compile-main">
 		<mkdir dir="bin/main" />
 		<javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6">
-                    <compilerarg value="-Xlint:unchecked" />
-                </javac>
+            <compilerarg value="-Xlint:unchecked" />
+        </javac>
+    <copy todir="bin/main">
+      <fileset dir="src/main" includes="**/*.properties" />
+    </copy>
 	</target>
 
-	<target name="-compile-test">
-		<mkdir dir="bin/test" />
-		<javac debug="true" srcdir="src/test" destdir="bin/test" />
+	<target name="-compile-sut">
+		<mkdir dir="bin/sut" />
+		<javac debug="true" debuglevel="lines,vars,source" srcdir="src/sut" destdir="bin/sut" />
 	</target>
 
-	<!-- Basic simple clean target -->
-	<target name="clean">
-		<delete dir="bin"/>
-	</target>
+  <target name="-compile-test" depends="-compile-main">
+    <mkdir dir="bin/test" />
+    <javac srcdir="src/test" destdir="bin/test" debug="true" source="6">
+      <classpath>
+        <path refid="lib.path" />
+        <path location="bin/main" />
+        <path location="bin/test" />
+      </classpath>
+    </javac>
+  </target>
 
+  <!-- Basic simple clean target -->
+  <target name="clean" description="Deletes the bin directory">
+          <delete dir="bin"/>
+  </target>
+
+  <!-- Test target -->
+  <target name="test" description="Run the unit tests on the code" depends="build">
+    <junit>
+      <classpath>
+        <path refid="lib.path" />
+        <path location="bin/main" />
+        <path location="bin/test" />
+      </classpath>
+      <formatter type="brief" usefile="false" />
+      <batchtest>
+        <fileset dir="bin/test" includes="**/*Test.class" />
+      </batchtest>
+    </junit>
+  </target>
 
 </project>

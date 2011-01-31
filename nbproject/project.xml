@@ -22,6 +22,12 @@
                     <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
+                    <label>src/sut</label>
+                    <type>java</type>
+                    <location>src/sut</location>
+                    <encoding>UTF-8</encoding>
+                </source-folder>
+                <source-folder>
                     <label>src/test</label>
                     <type>java</type>
                     <location>src/test</location>
@@ -42,15 +48,13 @@
                     <target>clean</target>
                     <target>build</target>
                 </action>
+                <action name="test">
+                    <target>test</target>
+                </action>
             </ide-actions>
             <export>
                 <type>folder</type>
                 <location>bin/main</location>
-                <build-target>build</build-target>
-            </export>
-            <export>
-                <type>folder</type>
-                <location>bin/test</location>
                 <build-target>build</build-target>
             </export>
             <view>
@@ -58,6 +62,10 @@
                     <source-folder style="packages">
                         <label>src/main</label>
                         <location>src/main</location>
+                    </source-folder>
+                    <source-folder style="packages">
+                        <label>src/sut</label>
+                        <location>src/sut</location>
                     </source-folder>
                     <source-folder style="packages">
                         <label>src/test</label>
@@ -72,11 +80,12 @@
                     <ide-action name="rebuild"/>
                     <ide-action name="clean"/>
                     <ide-action name="run"/>
+                    <ide-action name="test"/>
                 </context-menu>
             </view>
             <subprojects/>
         </general-data>
-        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/1">
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/2">
             <compilation-unit>
                 <package-root>src/main</package-root>
                 <classpath mode="compile">bin/main:lib/tools.jar:lib/core.jar:lib/gluegen-rt.jar:lib/jogl.jar:lib/opengl.jar</classpath>
@@ -84,11 +93,44 @@
                 <source-level>1.5</source-level>
             </compilation-unit>
             <compilation-unit>
+                <package-root>src/sut</package-root>
+                <classpath mode="compile">lib/core.jar:lib/gluegen-rt.jar:lib/jogl.jar:lib/opengl.jar:lib/tools.jar</classpath>
+                <source-level>1.5</source-level>
+            </compilation-unit>
+            <compilation-unit>
                 <package-root>src/test</package-root>
-                <classpath mode="compile">bin/test</classpath>
-                <built-to>bin/test</built-to>
+                <unit-tests/>
+                <classpath mode="compile">lib/core.jar:lib/gluegen-rt.jar:lib/jogl.jar:lib/junit-4.6.jar:lib/opengl.jar:lib/tools.jar:bin/main</classpath>
                 <source-level>1.5</source-level>
             </compilation-unit>
         </java-data>
+        <preferences xmlns="http://www.netbeans.org/ns/auxiliary-configuration-preferences/1">
+            <module name="org-netbeans-modules-editor-indent">
+                <node name="CodeStyle">
+                    <property name="usedProfile" value="project"/>
+                    <node name="project">
+                        <property name="spaces-per-tab" value="4"/>
+                        <property name="tab-size" value="4"/>
+                        <property name="indent-shift-width" value="4"/>
+                        <property name="expand-tabs" value="true"/>
+                        <property name="text-limit-width" value="80"/>
+                    </node>
+                </node>
+                <node name="text">
+                    <node name="x-java">
+                        <node name="CodeStyle">
+                            <node name="project">
+                                <property name="spaces-per-tab" value="2"/>
+                                <property name="tab-size" value="2"/>
+                                <property name="indent-shift-width" value="2"/>
+                                <property name="expand-tabs" value="true"/>
+                                <property name="text-limit-width" value="80"/>
+                            </node>
+                        </node>
+                    </node>
+                </node>
+            </module>
+            <module name="org-netbeans-modules-projectimport-eclipse-core"/>
+        </preferences>
     </configuration>
 </project>

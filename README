@@ -1,14 +1,34 @@
-Draws the stack and the heap of a running Java program in 3D using
-force-directed layout
+What this program does: 
+    Draws the stack and the heap of a running Java program in 3D
 
-Add a play and step button.
+How to run:
+    Use 'ant -p' to get a list of all of the public targets that you can run
+    These change often so you're better off just running 'ant -p'
 
-vm.suspend()
-vm.createModificationWatchpointRequest(Field field) for every field of every object.
-event.enable() every event
+How does this program work?
+    In simple terms here are the steps of execution:
+        1.) Memeographer creates a JVM that runs a target program (called the SuT for System Under Test)
+        2.) Memeographer attaches to that JVM and starts listening for calls to memeographer.Memeographer.step()
+        3.) Every time Memeographer grapher sees that function being called it will temporarily suspend the execution of all threads in SuT  generate an object graph of the program.
+        4.) The JVM exits, Memeographer has it's graphs.
+        5.) The graphs are rendered for the user. (Yay!)
 
-while (vm can run) {
-    vm.resume()
-    e = vm.eventQueue().remove()
-    processEvent(e)
-}
+    In reality the ordering of these events can vary, but right now that doesn't really happen
+
+How does the code work?
+    Documenting that here is just asking for pain since things change.
+    But here are some ideas that I don't think will change:
+        Right now the "core" of Memeographer are just the four classes in the memeograph packeage. 3 out of those 4 contain only a handful of code.
+        For information about how the code fits together:
+            memeograph.Memeographer //Information about the life cycle of the program
+            memeograph.Config       //Information about how objects are created, configured and extended
+            memeograph.graph.Node   //Information about how nodes in the graph store information
+
+Current Features missing that shouldn't take much work add (ie. Features that can be implemented in less that a day's work):
+    - Creating a UI for Memeoframe. I'm thinking using swing for that, since processing doesn't have much for GUI widgets. (And it's shouldn't that not what it's meant for.)
+    - Implementing the physics layout for GraphLayoutHandler (Where did all of that phsyics code go anyway?)
+    - Bring back the animations for transitioning between graphs.
+    - Multithreading the creation of graphs and rendering to be a producer/consumer type of relationship.
+        - Note this is the main reason that generator returns an iterator and not a list, the whole set of graphs need not be all totally created when the renderer gets it's hands on it.
+    - Bring back the ability to customize color and text again.
+    - Why doesn't OpenGL work? This is just a jogl issue. No java code probably needs to be touched, just the jars/libs need to be configured.
