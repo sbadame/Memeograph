@@ -34,9 +34,7 @@ Current Features missing that shouldn't take much work add (ie. Features that ca
         - Note this is the main reason that generator returns an iterator and not a list, the whole set of graphs need not be all totally created when the renderer gets it's hands on it.
     - Why doesn't OpenGL work? This is just a jogl issue. No java code probably needs to be touched, just the jars/libs need to be configured.
     - Have the stackframe display the actual line of code that is beign run in that frame. (Modification to StackFrameNode would be needed.)
-    - Bring back the ability to customize text again.
     - Why doesn't OpenGL work? This is just a jogl issue. No java code probably needs to be touched, just the jars/libs need to be configured.
-    - Stop displaying fields named "memeographcolor" and "memeographname"
     - Fix how base types are displayed - there isn't one "5" which all ints
       equal to 5 reference.  A possible fix for this is to eliminate the
       display of base types altogether - if you want your thing to show up,
