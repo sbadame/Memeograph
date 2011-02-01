@@ -2,17 +2,14 @@ package memeograph.generator.jdb;
 
 import com.sun.jdi.*;
 import com.sun.jdi.event.*;
+import memeograph.generator.jdb.nodes.*;
+
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.MethodEntryRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import memeograph.Config;
-import memeograph.generator.jdb.nodes.*;
-import memeograph.generator.jdb.nodes.StackFrameNode;
-import memeograph.generator.jdb.nodes.ThreadNode;
-import memeograph.generator.jdb.nodes.GraphNodeType;
-import memeograph.generator.jdb.nodes.ValueNodeCreator;
 import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
 
