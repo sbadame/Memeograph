@@ -7,6 +7,7 @@ import com.sun.jdi.request.MethodEntryRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import memeograph.Config;
 import memeograph.generator.jdb.nodes.*;
 import memeograph.generator.jdb.nodes.StackFrameNode;
 import memeograph.generator.jdb.nodes.ThreadNode;
@@ -24,11 +25,16 @@ public class VMParser {
   final VirtualMachine virtualMachine;
   private HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
   private ValueNodeCreator valueCache = new ValueNodeCreator();
+  private String triggermethodname = "";
+  private String triggerclassname = "";
 
   private ArrayList<Graph> graphList = new ArrayList<Graph>();
 
   public VMParser(VirtualMachine vm){
     this.virtualMachine = vm;
+    String t = Config.getConfig().getProperty(Config.TRIGGER);
+    triggermethodname = t.substring(t.lastIndexOf('.')+1);
+    triggerclassname = t.substring(0, t.lastIndexOf('.'));
   }
 
   public Iterator<Graph> getGraphs(){
@@ -45,7 +51,7 @@ public class VMParser {
 
     //Lets listen for a step...
     MethodEntryRequest mer = virtualMachine.eventRequestManager().createMethodEntryRequest();
-    mer.addClassFilter("memeograph.Memeographer");
+    mer.addClassFilter(triggerclassname);
     mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
     mer.enable();
 
@@ -59,7 +65,7 @@ public class VMParser {
               vmAlive = false;
           }else if (event instanceof MethodEntryEvent){
               MethodEntryEvent mee = (MethodEntryEvent)event;
-              if (mee.method().name().contains("step")) {
+              if (mee.method().name().contains(triggermethodname)) {
                 graphs.add(interrogate());
               }
           }else if (event instanceof VMStartEvent){

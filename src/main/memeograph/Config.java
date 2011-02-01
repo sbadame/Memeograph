@@ -42,6 +42,7 @@ public class Config extends Properties{
   public static final String RENDERER = "renderer";
   public static final String FILTERS = "filters";
   public static final String VERBOSE = "verbose";
+  public static String TRIGGER = "trigger";
 
   //Some of our own properties...
   public static final String PROPERTY_DIVIDER = ",";
