@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.ShortValue;
 
-class ShortNode implements GraphNodeType{
+class ShortNode extends GraphNodeType{
   private static int count = 0;
 
   public final short value;

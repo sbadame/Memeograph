@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.ByteValue;
 
-class ByteNode implements GraphNodeType{
+class ByteNode extends GraphNodeType{
   public int count = 0;
 
   public final byte value;

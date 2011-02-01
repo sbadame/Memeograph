@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.ThreadReference;
 
-public class ThreadNode implements GraphNodeType {
+public class ThreadNode extends GraphNodeType {
 
   public final long uid;
   public final String name;

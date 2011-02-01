@@ -1,6 +1,7 @@
 package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.*;
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import memeograph.Config;
@@ -42,7 +43,9 @@ public class ValueNodeCreator {
   private MutableNode getObjectReference(ObjectReference or) {
 
     MutableNode n = new MutableNode();
-    n.store(GraphNodeType.class, new ObjectNode(or));
+    ObjectNode on = new ObjectNode(or);
+    n.store(GraphNodeType.class, on);
+    n.store(Color.class, on.getColor());
 
     //Fields
     ClassType type = (ClassType)or.type();

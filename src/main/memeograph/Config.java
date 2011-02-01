@@ -147,6 +147,7 @@ public class Config extends Properties{
    *          the public constructor that takes a Config as it's only argument
    *          or the default constructor.
    */
+  @SuppressWarnings("unchecked")
   public <E> E getClass(String property, Class<E> cls){
      //I hate java exception handling sometimes...
     try {

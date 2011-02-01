@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.FloatValue;
 
-class FloatNode implements GraphNodeType{
+class FloatNode extends GraphNodeType {
 
   private static int count = 0;
 

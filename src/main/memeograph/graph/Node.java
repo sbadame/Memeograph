@@ -1,5 +1,6 @@
 package memeograph.graph;
 
+import java.awt.Color;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ public class Node implements Serializable{
     return !children.isEmpty();
   }
 
+  @SuppressWarnings("unchecked")
   public <E> E lookup(Class<E> key){
     Object val = hashMap.get(key);
     if (key.isInstance(val)) { return (E) val; }
@@ -74,6 +76,11 @@ public class Node implements Serializable{
     hash = 71 * hash + (this.hashMap != null ? this.hashMap.hashCode() : 0);
     hash = 71 * hash + (this.children != null ? this.children.hashCode() : 0);
     return hash;
+  }
+
+  public Color getColor() {
+    if (hashMap.containsKey(Color.class)) return lookup(Color.class);
+    return null;
   }
 
   @Override

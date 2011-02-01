@@ -1,6 +1,6 @@
 package memeograph.generator.jdb.nodes;
 
-public class ObjectGraphRoot implements GraphNodeType{
+public class ObjectGraphRoot extends GraphNodeType{
 
   private static int counter = 0;
 

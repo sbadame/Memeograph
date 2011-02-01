@@ -5,7 +5,7 @@ import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
 
-public class StackFrameNode implements GraphNodeType {
+public class StackFrameNode extends GraphNodeType {
 
   public final int count;
   public final String name;

@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.LongValue;
 
-class LongNode implements GraphNodeType{
+class LongNode extends GraphNodeType{
 
   private static int count = 0;
 
