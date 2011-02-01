@@ -21,7 +21,6 @@ import memeograph.util.ACyclicIterator;
  * A cute feature for linux/gnome users is to set "dotdisplayer.show" to true
  * and install dot along with gnome-open. The renderer will then automatically
  * compile the output and open the pdf for you.
- * @author Sandro Badame <a href="mailto:s.badame@gmail.com">s.badame&amp;gmail.com</a>
  */
 public class DOTRenderer implements GraphRenderer{
 

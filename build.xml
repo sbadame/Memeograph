@@ -44,7 +44,7 @@
         </java>
     </target>
 
-    <target name="run-fromgraph" depends="build" description="Loads a graph from file: graph.object. And then shows off the graph.">
+    <target name="run-fromgraph" depends="build" description="Loads a graph from file: graph.object. And then shows off the graph. This can be run after the run target is run to make execution faster assuming that you don't need to generate a new object graph.">
         <java fork="true" classname="memeograph.Memeographer">
           <sysproperty key="java.library.path" path="${basedir}/natives" />
           <arg value="+fileloader.file=graph.object +grapher=memeograph.builder.filebuilder.GraphFileLoader ${args}" />
