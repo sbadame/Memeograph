@@ -1,5 +1,6 @@
 package memeograph.generator.jdb.nodes;
 
+import java.awt.Color;
 import java.io.Serializable;
 
 /**
@@ -11,7 +12,10 @@ import java.io.Serializable;
  * toString() methods of Types should be human readable for the most part
  * Renderers should use them to retrieve that text that represents a node.
  */
-public interface GraphNodeType extends Serializable{
-
-  public String getUniqueID();
+public abstract class GraphNodeType implements Serializable {
+  public Color getColor() { return null; }
+  
+  // stop the "pass info with toString()" hack
+  public String getName() { return toString(); }
+  abstract public String getUniqueID();
 }

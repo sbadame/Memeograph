@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.ArrayReference;
 
-public class ArrayNode implements GraphNodeType{
+public class ArrayNode extends GraphNodeType{
 
 
   final public String name;

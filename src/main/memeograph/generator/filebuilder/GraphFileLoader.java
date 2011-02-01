@@ -35,6 +35,7 @@ public class GraphFileLoader implements GraphGenerator{
       }
   }
 
+  @SuppressWarnings("unchecked")
   public Iterator<Graph> getGraphs() {
     try {
       FileInputStream fileInputStream = new FileInputStream(file);

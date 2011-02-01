@@ -57,7 +57,7 @@ public class GraphLayoutHandler {
 
     private void layout(Node n, int z, int y)
     {
-        NodeGraphicsInfo newInfo = new NodeGraphicsInfo();
+        NodeGraphicsInfo newInfo = new NodeGraphicsInfo(n.getColor());
         newInfo.x = 0; //We don't know X yet, we have to go back and add it later
         newInfo.y = y * 50;
         newInfo.z = z * 50;

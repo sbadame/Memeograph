@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.CharValue;
 
-class CharNode implements GraphNodeType{
+class CharNode extends GraphNodeType{
   private static int count = 0;
 
   public final char value;

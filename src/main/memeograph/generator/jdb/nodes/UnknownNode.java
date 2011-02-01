@@ -6,7 +6,7 @@ import com.sun.jdi.Value;
  * Instances of this class means that the code is missing some type or that
  * something went wrong... not good.
  */
-class UnknownNode implements GraphNodeType{
+class UnknownNode extends GraphNodeType{
   private static int count = 0;
 
   public final String cls;

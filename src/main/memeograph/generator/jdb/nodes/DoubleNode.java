@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.DoubleValue;
 
-class DoubleNode implements GraphNodeType{
+class DoubleNode extends GraphNodeType{
   public int count = 0;
 
   public final double value;

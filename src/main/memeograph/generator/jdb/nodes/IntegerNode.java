@@ -2,7 +2,7 @@ package memeograph.generator.jdb.nodes;
 
 import com.sun.jdi.IntegerValue;
 
-public class IntegerNode implements GraphNodeType{
+public class IntegerNode extends GraphNodeType{
   public int count = 0;
 
   public final int value;

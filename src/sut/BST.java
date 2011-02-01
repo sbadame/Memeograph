@@ -36,7 +36,7 @@ public class BST {
         }
     }
 
-    protected Color memeographcolor = new Color(205, 183, 158);
+    protected int memeographcolor = 0xCDB79E;
     protected String memeographname = "BST()";
     protected boolean memeopoint = false;
 }
