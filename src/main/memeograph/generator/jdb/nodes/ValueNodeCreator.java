@@ -45,7 +45,6 @@ public class ValueNodeCreator {
     MutableNode n = new MutableNode();
     ObjectNode on = new ObjectNode(or);
     n.store(GraphNodeType.class, on);
-    n.store(Color.class, on.getColor());
 
     //Fields
     ClassType type = (ClassType)or.type();
@@ -56,8 +55,7 @@ public class ValueNodeCreator {
       if (val == null || val == or) { continue; }
 
       //Special case? Detect, apply, move on to next field
-      if (isSpecialCase(field, val)) {
-        applySpecialCase(field, val);
+      if ( isSpecialCase(field, val, n) ) {
         continue;
       }
 
@@ -73,11 +71,15 @@ public class ValueNodeCreator {
     return n;
   }
 
-  private boolean isSpecialCase(Field field, Value val) {
+  private boolean isSpecialCase(Field field, Value val, MutableNode n) {
+    if (field.name().equals("memeographcolor") && field.typeName().equals("int")) {
+        ((ObjectNode)n.lookup(GraphNodeType.class)).color = new Color(((IntegerValue)val).value());
+        return true;
+    }else if (field.name().equals("memeographname") && field.typeName().equals("java.lang.String")){
+        ((ObjectNode)n.lookup(GraphNodeType.class)).name = ((StringReference)val).value();
+        return true;
+    }
     return false;
-  }
-
-  private void applySpecialCase(Field field, Value val) {
   }
 
   /**
