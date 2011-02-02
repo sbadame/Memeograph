@@ -6,7 +6,7 @@ import memeograph.generator.jdb.nodes.*;
 
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import javax.media.opengl.GLException;
+import memeograph.Config;
 import memeograph.graph.Graph;
 import memeograph.graph.Node;
 import memeograph.util.ACyclicIterator;
@@ -47,13 +47,11 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     @Override
     public void setup(){
         //Full screen, go big or go home!
-        try{
-            size(1024, 768, P3D);
-            //size(1024, 768, OPENGL);
-        }catch(GLException gle){
-            gle.printStackTrace();
-            System.exit(1);
+        String rendertype = P3D;
+        if (Config.getConfig().isSwitchSet(Config.USE_OPENGL, false)) {
+          rendertype = OPENGL;
         }
+        size(1024, 768, rendertype );
         background(102);
 
         font = createFont("SansSerif.bold", 18);
@@ -80,6 +78,10 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         background(102);
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
+        if (!currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone()){
+          return;
+        }
+
         //Now draw the lines between the nodes
         ACyclicIterator<Node> i = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
         while( i.hasNext()){
@@ -101,6 +103,9 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         if (f.lookup(GraphNodeType.class) instanceof ObjectGraphRoot) { return; }
         NodeGraphicsInfo from = f.lookup(NodeGraphicsInfo.class);
         NodeGraphicsInfo to = t.lookup(NodeGraphicsInfo.class);
+
+        //If either of these happen then we're drawing nodes before they
+        //are laid out. That's a no-no. :)
 
         strokeWeight(5);
         stroke(1f,Math.min(from.opacity, to.opacity));
