@@ -1,9 +1,27 @@
 <?xml version="1.0"?>
 <project name="Memeograph" default="build" basedir=".">
 
-	<!-- Define all of our properties here -->
+    <!--OS specific stuff for jogl-->
+    <condition property="osfamily" value="windows"> <os family="windows" /> </condition>
+    <condition property="osfamily" value="linux"> <os family="unix" /> </condition>
+    <condition property="osfamily" value="mac"> <os family="mac" /> </condition>
+    <property name="osfamily" value="unknown" />
+
+    <!--Also architecture specific for JOGL -->
+    <condition property="arch" value="ppc"> <and> <os family="mac"/> <contains string="${os.arch}" substring="ppc"/> </and> </condition>
+    <condition property="arch" value="universal" ><os family="mac"/></condition>
+    <condition property="arch" value="64"> <contains string="${os.arch}" substring="64" /> </condition>
+    <property name="arch" value="32" />
+
+    <property name="nativelibrarypath" value="lib/jogl/${osfamily}${arch}" />
+    <echo message="Expecting native libs in: ${nativelibrarypath}" />
+
+    <available file="${nativelibrarypath}" type="dir" property="hasnativelibs"  value="true" />
+    <property name="hasnativelibs" value="false" />
+    <property name="memeographer_args" value="+useopengl=${hasnativelibs} +jdbgrapher.savefile=graph.object" />
+
     <property name="SuTclass" value="ReadChar" />
-    <property name="args" value="-cp ${basedir}/bin/sut ${SuTclass}" />
+    <property name="args" value="${memeographer_args} -cp ${basedir}/bin/sut ${SuTclass}" />
 
     <!-- the port# that Memeograph will connect to -->
     <property name="port" value="8000" />
@@ -24,22 +42,22 @@
             </fileset>
     </path>
 
-	<!-- Define all of our run targets here -->
-	<target name="run-sut" depends="build" description="Runs the ReadChar program">
-		<java fork="true" classname="${SuTclass}" >
-			<jvmarg value="-Xdebug" />
-			<jvmarg value="-Xrunjdwp:transport=${transport},address=${SuTport},server=y,suspend=n"/>
-			<classpath>
-				<path location="bin/sut"/>
-			</classpath>
-		</java>
-	</target>
+    <!-- Define all of our run targets here -->
+    <target name="run-sut" depends="build" description="Runs the ReadChar program">
+        <java fork="true" classname="${SuTclass}" >
+            <jvmarg value="-Xdebug" />
+            <jvmarg value="-Xrunjdwp:transport=${transport},address=${SuTport},server=y,suspend=n"/>
+            <classpath>
+                <path location="bin/sut"/>
+            </classpath>
+        </java>
+    </target>
 
     <target name="run" depends="build" description="Memeographer using the ReadChar program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
         <java fork="true" classname="memeograph.Memeographer">
           <jvmarg value="-Xcheck:jni" />
-          <sysproperty key="java.library.path" path="${basedir}/lib/jogl" />
-          <arg value="+jdbgrapher.savefile=graph.object ${args}" />
+          <sysproperty key="java.library.path" path="${nativelibrarypath}" />
+          <arg value="${args}" />
           <classpath>
               <path location="bin/main" />
               <path refid="lib.path" />
@@ -82,23 +100,23 @@
             </exec>
     </target>
 
-	<!-- Define all of our build targets here -->
+    <!-- Define all of our build targets here -->
         <target name="build" depends="-compile-main,-compile-sut,-compile-test"  description ="Builds the project, the tests and the SuT examples."/>
 
-	<target name="-compile-main">
-		<mkdir dir="bin/main" />
-		<javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6">
+    <target name="-compile-main">
+        <mkdir dir="bin/main" />
+        <javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6">
             <compilerarg value="-Xlint:unchecked" />
         </javac>
     <copy todir="bin/main">
       <fileset dir="src/main" includes="**/*.properties" />
     </copy>
-	</target>
+    </target>
 
-	<target name="-compile-sut">
-		<mkdir dir="bin/sut" />
-		<javac debug="true" debuglevel="lines,vars,source" srcdir="src/sut" destdir="bin/sut" />
-	</target>
+    <target name="-compile-sut">
+        <mkdir dir="bin/sut" />
+        <javac debug="true" debuglevel="lines,vars,source" srcdir="src/sut" destdir="bin/sut" />
+    </target>
 
   <target name="-compile-test" depends="-compile-main">
     <mkdir dir="bin/test" />
