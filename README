@@ -25,6 +25,7 @@ How does the code work?
             memeograph.graph.Node   //Information about how nodes in the graph store information
 
 Current Features missing that shouldn't take much work add (ie. Features that can be implemented in less that a day's work):
+    - Bring back the ability to customize color and text again.
     - Creating a UI for Memeoframe. I'm thinking using swing for that, since processing doesn't have much for GUI widgets. (And it's shouldn't that not what it's meant for.)
     - Implementing the physics layout for GraphLayoutHandler (Where did all of that phsyics code go anyway?)
     - Implement Peter's cool 3-D layout algorithm (currently in LaTeX and not Java)
@@ -33,6 +34,11 @@ Current Features missing that shouldn't take much work add (ie. Features that ca
         - Note this is the main reason that generator returns an iterator and not a list, the whole set of graphs need not be all totally created when the renderer gets it's hands on it.
     - Why doesn't OpenGL work? This is just a jogl issue. No java code probably needs to be touched, just the jars/libs need to be configured.
     - Have the stackframe display the actual line of code that is beign run in that frame. (Modification to StackFrameNode would be needed.)
+    - Why doesn't OpenGL work? This is just a jogl issue. No java code probably needs to be touched, just the jars/libs need to be configured.
+    - Fix how base types are displayed - there isn't one "5" which all ints
+      equal to 5 reference.  A possible fix for this is to eliminate the
+      display of base types altogether - if you want your thing to show up,
+      make it an Integer, and not an int
 
 Current Features that I want to see that will take lots of work:
     - Getting it to work with jython,closure,scala and some of the more badass JVM languages

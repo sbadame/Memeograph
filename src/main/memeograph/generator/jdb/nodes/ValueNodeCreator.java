@@ -18,17 +18,13 @@ public class ValueNodeCreator {
 
     if (val instanceof ArrayReference) {
       n = getArrayNode((ArrayReference)val);
-      valueCache.put(val, n);
     }else if (val instanceof ObjectReference){
       n = getObjectReference((ObjectReference)val);
-      valueCache.put(val, n);
     }else{
       n = getPrimitiveReference(val);
-      if (Config.getConfig().isSwitchSet(Config.GROUP_PRIMATIVES, false)) {
-        valueCache.put(val, n);
-      }
     }
 
+    valueCache.put(val, n);
     return n;
   }
 
