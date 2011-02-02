@@ -35,6 +35,7 @@ import java.util.logging.Logger;
  * @author Sandro Badame <a href="mailto:sandro@sbcoded.com">sandro&amp;sbcoded.com</a>
  */
 public class Config extends Properties{
+
   public static final String FILTERS = "filters";
   public static final String GENERATOR = "generator";
   public static final String GROUP_PRIMATIVES =  "groupprimitives";
@@ -44,6 +45,7 @@ public class Config extends Properties{
   public static final String TRIGGER = "trigger";
   public static final String VERBOSE = "verbose";
   public static final String VM_OPTIONS = "vm_options";
+  public static final String USE_OPENGL = "useopengl";
 
   //Some of our own properties...
   public static final String PROPERTY_DIVIDER = ",";

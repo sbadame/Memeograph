@@ -1,4 +1,4 @@
-What this program does: 
+What this program does:
     Draws the stack and the heap of a running Java program in 3D
 
 How to run:
@@ -31,7 +31,6 @@ Current Features missing that shouldn't take much work add (ie. Features that ca
     - Bring back the animations for transitioning between graphs. (Easier once the above is done)
     - Multithreading the creation of graphs and rendering to be a producer/consumer type of relationship.
         - Note this is the main reason that generator returns an iterator and not a list, the whole set of graphs need not be all totally created when the renderer gets it's hands on it.
-    - Why doesn't OpenGL work? This is just a jogl issue. No java code probably needs to be touched, just the jars/libs need to be configured.
     - Have the stackframe display the actual line of code that is beign run in that frame. (Modification to StackFrameNode would be needed.)
 
 Current Features that I want to see that will take lots of work:

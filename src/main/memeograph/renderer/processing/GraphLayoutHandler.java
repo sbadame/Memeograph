@@ -21,6 +21,7 @@ public class GraphLayoutHandler {
 
   private final Graph g;
   private final PApplet applet;
+  private boolean didLayout = false;
 
 
   //The Grid!!!
@@ -53,6 +54,7 @@ public class GraphLayoutHandler {
         }while(sf.hasChildren());
       }
       setXPositions(g);
+      didLayout = true;
   }
 
     private void layout(Node n, int z, int y)
@@ -125,5 +127,10 @@ public class GraphLayoutHandler {
       }
       return false;
     }
+
+    public boolean isLayoutDone() {
+      return didLayout;
+    }
+
 
 }
