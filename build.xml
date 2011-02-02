@@ -11,15 +11,18 @@
     <!-- the port # that the SuT program will listen for a connection from -->
     <property name="SuTport" value="${port}" />
 
-	<!-- the type of transport that we are using -->
-	<property name="transport" value="dt_socket" />
+    <!-- the type of transport that we are using -->
+    <property name="transport" value="dt_socket" />
 
-	<!-- Holds a list of all of the 'main' project's dependencies  that should go on the class path-->
-	<path id="lib.path">
-		<fileset dir=".">
-			<include name="lib/*.jar" />
-		</fileset>
-	</path>
+    <!-- Holds a list of all of the 'main' project's dependencies  that should go on the class path-->
+    <path id="lib.path">
+            <fileset dir=".">
+                <include name="lib/*.jar" />
+            </fileset>
+            <fileset dir=".">
+                <include name="lib/jogl/*.jar" />
+            </fileset>
+    </path>
 
 	<!-- Define all of our run targets here -->
 	<target name="run-sut" depends="build" description="Runs the ReadChar program">
@@ -35,7 +38,7 @@
     <target name="run" depends="build" description="Memeographer using the ReadChar program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
         <java fork="true" classname="memeograph.Memeographer">
           <jvmarg value="-Xcheck:jni" />
-          <sysproperty key="java.library.path" path="${basedir}/natives" />
+          <sysproperty key="java.library.path" path="${basedir}/lib/jogl" />
           <arg value="+jdbgrapher.savefile=graph.object ${args}" />
           <classpath>
               <path location="bin/main" />

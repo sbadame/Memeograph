@@ -77,6 +77,10 @@ public class Config extends Properties{
     putAll(parseArgs(fullargs.toString()));
 
     String vm_args = getProperty(VM_OPTIONS);
+    if (vm_args == null || vm_args.isEmpty()) {
+      System.err.println("Please pass in a program to run!");
+      System.exit(1);
+    }
     if (vm_args.matches("^\\d+$")) {
       setProperty(PORT, vm_args);
     }else{

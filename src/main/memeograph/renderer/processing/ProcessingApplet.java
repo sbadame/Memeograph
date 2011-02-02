@@ -6,7 +6,6 @@ import memeograph.generator.jdb.nodes.*;
 
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import javax.media.opengl.GLException;
 import memeograph.graph.Graph;
 import memeograph.graph.Node;
 import memeograph.util.ACyclicIterator;
@@ -47,13 +46,8 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     @Override
     public void setup(){
         //Full screen, go big or go home!
-        try{
-            size(1024, 768, P3D);
-            //size(1024, 768, OPENGL);
-        }catch(GLException gle){
-            gle.printStackTrace();
-            System.exit(1);
-        }
+        //size(1024, 768, P3D);
+        size(1024, 768, OPENGL);
         background(102);
 
         font = createFont("SansSerif.bold", 18);
