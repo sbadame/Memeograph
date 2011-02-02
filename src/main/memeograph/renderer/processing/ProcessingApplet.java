@@ -85,7 +85,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         while( i.hasNext()){
           Node parent = i.next();
           for (Node kid : parent.getChildren()) {
-            if(kid == null) continue;
             drawLine(parent, kid);
           }
         }
