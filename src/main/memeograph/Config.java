@@ -82,6 +82,7 @@ public class Config extends Properties{
       System.err.println("Please pass in a program to run!");
       System.exit(1);
     }
+    System.out.println(vm_args);
     if (vm_args.matches("^\\d+$")) {
       setProperty(PORT, vm_args);
     }else{

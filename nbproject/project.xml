@@ -16,21 +16,21 @@
                     <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
-                    <label>src/main</label>
+                    <label>main</label>
                     <type>java</type>
                     <location>src/main</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
-                    <label>src/sut</label>
+                    <label>test</label>
                     <type>java</type>
-                    <location>src/sut</location>
+                    <location>src/test</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
-                    <label>src/test</label>
+                    <label>examples</label>
                     <type>java</type>
-                    <location>src/test</location>
+                    <location>src/examples</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
             </folders>
@@ -60,16 +60,16 @@
             <view>
                 <items>
                     <source-folder style="packages">
-                        <label>src/main</label>
+                        <label>main</label>
                         <location>src/main</location>
                     </source-folder>
                     <source-folder style="packages">
-                        <label>src/sut</label>
-                        <location>src/sut</location>
+                        <label>test</label>
+                        <location>src/test</location>
                     </source-folder>
                     <source-folder style="packages">
-                        <label>src/test</label>
-                        <location>src/test</location>
+                        <label>examples</label>
+                        <location>src/examples</location>
                     </source-folder>
                     <source-file>
                         <location>build.xml</location>
@@ -93,14 +93,13 @@
                 <source-level>1.5</source-level>
             </compilation-unit>
             <compilation-unit>
-                <package-root>src/sut</package-root>
-                <classpath mode="compile">lib/core.jar:lib/gluegen-rt.jar:lib/jogl.jar:lib/opengl.jar:lib/tools.jar</classpath>
-                <source-level>1.5</source-level>
-            </compilation-unit>
-            <compilation-unit>
                 <package-root>src/test</package-root>
                 <unit-tests/>
                 <classpath mode="compile">lib/core.jar:lib/gluegen-rt.jar:lib/jogl.jar:lib/junit-4.6.jar:lib/opengl.jar:lib/tools.jar:bin/main</classpath>
+                <source-level>1.5</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>src/examples</package-root>
                 <source-level>1.5</source-level>
             </compilation-unit>
         </java-data>

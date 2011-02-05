@@ -20,9 +20,6 @@
     <property name="hasnativelibs" value="false" />
     <property name="memeographer_args" value="+useopengl=${hasnativelibs} +jdbgrapher.savefile=graph.object" />
 
-    <property name="SuTclass" value="ReadChar" />
-    <property name="args" value="${memeographer_args} -cp ${basedir}/bin/sut ${SuTclass}" />
-
     <!-- the port# that Memeograph will connect to -->
     <property name="port" value="8000" />
 
@@ -43,20 +40,20 @@
     </path>
 
     <!-- Define all of our run targets here -->
-    <target name="run-sut" depends="build" description="Runs the ReadChar program">
-        <java fork="true" classname="${SuTclass}" >
+    <target name="run-example-BST" depends="build" description="Runs the BST program">
+        <java fork="true" classname="BSTExample" >
             <jvmarg value="-Xdebug" />
             <jvmarg value="-Xrunjdwp:transport=${transport},address=${SuTport},server=y,suspend=n"/>
             <classpath>
-                <path location="bin/sut"/>
+                <path location="bin/examples"/>
             </classpath>
         </java>
     </target>
 
-    <target name="run" depends="build" description="Memeographer using the ReadChar program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
+    <target name="run" depends="build" description="Memeographer using the BSTExample program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
         <java fork="true" classname="memeograph.Memeographer">
           <sysproperty key="java.library.path" path="${nativelibrarypath}" />
-          <arg value="${args}" />
+          <arg value="${memeographer_args} -cp bin/examples BSTExample" />
           <classpath>
               <path location="bin/main" />
               <path refid="lib.path" />
@@ -75,7 +72,7 @@
         </java>
     </target>
 
-    <target name="run-dot" depends="build" description="Runs ReadChar and then generates dot output. If you use linux, have dot installed and have gnome-open installed then it will also generate the graph and display it to you. ">
+    <target name="run-dot" depends="build" description="Runs BSTExample and then generates dot output. If you use linux, have dot installed and have gnome-open installed then it will also generate the graph and display it to you. ">
         <java fork="true" classname="memeograph.Memeographer">
           <sysproperty key="java.library.path" path="${basedir}/natives" />
           <arg value="+displayer=memeograph.displayer.dot.DOTDisplayer ${args}" />
@@ -100,7 +97,7 @@
     </target>
 
     <!-- Define all of our build targets here -->
-        <target name="build" depends="-compile-main,-compile-sut,-compile-test"  description ="Builds the project, the tests and the SuT examples."/>
+        <target name="build" depends="-compile-main,-compile-examples,-compile-test"  description ="Builds the project, the tests and the examples."/>
 
     <target name="-compile-main">
         <mkdir dir="bin/main" />
@@ -112,9 +109,9 @@
     </copy>
     </target>
 
-    <target name="-compile-sut">
-        <mkdir dir="bin/sut" />
-        <javac debug="true" debuglevel="lines,vars,source" srcdir="src/sut" destdir="bin/sut" />
+    <target name="-compile-examples">
+        <mkdir dir="bin/examples" />
+        <javac debug="true" debuglevel="lines,vars,source" srcdir="src/examples" destdir="bin/examples" />
     </target>
 
   <target name="-compile-test" depends="-compile-main">

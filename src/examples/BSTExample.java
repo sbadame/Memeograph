@@ -1,5 +1,5 @@
 
-public class ReadChar{
+public class BSTExample{
     public static void main(String[] args){
         BST b = new BST(5);
         b = b.insert(10);
