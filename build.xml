@@ -50,6 +50,16 @@
         </java>
     </target>
 
+    <target name="run-example-clojure" depends="build" description="Runs the Clojure REPL">
+        <java fork="true" classname="clojure.main" >
+            <jvmarg value="-Xdebug" />
+            <jvmarg value="-Xrunjdwp:transport=${transport},address=${SuTport},server=y,suspend=n"/>
+            <classpath>
+                <path location="bin/examples/clojure/clojure.jar"/>
+            </classpath>
+        </java>
+    </target>
+
     <target name="run" depends="build" description="Memeographer using the BSTExample program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
         <java fork="true" classname="memeograph.Memeographer">
           <sysproperty key="java.library.path" path="${nativelibrarypath}" />
@@ -97,22 +107,28 @@
     </target>
 
     <!-- Define all of our build targets here -->
-        <target name="build" depends="-compile-main,-compile-examples,-compile-test"  description ="Builds the project, the tests and the examples."/>
+    <target name="build" depends="-compile-main,-compile-examples,-compile-test"  description ="Builds the project, the tests and the examples."/>
 
     <target name="-compile-main">
         <mkdir dir="bin/main" />
         <javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6">
             <compilerarg value="-Xlint:unchecked" />
         </javac>
-    <copy todir="bin/main">
-      <fileset dir="src/main" includes="**/*.properties" />
-    </copy>
+        <copy todir="bin/main">
+            <fileset dir="src/main" includes="**/*.properties" />
+        </copy>
     </target>
 
     <target name="-compile-examples">
         <mkdir dir="bin/examples" />
         <mkdir dir="bin/examples/java" />
+        <mkdir dir="bin/examples/clojure" />
         <javac debug="true" debuglevel="lines,vars,source" srcdir="src/examples/java" destdir="bin/examples/java" />
+
+        <!-- Clojure here -->
+        <copy todir="bin/examples/clojure">
+            <fileset dir="src/examples/clojure" includes="**/*.jar" />
+        </copy>
     </target>
 
   <target name="-compile-test" depends="-compile-main">
