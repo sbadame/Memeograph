@@ -3,6 +3,8 @@ package memeograph.renderer.processing;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 
 import java.io.File;
@@ -32,13 +34,25 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
   }
   
   public void init() {
+    try {
+      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    } catch (InstantiationException ex) {
+      ex.printStackTrace();
+    } catch (UnsupportedLookAndFeelException ex) {
+      ex.printStackTrace();
+    }catch (IllegalAccessException ex) {
+        Logger.getLogger(MemeoFrame.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (ClassNotFoundException ex){
+        ex.printStackTrace();
+      }
+
         
         //Make out processing applet
         papplet = new ProcessingApplet();
         papplet.frame = this;
         
         //The load the graph button
-        loadgraph = new JButton("Load a graph"){{
+        loadgraph = new JButton("Open a Saved Graph"){{
             addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) {loadGraph();}
             });
@@ -51,7 +65,7 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
             });
         }};
 
-        graphit = new JButton("Run it!"){{
+        graphit = new JButton("Run Memeographer!"){{
             addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) { doGraph(); }
             });
