@@ -1,10 +1,15 @@
 package memeograph.graph;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 /**
  * A Graph is a collection of connected Nodes.
@@ -30,7 +35,7 @@ import java.util.LinkedList;
  */
 public class Node implements Serializable{
 
-  protected HashMap<Class, Object>  hashMap = new HashMap<Class, Object> ();
+  protected transient HashMap<Class, Object>  hashMap = new HashMap<Class, Object> ();
   protected Collection<Node> children = new LinkedList<Node>();
 
   public Collection<Node> getChildren(){
@@ -87,5 +92,39 @@ public class Node implements Serializable{
   public String toString(){
     if (hashMap.containsKey(String.class)) { return lookup(String.class); }
     return super.toString();
+  }
+
+  /**
+   * Since we may may not be able to serialize all of the data in the hash
+   * we only serialize what we can...
+   * @param stream
+   * @throws IOException
+   */
+  private void writeObject(ObjectOutputStream stream) throws IOException {
+      stream.defaultWriteObject();
+
+      ArrayList<Entry<Class, Object>> serialList = new ArrayList<Entry<Class, Object>>();
+      for (Entry<Class, Object> entry : hashMap.entrySet()) {
+          if (entry.getValue() instanceof Serializable) {
+            serialList.add(entry);
+          }
+      }
+
+      stream.writeInt(serialList.size());
+      for (Entry<Class, Object> entry : serialList) {
+          stream.writeObject(entry.getKey());
+          stream.writeObject(entry.getValue());
+      }
+  }
+
+  private void readObject(ObjectInputStream aStream) throws IOException, ClassNotFoundException{
+      hashMap = new HashMap<Class, Object>();
+      aStream.defaultReadObject();
+      int entrySize = aStream.readInt();
+      for(int i = 0; i < entrySize; i++){
+          Class key = (Class) aStream.readObject();
+          Object value =  aStream.readObject();
+          hashMap.put(key,value);
+      }
   }
 }
