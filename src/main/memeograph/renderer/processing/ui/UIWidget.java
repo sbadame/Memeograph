@@ -1,9 +1,10 @@
 package memeograph.renderer.processing.ui;
 
-import java.awt.geom.Dimension2D;
+import java.awt.Dimension;
 import processing.core.PApplet;
 
 public abstract class UIWidget {
 
-    public abstract Dimension2D draw(PApplet p);
+    public abstract void draw(PApplet p);
+    public abstract Dimension getSize(PApplet p);
 }

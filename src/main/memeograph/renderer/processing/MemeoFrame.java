@@ -1,20 +1,13 @@
 package memeograph.renderer.processing;
 
+import javax.swing.*;
+import java.util.*;
+import java.io.*;
+
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 import memeograph.Config;
 import memeograph.GraphRenderer;
 import memeograph.generator.filebuilder.GraphFileLoader;
@@ -41,10 +34,10 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
     } catch (UnsupportedLookAndFeelException ex) {
       ex.printStackTrace();
     }catch (IllegalAccessException ex) {
-        Logger.getLogger(MemeoFrame.class.getName()).log(Level.SEVERE, null, ex);
-      } catch (ClassNotFoundException ex){
-        ex.printStackTrace();
-      }
+      ex.printStackTrace();
+    } catch (ClassNotFoundException ex){
+      ex.printStackTrace();
+    }
 
         
         //Make out processing applet

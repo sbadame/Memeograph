@@ -42,7 +42,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     private volatile boolean isSetup = false;
 
     //UI
-    private WidgetContainer topleft;
+    private WidgetContainer topleft, bottomright;
 
     public ProcessingApplet(){
         addMouseWheelListener(this);
@@ -55,7 +55,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     @Override
     public void setup(){
-        size(1024, 768, rendertype); //THIS MUST BE THE FIRST LINE OF CODE
+        size(1024, 700, rendertype); //THIS MUST BE THE FIRST LINE OF CODE
                                      //NO REALLY, IF IT ISN'T THEN PROCESSING'S
                                      //REFELECTION KILLS OPENGL AND YOUR DREAMS
         background(102);
@@ -72,16 +72,28 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         smooth();
 
         //Setup the UI
-        topleft = new WidgetContainer(){{
-            add(new TextWidget(new TextMaker(){
+        topleft = new LeftJustifiedWidgetContainer(){{
+            add(new TextWidget(){
                 public String getText() { return "FPS: " + round(frameRate); }
-            }));
+            });
 
             newRow();
 
-            add(new TextWidget(new TextMaker(){
+            add(new TextWidget(){
                 public String getText() { return "Graph " + (graphs.indexOf(currentgraph) + 1) + " of " + graphs.size();}
-            }));
+            });
+        }};
+
+        bottomright = new RightJustifiedWidgetContainer(){{
+            add(new TextWidget(){
+                public String getText() { return "Controls"; }
+            });
+
+            newRow();
+            add(new TextWidget(){public String getText(){return "N : next graph"; }});
+
+            newRow();
+            add(new TextWidget(){public String getText(){return "Mouse Wheel: zoom out"; }});
         }};
 
         isSetup = true;
@@ -117,9 +129,13 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
         hint(DISABLE_DEPTH_TEST);
         camera();
-        translate(0,0,0);
         textAlign(LEFT, TOP);
+
+        final int padding = 5;
+        translate(padding,padding,0);
         topleft.draw(this);
+        translate(width-padding-2, height-padding, 0);
+        bottomright.draw(this);
     }
 
 
@@ -294,10 +310,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     private void toggleRenderMode(){
         rendermode = (rendermode + 1) % ((renderfrontback|rendertopbottom) + 1);
-    }
-
-    @Override
-    public void mouseMoved(){
     }
 
     public void mouseWheelMoved(MouseWheelEvent e) {

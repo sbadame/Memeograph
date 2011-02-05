@@ -1,31 +1,33 @@
 package memeograph.renderer.processing.ui;
 
 import java.awt.Dimension;
-import java.awt.geom.Dimension2D;
 import processing.core.PApplet;
 
 public class TextWidget extends UIWidget{
 
-  private TextMaker textmaker;
+  private String text = "";
 
-  public TextWidget(final String text){
-     this(new TextMaker(){
-       public String getText(){
-          return text;
-       }
-     });
+  public TextWidget(String text){
+      this.text = text;
   }
 
-  public TextWidget(TextMaker tm){
-     this.textmaker = tm;
+  public TextWidget(){
+
+  }
+
+  public String getText(){
+      return text;
+  }
+
+  public Dimension getSize(PApplet p){
+      String s = getText();
+      return new Dimension((int)p.textWidth(s), (int)(p.textAscent() + p.textDescent()));
   }
 
   @Override
-  public Dimension2D draw(PApplet p) {
-      String s = textmaker.getText();
-      Dimension dimension = new Dimension((int) p.textWidth(s), (int) (p.textAscent() + p.textDescent()));
-      p.text(s, 0, 0);
-      return dimension;
+  public void draw(PApplet p) {
+      p.noFill();
+      p.text(getText(), 0, 0, 0);
   }
 
 }
