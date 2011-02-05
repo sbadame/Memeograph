@@ -3,6 +3,7 @@ package memeograph.renderer.processing;
 import java.util.*;
 import processing.core.*;
 import memeograph.generator.jdb.nodes.*;
+import memeograph.renderer.processing.ui.*;
 
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -17,15 +18,14 @@ import memeograph.util.ACyclicIterator;
  * We also do the user input handling here.
  */
 public class ProcessingApplet extends PApplet implements MouseWheelListener{
-    static int MOVE_TICK = 50;
-    
+    public static final int MOVE_TICK = 50;
+
     //Just to have something and avoid the dreaded null
     ArrayList<Graph> graphs = new ArrayList<Graph>();
     LinkedList<Graph> layoutqueue = new LinkedList<Graph>();
-
     Graph currentgraph = null;
 
-    PFont font;
+    PFont font3D;
 
     //Camera Info
     PVector pos;
@@ -40,6 +40,9 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     private int rendermode = renderfrontback;
 
     private volatile boolean isSetup = false;
+
+    //UI
+    private WidgetContainer topleft;
 
     public ProcessingApplet(){
         addMouseWheelListener(this);
@@ -58,17 +61,28 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         background(102);
         frame.setResizable(true);
 
-        font = createFont("SansSerif.bold", 18);
-        textFont(font);
+        font3D = createFont("SansSerif.bold", 18);
+        textFont(font3D);
         textAlign(CENTER, CENTER);
 
-        //Lets see if we can slow down the stacks rendering to 30fps
-        frameRate(25);
         pos = new PVector(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f));
         dir = new PVector(width/2.0f, height/2.0f, 0);
 
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
         smooth();
+
+        //Setup the UI
+        topleft = new WidgetContainer(){{
+            add(new TextWidget(new TextMaker(){
+                public String getText() { return "FPS: " + round(frameRate); }
+            }));
+
+            newRow();
+
+            add(new TextWidget(new TextMaker(){
+                public String getText() { return "Graph " + (graphs.indexOf(currentgraph) + 1) + " of " + graphs.size();}
+            }));
+        }};
 
         isSetup = true;
     }
@@ -76,6 +90,8 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     @Override
     public void draw(){
         background(102);
+        hint(ENABLE_DEPTH_TEST);
+        textAlign(CENTER, CENTER);
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
 
         if (currentgraph == null) { return; }
@@ -98,6 +114,12 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         while(j.hasNext()) {
           drawNode(j.next());
         }
+
+        hint(DISABLE_DEPTH_TEST);
+        camera();
+        translate(0,0,0);
+        textAlign(LEFT, TOP);
+        topleft.draw(this);
     }
 
 
