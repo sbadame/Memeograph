@@ -57,24 +57,7 @@ public class JDBGraphGenerator implements GraphGenerator {
 
   @Override
   public Iterator<Graph> getGraphs() {
-    VMParser graphBuilder = new VMParser(virtualMachine);
-    Iterator<Graph> graphs = graphBuilder.getGraphs();
-    if (config.isPropertySet(SAVE_GRAPH)){
-      //This sucks, I know... but I need something that I can serialize
-      ArrayList<Graph> graphlist = new ArrayList<Graph>(); 
-      while(graphs.hasNext())graphlist.add(graphs.next());
-      try {
-        FileOutputStream fos = new FileOutputStream(new File(config.getProperty(SAVE_GRAPH)));
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        oos.writeObject(graphlist);
-        oos.flush();
-        oos.close();
-      }catch (IOException ex) {
-          Logger.getLogger(JDBGraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
-      }
-      return graphlist.iterator();
-    }
-    return graphs;
+    return new VMParser(virtualMachine).getGraphs();
   }
 
   private static VirtualMachine createTargetVM(String main_command, String vm_options){

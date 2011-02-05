@@ -18,10 +18,9 @@ import memeograph.util.ACyclicIterator;
  */
 public class ProcessingApplet extends PApplet implements MouseWheelListener{
     static int MOVE_TICK = 50;
-
-
+    
     //Just to have something and avoid the dreaded null
-    Iterator<Graph> graphs = new ArrayList<Graph>().iterator();
+    ArrayList<Graph> graphs = new ArrayList<Graph>();
     Graph currentgraph = null;
 
     PFont font;
@@ -42,7 +41,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     public ProcessingApplet(){
         addMouseWheelListener(this);
     }
-
 
     @Override
     public void setup(){
@@ -70,13 +68,15 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         //the graph...
         synchronized(lock){ isSetup = true; lock.notifyAll(); }
     }
-
-
-
+    
     @Override
     public void draw(){
         background(102);
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
+        
+        if (currentgraph == null) {
+          return;
+        }
 
         if (!currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone()){
           return;
@@ -103,9 +103,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         if (f.lookup(GraphNodeType.class) instanceof ObjectGraphRoot) { return; }
         NodeGraphicsInfo from = f.lookup(NodeGraphicsInfo.class);
         NodeGraphicsInfo to = t.lookup(NodeGraphicsInfo.class);
-
-        //If either of these happen then we're drawing nodes before they
-        //are laid out. That's a no-no. :)
 
         strokeWeight(5);
         stroke(1f,Math.min(from.opacity, to.opacity));
@@ -161,39 +158,42 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         }
         popMatrix();
     }
-
-    public void setGraphs(Iterator<Graph> graphs ){
+    
+    public void addGraph(Graph g){
       //Make sure that setup has run first, then we can start to set the graphs
-      synchronized(lock){
-        while(!isSetup){
-          try {
-            lock.wait();
-          } catch (InterruptedException ex) {
-            ex.printStackTrace();
+      if (!isSetup) {
+        synchronized(lock){
+          while(!isSetup){
+            try {
+              lock.wait();
+            } catch (InterruptedException ex) {
+              ex.printStackTrace();
+            }
           }
         }
       }
-
-      this.graphs = graphs;
-      this.currentgraph = graphs.next();
-      GraphLayoutHandler layout = new GraphLayoutHandler(currentgraph, this);
-      currentgraph.getRoot().store(GraphLayoutHandler.class, layout);
+      
+      GraphLayoutHandler layout = new GraphLayoutHandler(g, this);
+      g.getRoot().store(GraphLayoutHandler.class, layout);
       layout.doLayout();
-  }
+      graphs.add(g);
+      
+      if (currentgraph == null) {
+         currentgraph = g;
+      }
+    }
 
+    /**
+     * This is called when the user wants to see the next graph
+     */
     private void nextGraph(){
-      if (graphs.hasNext() == false) {
+      int i = graphs.indexOf(currentgraph);
+      if (i >= graphs.size() - 1) {
         System.err.println("No more to show you...");
         return;
+      }else{
+        currentgraph = graphs.get(i + 1);
       }
-      Graph nextGraph = graphs.next();
-      GraphLayoutHandler layout = nextGraph.getRoot().lookup(GraphLayoutHandler.class);
-      if (layout == null) {
-          layout = new GraphLayoutHandler(nextGraph, this);
-          layout.doLayout();
-          nextGraph.getRoot().store(GraphLayoutHandler.class, layout);
-      }
-      currentgraph = nextGraph;
     }
 
 
