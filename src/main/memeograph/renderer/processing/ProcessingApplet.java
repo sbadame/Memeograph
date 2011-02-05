@@ -21,6 +21,8 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     
     //Just to have something and avoid the dreaded null
     ArrayList<Graph> graphs = new ArrayList<Graph>();
+    LinkedList<Graph> layoutqueue = new LinkedList<Graph>();
+
     Graph currentgraph = null;
 
     PFont font;
@@ -30,27 +32,31 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     PVector dir;
     PVector camNorth = new PVector(0,1,0);
 
+    private final String rendertype;
+
     //Text Rendering info
     private final int renderfrontback = 1;
     private final int rendertopbottom = 2;
     private int rendermode = renderfrontback;
 
-    private final Object lock = new Object();
-    private boolean isSetup = false;
+    private volatile boolean isSetup = false;
 
     public ProcessingApplet(){
         addMouseWheelListener(this);
+        if (Config.getConfig().isSwitchSet(Config.USE_OPENGL, false)){
+            rendertype = OPENGL;
+        }else{
+            rendertype = P3D;
+        }
     }
 
     @Override
     public void setup(){
-        //Full screen, go big or go home!
-        String rendertype = P3D;
-        if (Config.getConfig().isSwitchSet(Config.USE_OPENGL, false)) {
-          rendertype = OPENGL;
-        }
-        size(1024, 768, rendertype );
+        size(1024, 768, rendertype); //THIS MUST BE THE FIRST LINE OF CODE
+                                     //NO REALLY, IF IT ISN'T THEN PROCESSING'S
+                                     //REFELECTION KILLS OPENGL AND YOUR DREAMS
         background(102);
+        frame.setResizable(true);
 
         font = createFont("SansSerif.bold", 18);
         textFont(font);
@@ -64,19 +70,15 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
         smooth();
 
-        //Absolutely insane, but we need to make sure this runs before setting
-        //the graph...
-        synchronized(lock){ isSetup = true; lock.notifyAll(); }
+        isSetup = true;
     }
     
     @Override
     public void draw(){
         background(102);
         camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
-        
-        if (currentgraph == null) {
-          return;
-        }
+
+        if (currentgraph == null) { return; }
 
         if (!currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone()){
           return;
@@ -159,28 +161,25 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         popMatrix();
     }
     
-    public void addGraph(Graph g){
-      //Make sure that setup has run first, then we can start to set the graphs
+    public void addGraph(Graph newGraph){
+      GraphLayoutHandler layout = new GraphLayoutHandler(newGraph, this);
+      newGraph.getRoot().store(GraphLayoutHandler.class, layout);
+
       if (!isSetup) {
-        synchronized(lock){
-          while(!isSetup){
-            try {
-              lock.wait();
-            } catch (InterruptedException ex) {
-              ex.printStackTrace();
-            }
-          }
-        }
+          layoutqueue.add(newGraph);
+          return;
       }
-      
-      GraphLayoutHandler layout = new GraphLayoutHandler(g, this);
-      g.getRoot().store(GraphLayoutHandler.class, layout);
+
+      while(!layoutqueue.isEmpty()){
+          Graph graph = layoutqueue.pop();
+          graph.getRoot().lookup(GraphLayoutHandler.class).doLayout();
+          graphs.add(graph);
+          if (currentgraph == null) { currentgraph = graph; }
+      }
+
       layout.doLayout();
-      graphs.add(g);
-      
-      if (currentgraph == null) {
-         currentgraph = g;
-      }
+      graphs.add(newGraph);
+      if (currentgraph == null) { currentgraph = newGraph; }
     }
 
     /**
@@ -201,6 +200,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     @Override
     public void mouseDragged()
     {
+        if (currentgraph == null) { return; }
         float dy = pmouseY - mouseY;
         if (dy != 0) {
             float y = (pos.y-dir.y);
@@ -232,6 +232,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     @Override
     public void keyPressed(){
+        if (currentgraph == null) { return; }
         char k = (char)key;
         switch(k){
             case 'w':

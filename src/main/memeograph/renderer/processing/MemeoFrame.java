@@ -3,6 +3,8 @@ package memeograph.renderer.processing;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.*;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import javax.swing.*;
 import memeograph.GraphRenderer;
 import memeograph.graph.Graph;
 
@@ -23,6 +24,7 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
   
   public MemeoFrame(){
       super("Memeographer!");
+      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
   }
   
   public void init() {
@@ -30,7 +32,6 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
         //Make out processing applet
         papplet = new ProcessingApplet();
         papplet.frame = this;
-        papplet.init();
         
         //The save the graph button
         savegraph = new JButton("Save"){{
@@ -39,17 +40,18 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
                 public void actionPerformed(ActionEvent e) {saveGraph();}
             });
         }};
-        
+
         JPanel topBar = new JPanel();
         topBar.add(savegraph);
-        
+
         setLayout(new BorderLayout());
         add(topBar, BorderLayout.NORTH);
-        add(papplet, BorderLayout.CENTER);
         
         setSize(1024, 768);
         setLocationRelativeTo(null); //Centers the frame
         setVisible(true);
+        add(papplet, BorderLayout.CENTER);
+        papplet.init();
   }
 
   public void setGraphs(Iterator<Graph> generatorIterator) {
@@ -78,7 +80,7 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
               ex.printStackTrace();
             }
         }
-      
+
   }
 
 }
