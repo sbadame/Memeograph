@@ -46,8 +46,9 @@ public class JDBGraphGenerator implements GraphGenerator {
       //virtualMachine = connectToTargetVM(new Integer(port));
       throw new UnsupportedOperationException("Removed attaching to a live VM for now.");
     }else{
-      String target = config.getProperty(Config.SUT_MAIN);
       String target_args = config.getProperty(Config.VM_OPTIONS, "");
+      String target = target_args.substring(target_args.lastIndexOf(' '));
+      target_args = target_args.substring(0, target_args.lastIndexOf(' '));
       if (target != null) {
         virtualMachine = createTargetVM(target, target_args);
       }

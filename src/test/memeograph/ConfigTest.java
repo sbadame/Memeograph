@@ -23,9 +23,14 @@ public class ConfigTest {
     Map<String, String> result2 = Config.parseArgs(args2);
     assertTrue(result2.get("hello").equals("world"));
 
+    String args3 = "+hello    =    world";
+    Map<String, String> result3 = Config.parseArgs(args3);
+    assertTrue(result3.get("hello").equals("world"));
+
+
     String args5 = "+duh";
     Map<String, String> result5 = Config.parseArgs(args5);
-    assertTrue(result5.get("+duh").equals("true"));
+    assertTrue(result5.get("duh").equals("true"));
 
 
   }

@@ -3,7 +3,6 @@ package memeograph;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -11,6 +10,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * At its core just a bunch of names and values for properties
@@ -40,7 +41,6 @@ public class Config extends Properties{
   public static final String GROUP_PRIMATIVES =  "groupprimitives";
   public static final String PORT = "port";
   public static final String RENDERER = "renderer";
-  public static final String SUT_MAIN = "target";
   public static final String TRIGGER = "trigger";
   public static final String USE_OPENGL = "useopengl";
   public static final String VERBOSE = "verbose";
@@ -52,7 +52,7 @@ public class Config extends Properties{
   private static Config config;
 
   /*
-   * Create a config using the String[] as arguments
+   * Create a properties using the String[] as arguments
    */
   public static Config createConfig(String[] args){
     config = new Config(args);
@@ -60,7 +60,7 @@ public class Config extends Properties{
   }
 
   /**
-   * @return get the only config instance in existence
+   * @return get the only properties instance in existence
    */
   public static Config getConfig(){
     return config;
@@ -81,15 +81,6 @@ public class Config extends Properties{
     if (vm_args == null || vm_args.isEmpty()) {
       System.err.println("Please pass in a program to run!");
       System.exit(1);
-    }
-    System.out.println(vm_args);
-    if (vm_args.matches("^\\d+$")) {
-      setProperty(PORT, vm_args);
-    }else{
-      String t = vm_args.substring(vm_args.lastIndexOf(' ')+1,vm_args.length());
-      setProperty(SUT_MAIN, t);
-
-      setProperty(VM_OPTIONS, vm_args.substring(0,vm_args.lastIndexOf(' ')));
     }
 
     if (isSwitchSet(VERBOSE, false)) {
@@ -207,76 +198,51 @@ public class Config extends Properties{
     return null;
   }
 
+  public static Map<String, String> parseArgs(String commandLine){
+      HashMap<String, String> properties = new HashMap<String, String>();
 
-  /**
-   * Only public so that I can weakly test this...
-   * What a horribly hacky parsing function... please kill me.
-   * args that start with a '+' get saved as a property, anything else
-   * gets passed to the target program.
-   */
-  public static Map<String, String> parseArgs(String args){
-    HashMap<String, String> target = new HashMap<String, String>();
-    //Trim off the whitespace!
-    args = args.trim();
+      Pattern[] patterns = new Pattern[]{
+        //Switches like +show
+        Pattern.compile("\\+([\\w\\.]+)"),
+        //Regular properties like +key=val
+        Pattern.compile("\\+([\\w\\.]+)\\s*=\\s*(\\S+)"),
+        //Quoted properties +f="f b"
+        Pattern.compile("\\+([\\w\\.]+)\\s*=\\s*\"([^\"])*\"") 
+      };
 
-    ArrayList<String> splitupArgs = new ArrayList<String>();
-    StringBuilder currentArg = new StringBuilder();
-    boolean isInQuotes = false;
-    boolean isInArg = false;
-    for(int i = 0; i < args.length(); i++){
-      char c = args.charAt(i);
-
-      if (!isInArg){
-        //Not even collecting for an arguement yet
-        if (c == ' '){
-          continue;
-        } else {
-          isInArg = true;
-          currentArg.append(c);
-        }
-
-      }else if (isInQuotes){
-
-          if (c == '"'){
-            isInQuotes = false;
-          }else{
-            currentArg.append(c);
+      commandLine = commandLine.trim();
+      while(!commandLine.isEmpty()){
+          Matcher[] results = new Matcher[patterns.length];
+          for(int i = 0; i < results.length; i++){
+             results[i] = patterns[i].matcher(commandLine);
           }
 
-      }else if (c == '"'){
-          isInQuotes = true;
-      }else if (c == ' '){
-        isInArg = false;
-        splitupArgs.add(currentArg.toString());
-        currentArg.setLength(0);
-      }else{
-        currentArg.append(c);
+          Matcher best = null;
+          for (Matcher matcher : results) {
+              if (!matcher.lookingAt()) { continue; }
+              if (best == null) { best = matcher; continue; }
+
+              if (best.end() < matcher.end()) {
+                  best = matcher;
+              } 
+          }
+
+          //Yay! We have a match!!
+          if (best != null) {
+             if (best.groupCount() == 1) {
+                properties.put(best.group(1), String.valueOf(true));
+             }else if (best.groupCount() == 2){
+                properties.put(best.group(1), best.group(2));
+             }
+             commandLine = commandLine.substring(best.end());
+          }else{
+             properties.put(VM_OPTIONS, commandLine);
+             return properties;
+          }
+          commandLine = commandLine.trim();
       }
 
-    }
-
-    if (currentArg.length() > 0) splitupArgs.add(currentArg.toString());
-
-    StringBuilder target_vm = new StringBuilder();
-    for (String arg : splitupArgs) {
-       if(arg.startsWith("+")){
-           if(arg.contains("=")){
-             int i = arg.indexOf("=");
-             String name = arg.substring(1, i).trim();
-             String value = arg.substring(i+1, arg.length()).trim();
-             target.put(name, value);
-           }else{
-             target.put(arg, Boolean.toString(true));
-           }
-       }else{
-         target_vm.append(arg).append(" ");
-       }
-    }
-    String tvm = target_vm.toString().trim();
-    if(!tvm.isEmpty()){
-      target.put(VM_OPTIONS, tvm);
-    }
-    return target;
+      return properties;
   }
 
 }
