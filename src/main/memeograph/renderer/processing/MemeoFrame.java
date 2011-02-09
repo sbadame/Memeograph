@@ -14,36 +14,35 @@ import memeograph.generator.filebuilder.GraphFileLoader;
 import memeograph.graph.Graph;
 
 public class MemeoFrame extends JFrame implements GraphRenderer{
-  
+
   private JButton savegraph, loadgraph, graphit;
   private ProcessingApplet papplet;  
   private final List<Graph> graphs = Collections.synchronizedList(new ArrayList<Graph>());
 
   private final Object waitLock = new Object();
-  
+
   public MemeoFrame(){
       super("Memeographer!");
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
   }
-  
-  public void init() {
-    try {
-      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-    } catch (InstantiationException ex) {
-      ex.printStackTrace();
-    } catch (UnsupportedLookAndFeelException ex) {
-      ex.printStackTrace();
-    }catch (IllegalAccessException ex) {
-      ex.printStackTrace();
-    } catch (ClassNotFoundException ex){
-      ex.printStackTrace();
-    }
 
-        
+  public void init() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (InstantiationException ex) {
+            ex.printStackTrace();
+        } catch (UnsupportedLookAndFeelException ex) {
+            ex.printStackTrace();
+        }catch (IllegalAccessException ex) {
+            ex.printStackTrace();
+        } catch (ClassNotFoundException ex){
+            ex.printStackTrace();
+        }
+
         //Make out processing applet
         papplet = new ProcessingApplet();
         papplet.frame = this;
-        
+
         //The load the graph button
         loadgraph = new JButton("Open a Saved Graph"){{
             addActionListener(new ActionListener(){
@@ -71,7 +70,7 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
 
         setLayout(new BorderLayout());
         add(topBar, BorderLayout.NORTH);
-        
+
         setSize(1024, 768);
         setLocationRelativeTo(null); //Centers the frame
         setVisible(true);
@@ -87,7 +86,7 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
         }
 
         SwingUtilities.invokeLater(new Runnable(){
-            public void run(){
+            public void run() {
               topBar.remove(loadgraph);
               topBar.remove(graphit);
               topBar.add(savegraph);
@@ -110,7 +109,7 @@ public class MemeoFrame extends JFrame implements GraphRenderer{
       waitLock.notify();
     }
   }
-  
+
   private void saveGraph(){
       JFileChooser fc = new JFileChooser();
       if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION){
