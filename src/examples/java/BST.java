@@ -27,15 +27,12 @@ public class BST {
     public BST insert(int n)
     {
         if (n < data){
-            memeopoint = true;
             return new BST(data, left.insert(n), right);
         }else{
-            memeopoint = true;
             return new BST(data, left, right.insert(n));
         }
     }
 
     protected int memeographcolor = 0xCDB79E;
     protected String memeographname = "BST()";
-    protected boolean memeopoint = false;
 }
