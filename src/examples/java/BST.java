@@ -1,4 +1,3 @@
-import java.awt.Color;
 
 public class BST {
     final BST left, right;

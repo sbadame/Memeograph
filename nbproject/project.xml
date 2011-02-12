@@ -28,9 +28,9 @@
                     <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
-                    <label>examples</label>
+                    <label>src/examples/java</label>
                     <type>java</type>
-                    <location>src/examples</location>
+                    <location>src/examples/java</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
             </folders>
@@ -68,8 +68,8 @@
                         <location>src/test</location>
                     </source-folder>
                     <source-folder style="packages">
-                        <label>examples</label>
-                        <location>src/examples</location>
+                        <label>src/examples/java</label>
+                        <location>src/examples/java</location>
                     </source-folder>
                     <source-file>
                         <location>build.xml</location>
@@ -99,7 +99,7 @@
                 <source-level>1.5</source-level>
             </compilation-unit>
             <compilation-unit>
-                <package-root>src/examples</package-root>
+                <package-root>src/examples/java</package-root>
                 <source-level>1.5</source-level>
             </compilation-unit>
         </java-data>

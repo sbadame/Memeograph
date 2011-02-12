@@ -1,5 +1,3 @@
-import java.awt.Color;
-
 public class Leaf extends BST {
 
 
