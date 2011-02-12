@@ -18,7 +18,6 @@ import memeograph.util.ACyclicIterator;
  * We also do the user input handling here.
  */
 public class ProcessingApplet extends PApplet implements MouseWheelListener{
-    public static final int MOVE_TICK = 50;
 
     //Just to have something and avoid the dreaded null
     ArrayList<Graph> graphs = new ArrayList<Graph>();
@@ -28,9 +27,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     PFont font3D;
 
     //Camera Info
-    PVector pos;
-    PVector dir;
-    PVector camNorth = new PVector(0,1,0);
+    CameraHandler cameraHandler = new CameraHandler(this);
 
     private final String rendertype;
 
@@ -65,10 +62,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         textFont(font3D);
         textAlign(CENTER, CENTER);
 
-        pos = new PVector(width/2.0f, height/2.0f, (height/2.0f) / tan(PI*60.0f / 360.0f));
-        dir = new PVector(width/2.0f, height/2.0f, 0);
-
-        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
+        cameraHandler.setup();
         smooth();
 
         //Setup the UI
@@ -104,7 +98,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         background(102);
         hint(ENABLE_DEPTH_TEST);
         textAlign(CENTER, CENTER);
-        camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, 0, 1, 0);
+        cameraHandler.draw();
 
         if (currentgraph == null) { return; }
 
@@ -234,78 +228,24 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     }
 
 
-    private float dtheta = .03f;
     @Override
     public void mouseDragged()
     {
         if (currentgraph == null) { return; }
-        float dy = pmouseY - mouseY;
-        if (dy != 0) {
-            float y = (pos.y-dir.y);
-            float z = (pos.z-dir.z);
-            float r = sqrt(y*y + z*z);
-            float theta = atan2(y, z);
-
-            float theta_new = theta + ((dy > 0) ? dtheta : (-1*dtheta));
-            y = sin(theta_new) * r;
-            z = cos(theta_new) * r;
-            pos.y = dir.y + y;
-            pos.z = dir.z + z;
-        }
-
-        float dx = pmouseX - mouseX;
-        if (dx != 0) {
-            float x = (pos.x-dir.x);
-            float z = (pos.z-dir.z);
-            float r = sqrt(x*x + z*z);
-            float theta = atan2(z, x);
-
-            float theta_new = theta + ((dx < 0) ? dtheta : (-1*dtheta));
-            x = cos(theta_new) * r;
-            z = sin(theta_new) * r;
-            pos.x = dir.x + x;
-            pos.z = dir.z + z;
-        }
+        cameraHandler.mouseDragged();
     }
 
     @Override
     public void keyPressed(){
         if (currentgraph == null) { return; }
+        cameraHandler.keyPressed();
         char k = (char)key;
         switch(k){
-            case 'w':
-            case 'W': translateCameraY(-MOVE_TICK); break;
-            case 's':
-            case 'S': translateCameraY(MOVE_TICK); break;
-            case 'a':
-            case 'A': translateCameraX(-MOVE_TICK); break;
-            case 'd':
-            case 'D': translateCameraX(MOVE_TICK); break;
             case 't':
             case 'T': toggleRenderMode(); break;
             case 'n':
             case 'N': nextGraph(); break;
-            default: break;
         }
-    }
-
-    private void translateCameraY(float amount){
-        PVector camera = PVector.sub(dir,pos);
-        PVector cross = camera.cross(camNorth);
-        PVector up = cross.cross(camera);
-        up.normalize();
-        up.mult(amount);
-        pos.add(up);
-        dir.add(up);
-    }
-
-    private void translateCameraX(float amount){
-        PVector camera = PVector.sub(dir,pos);
-        PVector cross = camera.cross(camNorth);
-        cross.normalize();
-        cross.mult(amount);
-        pos.add(cross);
-        dir.add(cross);
     }
 
     private void toggleRenderMode(){
@@ -313,14 +253,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     }
 
     public void mouseWheelMoved(MouseWheelEvent e) {
-        int notches = -1*e.getWheelRotation(); //notches goes negative if the
-                                            //wheel is scrolled up.
-             
-        PVector camera = PVector.sub(dir,pos);
-        camera.normalize();
-        
-        pos.add(PVector.mult(camera, (float)notches * 100f));
-        dir.add(PVector.mult(camera, (float)notches * 100f));
+        cameraHandler.mouseWheelMoved(e);
     }
 
 
