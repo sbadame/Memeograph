@@ -101,7 +101,7 @@
 
     <target name="-compile-main">
         <mkdir dir="bin/main" />
-        <javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6">
+        <javac srcdir="src/main" destdir="bin/main" classpathref="lib.path" debug="on" source="6" includeAntRuntime="false">
             <compilerarg value="-Xlint:unchecked" />
         </javac>
         <copy todir="bin/main">
@@ -112,12 +112,12 @@
     <target name="-compile-examples">
         <mkdir dir="bin/examples" />
         <mkdir dir="bin/examples/java" />
-        <javac debug="true" debuglevel="lines,vars,source" srcdir="src/examples/java" destdir="bin/examples/java" />
+        <javac debug="true" debuglevel="lines,vars,source" srcdir="src/examples/java" destdir="bin/examples/java"  includeAntRuntime="false"/>
     </target>
 
   <target name="-compile-test" depends="-compile-main">
     <mkdir dir="bin/test" />
-    <javac srcdir="src/test" destdir="bin/test" debug="true" source="6">
+    <javac srcdir="src/test" destdir="bin/test" debug="true" source="6" includeAntRuntime="false">
       <classpath>
         <path refid="lib.path" />
         <path location="bin/main" />
