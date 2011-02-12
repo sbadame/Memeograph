@@ -7,15 +7,12 @@ public class BSTExample{
         b = b.insert(12);
         b = b.insert(2);
         b = b.insert(1);
-        memeograph.Memeographer.step();
 
         LList l = new LList();
         l = new LList(-3, l);
         l = new LList(6, l);
         l = new LList(7, l);
         l = new LList(8, l);
-
-        memeograph.Memeographer.step();
     }
 
 }
