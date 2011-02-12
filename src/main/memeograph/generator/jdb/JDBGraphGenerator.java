@@ -6,15 +6,9 @@ import com.sun.jdi.connect.Connector.Argument;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import com.sun.jdi.connect.LaunchingConnector;
 import com.sun.jdi.connect.VMStartException;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import memeograph.GraphGenerator;
 import memeograph.Config;
 import memeograph.graph.Graph;
@@ -33,7 +27,6 @@ public class JDBGraphGenerator implements GraphGenerator {
 
   private VirtualMachine virtualMachine;
   private Config config;
-  private String SAVE_GRAPH = "jdbgrapher.savefile";
 
   public JDBGraphGenerator(Config config){
     this.config = config;
@@ -41,19 +34,12 @@ public class JDBGraphGenerator implements GraphGenerator {
 
   @Override
   public void start(){
-    String port = config.getProperty(Config.PORT);
-    if (port != null) {
-      //virtualMachine = connectToTargetVM(new Integer(port));
-      throw new UnsupportedOperationException("Removed attaching to a live VM for now.");
-    }else{
       String target_args = config.getProperty(Config.VM_OPTIONS, "");
       String target = target_args.substring(target_args.lastIndexOf(' '));
       target_args = target_args.substring(0, target_args.lastIndexOf(' '));
       if (target != null) {
         virtualMachine = createTargetVM(target, target_args);
       }
-    }
-
   }
 
   @Override
