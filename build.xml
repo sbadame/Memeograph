@@ -53,7 +53,7 @@
     <target name="run" depends="build" description="Memeographer using the BSTExample program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
         <java fork="true" classname="memeograph.Memeographer">
           <sysproperty key="java.library.path" path="${nativelibrarypath}" />
-          <arg value="${memeographer_args} -cp bin/examples/java BSTExample" />
+          <arg value="${memeographer_args} +sourcepath=src/examples/java -cp bin/examples/java BSTExample" />
           <classpath>
               <path location="bin/main" />
               <path refid="lib.path" />

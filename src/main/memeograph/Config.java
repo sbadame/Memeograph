@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import memeograph.util.SourceCodeManager;
 
 /**
  * At its core just a bunch of names and values for properties
@@ -45,6 +46,7 @@ public class Config extends Properties{
   public static final String USE_OPENGL = "useopengl";
   public static final String VERBOSE = "verbose";
   public static final String VM_OPTIONS = "vm_options";
+  public static final String SOURCE_PATHS = "sourcepath";
 
   //Some of our own properties...
   public static final String PROPERTY_DIVIDER = ",";
@@ -65,6 +67,10 @@ public class Config extends Properties{
   public static Config getConfig(){
     return config;
   }
+
+  private GraphGenerator generator = null;
+  private GraphRenderer renderer = null;
+  private SourceCodeManager target = null;
 
   private Config(String[] args){
     try {
@@ -107,7 +113,6 @@ public class Config extends Properties{
     return getProperty(property) != null && !getProperty(property).isEmpty();
   }
 
-  private GraphGenerator generator = null;
   public GraphGenerator getGenerator() {
       if (generator == null) {
         generator = getClass(GENERATOR, GraphGenerator.class);
@@ -115,7 +120,6 @@ public class Config extends Properties{
       return generator;
   }
 
-  private GraphRenderer renderer = null;
   public GraphRenderer getRenderer() {
       if (renderer == null) {
         renderer = getClass(RENDERER, GraphRenderer.class);
@@ -129,6 +133,13 @@ public class Config extends Properties{
        return value.split(PROPERTY_DIVIDER);
     }
     return new String[0];
+  }
+
+  public SourceCodeManager getTargetProgram(){
+      if (target == null) {
+          target = new SourceCodeManager(this);
+      }
+      return target;
   }
 
   /**
