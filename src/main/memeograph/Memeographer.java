@@ -19,16 +19,16 @@ package memeograph;
  */
 public class Memeographer {
 
-  public static void main(String[] args) {
-    Config config = Config.createConfig(args);
+    public static void main(String[] args) {
+        Config config = Config.createConfig(args);
 
-    GraphRenderer renderer = config.getRenderer();
-    renderer.init();
+        GraphRenderer renderer = config.getRenderer();
+        renderer.init();
 
-    GraphGenerator generator = config.getGenerator();
-    generator.start();
+        GraphGenerator generator = config.getGenerator();
+        generator.start();
 
-    renderer.setGraphs(generator.getGraphs());
-  }
+        renderer.setGraphs(generator.getGraphs());
+    }
 
 }
