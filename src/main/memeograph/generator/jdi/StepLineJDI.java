@@ -1,17 +1,16 @@
-package memeograph.generator.jdb;
+package memeograph.generator.jdi;
 
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.event.Event;
-import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.StepRequest;
 import memeograph.Config;
 import memeograph.graph.Graph;
 
-public class InteractiveJDBGraphGenerator extends JDBGraphGenerator {
+public class StepLineJDI extends JDI {
 
-  public InteractiveJDBGraphGenerator(Config c){
+  public StepLineJDI(Config c){
       super(c);
   }
 
@@ -38,13 +37,12 @@ public class InteractiveJDBGraphGenerator extends JDBGraphGenerator {
 
       addVMEventListener(sr, new EventAction() {
           public Graph doAction(Event e) {
-              StepEvent se = (StepEvent) e;
               return generateGraph();
           }
       });
 
-      sr.addClassFilter("BSTExample");
       sr.setSuspendPolicy(EventRequest.SUSPEND_ALL);
+      sr.addClassFilter(Config.getConfig().getProperty(Config.TARGET_MAIN));
       sr.enable();
   }
 

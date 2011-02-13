@@ -1,4 +1,4 @@
-package memeograph.generator.jdb;
+package memeograph.generator.jdi;
 
 import com.sun.jdi.*;
 import com.sun.jdi.connect.*;
@@ -10,7 +10,7 @@ import com.sun.jdi.request.MethodEntryRequest;
 import java.util.*;
 import java.io.IOException;
 
-import memeograph.generator.jdb.nodes.*;
+import memeograph.generator.jdi.nodes.*;
 
 import memeograph.Generator;
 import memeograph.Config;
@@ -27,7 +27,7 @@ import memeograph.graph.MutableNode;
  * then re-running the program and building the graph from scratch in most
  * cases.
  */
-public class JDBGraphGenerator implements Generator {
+public class JDI implements Generator {
 
     private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
     private final ValueNodeCreator valueCache = new ValueNodeCreator();
@@ -40,7 +40,7 @@ public class JDBGraphGenerator implements Generator {
     private EventIterator eventIterator = null;
     private HashMap<EventRequest, EventAction> actions = new HashMap<EventRequest, EventAction>();
 
-    public JDBGraphGenerator(Config config){
+    public JDI(Config config){
         String target_options = config.getProperty(Config.TARGET_OPTIONS, "");
         target = target_options.substring(target_options.lastIndexOf(' '));
         target_args = target_options.substring(0, target_options.lastIndexOf(' '));
@@ -63,6 +63,8 @@ public class JDBGraphGenerator implements Generator {
                 try {
                     vm = connector.launch(launchargs);
                     new ProcessDirector(vm.process()).start();
+                    Config.getConfig().put(Config.TARGET_MAIN, target.trim());
+                    Config.getConfig().put(Config.TARGET_ARGS, target_args.trim());
                     keepgoing = false;
                 } catch (IOException ex) {
                   ex.printStackTrace();

@@ -1,4 +1,4 @@
-package memeograph.generator.jdb;
+package memeograph.generator.jdi;
 
 import com.sun.jdi.event.Event;
 import memeograph.graph.Graph;

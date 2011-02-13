@@ -18,7 +18,7 @@
 
     <available file="${nativelibrarypath}" type="dir" property="hasnativelibs"  value="true" />
     <property name="hasnativelibs" value="false" />
-    <property name="memeographer_args" value="+useopengl=${hasnativelibs} +jdbgrapher.savefile=graph.object" />
+    <property name="memeographer_args" value="+useopengl=${hasnativelibs} +jdigrapher.savefile=graph.object" />
 
     <!-- the port# that Memeograph will connect to -->
     <property name="port" value="8000" />
@@ -50,9 +50,9 @@
         </java>
     </target>
 
-    <target name="run-interactive" description="Runs memeographer by stepping line by line through main.">
+    <target name="run-stepline" description="Runs memeographer by stepping line by line through main.">
         <antcall target="run">
-            <param name="memeographer.args" value="+generator=memeograph.generator.jdb.InteractiveJDBGraphGenerator" />
+            <param name="memeographer.args" value="+generator=memeograph.generator.jdi.StepLineJDI" />
         </antcall>
     </target>
 

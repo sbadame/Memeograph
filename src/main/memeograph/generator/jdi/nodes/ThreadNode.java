@@ -1,4 +1,4 @@
-package memeograph.generator.jdb.nodes;
+package memeograph.generator.jdi.nodes;
 
 import com.sun.jdi.ThreadReference;
 

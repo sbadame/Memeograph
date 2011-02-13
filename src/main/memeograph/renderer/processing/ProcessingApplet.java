@@ -2,7 +2,7 @@ package memeograph.renderer.processing;
 
 import java.util.*;
 import processing.core.*;
-import memeograph.generator.jdb.nodes.*;
+import memeograph.generator.jdi.nodes.*;
 import memeograph.renderer.processing.ui.*;
 
 import java.awt.event.MouseWheelEvent;

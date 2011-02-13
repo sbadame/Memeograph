@@ -1,4 +1,4 @@
-package memeograph.generator.jdb;
+package memeograph.generator.jdi;
 
 import java.io.BufferedReader;
 import java.io.IOException;

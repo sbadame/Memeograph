@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import memeograph.Config;
 import memeograph.Renderer;
-import memeograph.generator.jdb.nodes.GraphNodeType;
+import memeograph.generator.jdi.nodes.GraphNodeType;
 import memeograph.graph.Graph;
 import memeograph.graph.Node;
 import memeograph.util.ACyclicIterator;

@@ -45,8 +45,11 @@ public class Config extends Properties{
   public static final String TRIGGER = "trigger";
   public static final String USE_OPENGL = "useopengl";
   public static final String VERBOSE = "verbose";
-  public static final String TARGET_OPTIONS = "vm_options";
   public static final String SOURCE_PATHS = "sourcepath";
+
+  public static final String TARGET_OPTIONS = "vm_options";
+  public static final String TARGET_MAIN = "targetmain";
+  public static final String TARGET_ARGS = "targetargs";
 
   //Some of our own properties...
   public static final String PROPERTY_DIVIDER = ",";
@@ -85,19 +88,19 @@ public class Config extends Properties{
 
     String vm_args = getProperty(TARGET_OPTIONS);
     if (vm_args == null || vm_args.isEmpty()) {
-      System.err.println("Please pass in a program to run!");
-      System.exit(1);
+        System.err.println("Please pass in a program to run!");
+        System.exit(1);
     }
 
     if (isSwitchSet(VERBOSE, false)) {
-      System.out.println("Passed in Arguments: " + fullargs);
-      LinkedList<String> keyvaluepairs = new LinkedList<String>();
-      for (Object object : keySet()) {
-        keyvaluepairs.add(object + "=" + getProperty((String) object));
-      }
-      Collections.sort(keyvaluepairs);
-      System.out.println("Printing Config:");
-      for (String string : keyvaluepairs) { System.out.println("\t"+string); }
+        System.out.println("Passed in Arguments: " + fullargs);
+        LinkedList<String> keyvaluepairs = new LinkedList<String>();
+        for (Object object : keySet()) {
+            keyvaluepairs.add(object + "=" + getProperty((String) object));
+        }
+        Collections.sort(keyvaluepairs);
+        System.out.println("Printing Config:");
+        for (String string : keyvaluepairs) { System.out.println("\t"+string); }
     }
   }
 
