@@ -15,9 +15,6 @@ public class StepLineJDI extends JDI {
   }
 
   @Override
-  public void startupEventRequests(){ }
-
-  @Override
   public void VMStarted(){
       VirtualMachine vm = getVirtualMachine();
       ThreadReference main = null;
@@ -34,7 +31,6 @@ public class StepLineJDI extends JDI {
       }
 
       StepRequest sr = vm.eventRequestManager().createStepRequest(main, StepRequest.STEP_LINE, StepRequest.STEP_OVER);
-
       addVMEventListener(sr, new EventAction() {
           public Graph doAction(Event e) {
               return generateGraph();

@@ -5,7 +5,6 @@ import com.sun.jdi.connect.*;
 import com.sun.jdi.connect.Connector.Argument;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.EventRequest;
-import com.sun.jdi.request.MethodEntryRequest;
 
 import java.util.*;
 import java.io.IOException;
@@ -27,12 +26,10 @@ import memeograph.graph.MutableNode;
  * then re-running the program and building the graph from scratch in most
  * cases.
  */
-public class JDI implements Generator {
+public abstract class JDI implements Generator {
 
     private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
     private final ValueNodeCreator valueCache = new ValueNodeCreator();
-    private final String triggermethodname;
-    private final String triggerclassname;
 
     private VirtualMachine vm;
     private final String target;
@@ -44,10 +41,6 @@ public class JDI implements Generator {
         String target_options = config.getProperty(Config.TARGET_OPTIONS, "");
         target = target_options.substring(target_options.lastIndexOf(' '));
         target_args = target_options.substring(0, target_options.lastIndexOf(' '));
-
-        String t = Config.getConfig().getProperty(Config.TRIGGER);
-        triggermethodname = t.substring(t.lastIndexOf('.')+1);
-        triggerclassname = t.substring(0, t.lastIndexOf('.'));
     }
 
     @Override
@@ -85,24 +78,12 @@ public class JDI implements Generator {
     /**
      * Adds EventRequests to the VM on VM startup.
      */
-    public void startupEventRequests(){
-        //Lets listen for a step...
-        MethodEntryRequest mer = vm.eventRequestManager().createMethodEntryRequest();
-        mer.addClassFilter(triggerclassname);
-        mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
+    public void startupEventRequests(){}
 
-        addVMEventListener(mer, new EventAction(){
-            public Graph doAction(Event event) {
-                MethodEntryEvent mee = (MethodEntryEvent)event;
-                if (mee.method().name().equals(triggermethodname)) {
-                    return generateGraph();
-                }
-                return null;
-            }
-        });
-
-        mer.enable();
-    }
+    /**
+     * Called when the VM has started.
+     */
+    public void VMStarted(){ }
 
     /**
      * Generate and return the next graph.
@@ -232,7 +213,4 @@ public class JDI implements Generator {
         return vm;
     }
 
-    public void VMStarted(){
-
-    }
 }
