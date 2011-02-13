@@ -29,22 +29,18 @@ import memeograph.graph.MutableNode;
  */
 public class JDBGraphGenerator implements Generator {
 
-    private VirtualMachine vm;
-
-    protected Config config;
-
     private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
     private final ValueNodeCreator valueCache = new ValueNodeCreator();
     private final String triggermethodname;
     private final String triggerclassname;
 
+    private VirtualMachine vm;
     private final String target;
     private final String target_args;
     private EventIterator eventIterator = null;
     private HashMap<EventRequest, EventAction> actions = new HashMap<EventRequest, EventAction>();
 
     public JDBGraphGenerator(Config config){
-        this.config = config;
         String target_options = config.getProperty(Config.TARGET_OPTIONS, "");
         target = target_options.substring(target_options.lastIndexOf(' '));
         target_args = target_options.substring(0, target_options.lastIndexOf(' '));
@@ -96,7 +92,7 @@ public class JDBGraphGenerator implements Generator {
         addVMEventListener(mer, new EventAction(){
             public Graph doAction(Event event) {
                 MethodEntryEvent mee = (MethodEntryEvent)event;
-                if (mee.method().name().contains(triggermethodname)) {
+                if (mee.method().name().equals(triggermethodname)) {
                     return generateGraph();
                 }
                 return null;
@@ -126,14 +122,19 @@ public class JDBGraphGenerator implements Generator {
                 boolean resume = true;
                 while(eventIterator.hasNext()){
                     Event event = eventIterator.nextEvent();
-                    if ( !( event instanceof VMStartEvent || event instanceof VMDeathEvent || event instanceof VMDisconnectEvent ) ) {
+                    if ( event instanceof VMStartEvent ){
+                        VMStarted();
+                    }else if (!(event instanceof VMDeathEvent || event instanceof VMDisconnectEvent ) ) {
                         EventAction action = actions.get(event.request());
                         if (action != null) {
                             g = action.doAction(event);
                             resume = (g == null);
                         }else{
-                            System.err.println("Strange event" + event.getClass().getName());
                         }
+                    }else{
+                      if (event instanceof VMStartEvent) {
+                          VMStarted();
+                      }
                     }
                 }
                 if (resume) { vm.resume(); }
@@ -159,12 +160,11 @@ public class JDBGraphGenerator implements Generator {
         for (ThreadReference thread :  vm.allThreads()) {
            try {
                if (thread.threadGroup().name().equals("system")) { continue; }
-
                MutableNode threadNode = new MutableNode();
                threadNode.store(GraphNodeType.class, new ThreadNode(thread));
                MutableNode prev = threadNode;
 
-               for (int d = thread.frameCount() - 1; d > 0; d--) {
+               for (int d = thread.frameCount() - 1; d >= 0; d--) {
                    MutableNode newFrame = exploreStackFrame(thread.frame(d), d);
                    prev.addChild(newFrame);
                    prev = newFrame;
@@ -228,5 +228,9 @@ public class JDBGraphGenerator implements Generator {
 
     public VirtualMachine getVirtualMachine() {
         return vm;
+    }
+
+    public void VMStarted(){
+
     }
 }
