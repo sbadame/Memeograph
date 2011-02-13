@@ -1,5 +1,7 @@
 package memeograph;
 
+import memeograph.graph.Graph;
+
 /**
  * Seriously, this is the whole program in a nutshell.
  * Config takes the args from the commandline and from default.properties
@@ -28,8 +30,9 @@ public class Memeographer {
         Generator generator = config.getGenerator();
         generator.start();
 
-        while(generator.isAlive())
-            renderer.addGraph(generator.getNextGraph());
+        Graph g = null;
+        while( (g = generator.getNextGraph()) != null )
+            renderer.addGraph(g);
 
         renderer.finish();
     }

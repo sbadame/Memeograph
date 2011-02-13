@@ -16,7 +16,6 @@ import memeograph.Generator;
 import memeograph.Config;
 import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
-import org.w3c.dom.events.EventException;
 
 /**
  * This will generateGraph a VM for an object graph whenever a trigger method is
@@ -30,7 +29,8 @@ import org.w3c.dom.events.EventException;
  */
 public class JDBGraphGenerator implements Generator {
 
-    protected VirtualMachine virtualMachine;
+    private VirtualMachine vm;
+
     protected Config config;
 
     private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
@@ -40,7 +40,6 @@ public class JDBGraphGenerator implements Generator {
 
     private final String target;
     private final String target_args;
-    private boolean isAlive = true;
     private EventIterator eventIterator = null;
     private HashMap<EventRequest, EventAction> actions = new HashMap<EventRequest, EventAction>();
 
@@ -66,8 +65,8 @@ public class JDBGraphGenerator implements Generator {
                 launchargs.get("options").setValue(target_args);
                 launchargs.get("main").setValue(target);
                 try {
-                    virtualMachine = connector.launch(launchargs);
-                    new ProcessDirector(virtualMachine.process()).start();
+                    vm = connector.launch(launchargs);
+                    new ProcessDirector(vm.process()).start();
                     keepgoing = false;
                 } catch (IOException ex) {
                   ex.printStackTrace();
@@ -78,26 +77,19 @@ public class JDBGraphGenerator implements Generator {
                 }
         }
 
-        if (virtualMachine == null) {
+        if (vm == null) {
             throw new RuntimeException("Couldn't start a VM");
         }
 
-        //Start up the VM and wait for a graph to be generated
-        virtualMachine.resume();
-
         startupEventRequests();
-
-        try {
-            eventIterator = virtualMachine.eventQueue().remove().eventIterator();
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-
     }
 
+    /**
+     * Adds EventRequests to the VM on VM startup.
+     */
     public void startupEventRequests(){
         //Lets listen for a step...
-        MethodEntryRequest mer = virtualMachine.eventRequestManager().createMethodEntryRequest();
+        MethodEntryRequest mer = vm.eventRequestManager().createMethodEntryRequest();
         mer.addClassFilter(triggerclassname);
         mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
 
@@ -115,48 +107,42 @@ public class JDBGraphGenerator implements Generator {
     }
 
     /**
-     * Generates and returns the next graph
+     * Generate and return the next graph.
+     * Assumes that the VM has already been paused. It will resume the VM
+     * and wait for a graph to be generated. The first graph that is generated
+     * is returned and the VM is kept in in a suspended state.
      */
     public Graph getNextGraph(){
         Graph g = null;
-
+        vm.resume();
         try {
             while(g == null){
                 if (eventIterator == null || eventIterator.hasNext() == false) {
-                    try{eventIterator = virtualMachine.eventQueue().remove().eventIterator();}
+                    try{eventIterator = vm.eventQueue().remove().eventIterator();}
                     catch(VMDisconnectedException vde){
-                        isAlive = false;
                         return null;
                     }
                 }
+                boolean resume = true;
                 while(eventIterator.hasNext()){
                     Event event = eventIterator.nextEvent();
-                    if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
-                        isAlive = false;
-                    }else if (event instanceof VMStartEvent){
-                        //Meh, who cares... the VM is starting... Parade?
-                    } else {
+                    if ( !( event instanceof VMStartEvent || event instanceof VMDeathEvent || event instanceof VMDisconnectEvent ) ) {
                         EventAction action = actions.get(event.request());
                         if (action != null) {
                             g = action.doAction(event);
+                            resume = (g == null);
                         }else{
                             System.err.println("Strange event" + event.getClass().getName());
                         }
                     }
-                    if (isAlive) {
-                      virtualMachine.resume();
-                    }
                 }
+                if (resume) { vm.resume(); }
             }
         } catch (InterruptedException ex) {
           System.err.println("Couldn't wait for the vm to pause.");
           ex.printStackTrace();
         }
         return g;
-    }
-
-    public boolean isAlive(){
-        return isAlive;
     }
 
     /**
@@ -170,7 +156,7 @@ public class JDBGraphGenerator implements Generator {
 
         objectCache.clear();
         ObjectClassType.clearCache();
-        for (ThreadReference thread :  virtualMachine.allThreads()) {
+        for (ThreadReference thread :  vm.allThreads()) {
            try {
                if (thread.threadGroup().name().equals("system")) { continue; }
 
@@ -239,4 +225,8 @@ public class JDBGraphGenerator implements Generator {
         actions.put(e, ea);
     }
 
+
+    public VirtualMachine getVirtualMachine() {
+        return vm;
+    }
 }

@@ -12,7 +12,6 @@ import memeograph.graph.Graph;
  */
 public interface Generator {
   public void start();
-  public boolean isAlive();
 
   /**
    * Blocks until the next graph is generated. Returns null if there are no
