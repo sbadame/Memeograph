@@ -50,50 +50,39 @@
         </java>
     </target>
 
-    <target name="run" depends="build" description="Memeographer using the BSTExample program as the SuT. Saves a graph to the file: graph.object so that run-fromfile can be used subsequently.">
-        <java fork="true" classname="memeograph.Memeographer">
-          <sysproperty key="java.library.path" path="${nativelibrarypath}" />
-          <arg value="${memeographer_args} +sourcepath=src/examples/java -cp bin/examples/java BSTExample" />
-          <classpath>
-              <path location="bin/main" />
-              <path refid="lib.path" />
-          </classpath>
-        </java>
+    <target name="run-interactive" description="Runs memeographer by stepping line by line through main.">
+        <antcall target="run">
+            <param name="memeographer.args" value="+generator=memeograph.generator.jdb.InteractiveJDBGraphGenerator" />
+        </antcall>
     </target>
 
-    <target name="run-fromgraph" depends="build" description="Loads a graph from file: graph.object. And then shows off the graph. This can be run after the run target is run to make execution faster assuming that you don't need to generate a new object graph.">
-        <java fork="true" classname="memeograph.Memeographer">
-          <sysproperty key="java.library.path" path="${basedir}/natives" />
-          <arg value="+fileloader.file=graph.object +grapher=memeograph.builder.filebuilder.GraphFileLoader ${args}" />
-          <classpath>
-              <path location="bin/main" />
-              <path refid="lib.path" />
-          </classpath>
-        </java>
+    <target name="run-fromgraph" description="Loads a graph from file: graph.object. And then shows off the graph. This can be run after the run target is run to make execution faster assuming that you don't need to generate a new object graph.">
+        <antcall target="run">
+            <param name="memeographer.args" value="+fileloader.file=graph.object +grapher=memeograph.builder.filebuilder.GraphFileLoader ${args}" />
+        </antcall>
     </target>
 
-    <target name="run-dot" depends="build" description="Runs BSTExample and then generates dot output. If you use linux, have dot installed and have gnome-open installed then it will also generate the graph and display it to you. ">
-        <java fork="true" classname="memeograph.Memeographer">
-          <sysproperty key="java.library.path" path="${basedir}/natives" />
-          <arg value="+displayer=memeograph.displayer.dot.DOTDisplayer ${args}" />
-          <classpath>
-              <path location="bin/main" />
-              <path refid="lib.path" />
-          </classpath>
-        </java>
+
+    <target name="run-dot" description="Runs BSTExample and then generates dot output. If you use linux, have dot installed and have gnome-open installed then it will also generate the graph and display it to you. ">
+        <antcall target="run">
+            <param name="memeographer.args" value="+displayer=memeograph.renderer.dot.DOTRenderer" />
+        </antcall>
     </target>
 
-    <target name="pdf" depends="build" description="An old target that converts dot files to pdfs.">
-    <java fork="true" classname="memeograph.Memeographer">
-        <arg value="dot" />
-        <classpath>
-            <path location="bin/main" />
-            <path refid="lib.path" />
-        </classpath>
-    </java>
-            <exec executable="dot">
-                <arg line="-Tpdf output.dot -o output.pdf"/>
-            </exec>
+    <target name="run" depends="build" description="Runs memeographer on BSTExample creating a graph on every insert ">
+        <property name="target.main" value="BSTExample" />
+        <property name="target.args" value="" />
+        <property name="target.classpath" value="bin/examples/java" />
+        <property name="target.sourcepath" value="src/examples/java" />
+        <property name="memeographer.args" value="" />
+        <java fork="true" classname="memeograph.Memeographer">
+            <sysproperty key="java.library.path" path="${nativelibrarypath}" />
+            <arg value="${memeographer_args} ${memeographer.args} +sourcepath=${target.sourcepath} -cp ${target.classpath} ${target.main} ${target.args}" />
+            <classpath>
+                <path location="bin/main" />
+                <path refid="lib.path" />
+            </classpath>
+        </java>
     </target>
 
     <!-- Define all of our build targets here -->

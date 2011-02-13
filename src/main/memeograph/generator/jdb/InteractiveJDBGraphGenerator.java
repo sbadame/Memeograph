@@ -39,7 +39,6 @@ public class InteractiveJDBGraphGenerator extends JDBGraphGenerator {
       addVMEventListener(sr, new EventAction() {
           public Graph doAction(Event e) {
               StepEvent se = (StepEvent) e;
-              System.out.println(se.location());
               return generateGraph();
           }
       });
