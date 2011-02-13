@@ -217,7 +217,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     /**
      * This is called when the user wants to see the next graph
      */
-    private void nextGraph(){
+    public void showNextGraph(){
       int i = graphs.indexOf(currentgraph);
       if (i >= graphs.size() - 1) {
         System.err.println("No more to show you...");
@@ -244,7 +244,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
             case 't':
             case 'T': toggleRenderMode(); break;
             case 'n':
-            case 'N': nextGraph(); break;
+            case 'N': showNextGraph(); break;
         }
     }
 

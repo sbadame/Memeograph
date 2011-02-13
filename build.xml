@@ -50,6 +50,12 @@
         </java>
     </target>
 
+    <target name="run-interactive-step" description="Runs memeographer expecting userinput to guide the graph building">
+        <antcall target="run">
+            <param name="memeographer.args" value="+generator=memeograph.generator.jdi.InteractiveStep +renderer=memeograph.renderer.processing.InteractiveMemeoFrame" />
+        </antcall>
+    </target>
+
     <target name="run-stepline" description="Runs memeographer by stepping line by line through main.">
         <antcall target="run">
             <param name="memeographer.args" value="+generator=memeograph.generator.jdi.StepLineJDI" />

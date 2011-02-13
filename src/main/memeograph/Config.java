@@ -171,7 +171,8 @@ public class Config extends Properties{
       try {
         constructor = loadClass.getConstructor(Config.class);
         try {
-          return (E)constructor.newInstance(Config.this);
+          Object newInstance = constructor.newInstance(Config.this);
+          return (E) newInstance;
         } catch (InstantiationException ex) {
           Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {

@@ -40,7 +40,7 @@ public class MemeoFrame extends JFrame implements Renderer{
           }
 
           //Make out processing applet
-          papplet = new ProcessingApplet();
+          papplet = getApplet();
           papplet.frame = this;
 
           //The load the graph button
@@ -135,4 +135,8 @@ public class MemeoFrame extends JFrame implements Renderer{
     }
 
     public void finish(){}
+
+    public ProcessingApplet getApplet(){
+       return new ProcessingApplet();
+    }
 }

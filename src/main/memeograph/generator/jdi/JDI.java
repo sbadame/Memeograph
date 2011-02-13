@@ -8,6 +8,8 @@ import com.sun.jdi.request.EventRequest;
 
 import java.util.*;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import memeograph.generator.jdi.nodes.*;
 
@@ -15,6 +17,7 @@ import memeograph.Generator;
 import memeograph.Config;
 import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
+import sun.jvmstat.monitor.event.VmEvent;
 
 /**
  * This will generateGraph a VM for an object graph whenever a trigger method is
@@ -32,6 +35,7 @@ public abstract class JDI implements Generator {
     private final ValueNodeCreator valueCache = new ValueNodeCreator();
 
     private VirtualMachine vm;
+    private ThreadReference mainThread;
     private final String target;
     private final String target_args;
     private EventIterator eventIterator = null;
@@ -72,7 +76,24 @@ public abstract class JDI implements Generator {
             throw new RuntimeException("Couldn't start a VM");
         }
 
+        //Stuff to add before the VM startsup
         startupEventRequests();
+
+        vm.resume(); //Only to grab the VMStart Event.
+        try {
+            eventIterator = vm.eventQueue().remove().eventIterator();
+            while(eventIterator.hasNext()){
+                Event event = eventIterator.nextEvent();
+                if (event instanceof VMStartEvent) {
+                    mainThread = ((VMStartEvent)event).thread();
+                    VMStarted();
+                    return;
+                }
+            }
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+
     }
 
     /**
@@ -211,6 +232,10 @@ public abstract class JDI implements Generator {
 
     public VirtualMachine getVirtualMachine() {
         return vm;
+    }
+
+    public ThreadReference getMainThread() {
+        return mainThread;
     }
 
 }
