@@ -9,8 +9,6 @@ import com.sun.jdi.request.MethodEntryRequest;
 
 import java.util.*;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import memeograph.generator.jdb.nodes.*;
 
@@ -18,6 +16,7 @@ import memeograph.Generator;
 import memeograph.Config;
 import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
+import org.w3c.dom.events.EventException;
 
 /**
  * This will generateGraph a VM for an object graph whenever a trigger method is
@@ -43,6 +42,7 @@ public class JDBGraphGenerator implements Generator {
     private final String target_args;
     private boolean isAlive = true;
     private EventIterator eventIterator = null;
+    private HashMap<EventRequest, EventAction> actions = new HashMap<EventRequest, EventAction>();
 
     public JDBGraphGenerator(Config config){
         this.config = config;
@@ -85,11 +85,7 @@ public class JDBGraphGenerator implements Generator {
         //Start up the VM and wait for a graph to be generated
         virtualMachine.resume();
 
-        //Lets listen for a step...
-        MethodEntryRequest mer = virtualMachine.eventRequestManager().createMethodEntryRequest();
-        mer.addClassFilter(triggerclassname);
-        mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
-        mer.enable();
+        startupEventRequests();
 
         try {
             eventIterator = virtualMachine.eventQueue().remove().eventIterator();
@@ -97,6 +93,25 @@ public class JDBGraphGenerator implements Generator {
             ex.printStackTrace();
         }
 
+    }
+
+    public void startupEventRequests(){
+        //Lets listen for a step...
+        MethodEntryRequest mer = virtualMachine.eventRequestManager().createMethodEntryRequest();
+        mer.addClassFilter(triggerclassname);
+        mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
+
+        addVMEventListener(mer, new EventAction(){
+            public Graph doAction(Event event) {
+                MethodEntryEvent mee = (MethodEntryEvent)event;
+                if (mee.method().name().contains(triggermethodname)) {
+                    return generateGraph();
+                }
+                return null;
+            }
+        });
+
+        mer.enable();
     }
 
     /**
@@ -118,15 +133,15 @@ public class JDBGraphGenerator implements Generator {
                     Event event = eventIterator.nextEvent();
                     if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
                         isAlive = false;
-                    }else if (event instanceof MethodEntryEvent){
-                        MethodEntryEvent mee = (MethodEntryEvent)event;
-                        if (mee.method().name().contains(triggermethodname)) {
-                            g = generateGraph();
-                        }
                     }else if (event instanceof VMStartEvent){
-                      //Meh, who cares... the VM is starting... Parade?
-                    }else{
-                      System.err.println("Strange event" + event.getClass().getName());
+                        //Meh, who cares... the VM is starting... Parade?
+                    } else {
+                        EventAction action = actions.get(event.request());
+                        if (action != null) {
+                            g = action.doAction(event);
+                        }else{
+                            System.err.println("Strange event" + event.getClass().getName());
+                        }
                     }
                     if (isAlive) {
                       virtualMachine.resume();
@@ -215,6 +230,13 @@ public class JDBGraphGenerator implements Generator {
         objectCache.put(thisObject.uniqueID(), node);
       }
       return objectCache.get(thisObject.uniqueID());
+    }
+
+    /**
+     * Adds an event listener that goes off when the event has been detected.
+     */
+    public void addVMEventListener(EventRequest e, EventAction ea){
+        actions.put(e, ea);
     }
 
 }
