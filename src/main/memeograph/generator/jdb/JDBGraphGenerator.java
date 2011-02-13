@@ -9,17 +9,19 @@ import com.sun.jdi.request.MethodEntryRequest;
 
 import java.util.*;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import memeograph.generator.jdb.nodes.*;
 
-import memeograph.GraphGenerator;
+import memeograph.Generator;
 import memeograph.Config;
 import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
 
 /**
- * This will interrogate a VM for an object graph whenever memeograph.step()
- * is called in the SuT.
+ * This will generateGraph a VM for an object graph whenever a trigger method is
+ * called in the SuT.
  *
  * Has the slightly strange side effect that if "jdbgrapher.savefile" is set it
  * will serialize the graph and save it to the filename pointed to by the property.
@@ -27,140 +29,154 @@ import memeograph.graph.MutableNode;
  * then re-running the program and building the graph from scratch in most
  * cases.
  */
-public class JDBGraphGenerator implements GraphGenerator {
+public class JDBGraphGenerator implements Generator {
 
-  protected VirtualMachine virtualMachine;
-  protected Config config;
+    protected VirtualMachine virtualMachine;
+    protected Config config;
 
-  private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
-  private final ValueNodeCreator valueCache = new ValueNodeCreator();
-  private final String triggermethodname;
-  private final String triggerclassname;
-  private ArrayList<Graph> graphList = new ArrayList<Graph>();
+    private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
+    private final ValueNodeCreator valueCache = new ValueNodeCreator();
+    private final String triggermethodname;
+    private final String triggerclassname;
 
-  private String target;
-  private String target_args;
+    private final String target;
+    private final String target_args;
+    private boolean isAlive = true;
+    private EventIterator eventIterator = null;
 
-  public JDBGraphGenerator(Config config){
-      this.config = config;
-      target_args = config.getProperty(Config.VM_OPTIONS, "");
-      target = target_args.substring(target_args.lastIndexOf(' '));
-      target_args = target_args.substring(0, target_args.lastIndexOf(' '));
+    public JDBGraphGenerator(Config config){
+        this.config = config;
+        String target_options = config.getProperty(Config.TARGET_OPTIONS, "");
+        target = target_options.substring(target_options.lastIndexOf(' '));
+        target_args = target_options.substring(0, target_options.lastIndexOf(' '));
 
-      String t = Config.getConfig().getProperty(Config.TRIGGER);
-      triggermethodname = t.substring(t.lastIndexOf('.')+1);
-      triggerclassname = t.substring(0, t.lastIndexOf('.'));
-  }
+        String t = Config.getConfig().getProperty(Config.TRIGGER);
+        triggermethodname = t.substring(t.lastIndexOf('.')+1);
+        triggerclassname = t.substring(0, t.lastIndexOf('.'));
+    }
 
-  @Override
-  public void start(){
-      virtualMachine = launchTargetVM(target, target_args);
-  }
-
-  @Override
-  public Iterator<Graph> getGraphs() {
-      graphList = createGraphs();
-      return graphList.iterator();
-  }
-
-  private static VirtualMachine launchTargetVM(String main_command, String vm_options){
-      for (LaunchingConnector connector : Bootstrap.virtualMachineManager().launchingConnectors()) {
-              if (connector.transport().name().equals("dt_socket") == false) {
-                  continue;
-              }
-              Map<String, Argument> launchargs = connector.defaultArguments();
-              launchargs.get("options").setValue(vm_options);
-              launchargs.get("main").setValue(main_command);
-              try {
-                  final VirtualMachine vm = connector.launch(launchargs);
-                  new ProcessDirector(vm.process()).start();
-                  return vm;
-              } catch (IOException ex) {
-                ex.printStackTrace();
-              } catch (IllegalConnectorArgumentsException ex) {
-                ex.printStackTrace();
-              } catch (VMStartException ex) {
-                ex.printStackTrace();
-              }
-      }
-      return null;
-  }
-
-  public ArrayList<Graph> createGraphs(){
-
-      ArrayList<Graph> graphs = new ArrayList<Graph>();
-      virtualMachine.resume();
-
-      //Lets listen for a step...
-      MethodEntryRequest mer = virtualMachine.eventRequestManager().createMethodEntryRequest();
-      mer.addClassFilter(triggerclassname);
-      mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
-      mer.enable();
-
-      try {
-        boolean vmAlive = true;
-        while(vmAlive){
-          EventIterator e = virtualMachine.eventQueue().remove().eventIterator();
-          while(e.hasNext()){
-            Event event = e.nextEvent();
-            if (event instanceof VMDeathEvent) {
-                vmAlive = false;
-            }else if (event instanceof MethodEntryEvent){
-                MethodEntryEvent mee = (MethodEntryEvent)event;
-                if (mee.method().name().contains(triggermethodname)) {
-                  graphs.add(interrogate());
+    @Override
+    public void start(){
+        boolean keepgoing = true;
+        for (LaunchingConnector connector : Bootstrap.virtualMachineManager().launchingConnectors()) {
+                if (!keepgoing || connector.transport().name().equals("dt_socket") == false) {
+                    continue;
                 }
-            }else if (event instanceof VMStartEvent){
-              //Meh, who cares... the VM is starting... Parade?
-            }else{
-              System.err.println("Strange event" + event.getClass().getName());
-            }
-            if (vmAlive) {
-              virtualMachine.resume();
-            }
-          }
+                Map<String, Argument> launchargs = connector.defaultArguments();
+                launchargs.get("options").setValue(target_args);
+                launchargs.get("main").setValue(target);
+                try {
+                    virtualMachine = connector.launch(launchargs);
+                    new ProcessDirector(virtualMachine.process()).start();
+                    keepgoing = false;
+                } catch (IOException ex) {
+                  ex.printStackTrace();
+                } catch (IllegalConnectorArgumentsException ex) {
+                  ex.printStackTrace();
+                } catch (VMStartException ex) {
+                  ex.printStackTrace();
+                }
         }
-      } catch (InterruptedException ex) {
-        System.err.println("Couldn't wait for the vm to pause.");
-        ex.printStackTrace();
-      }
-      return graphs;
-  }
 
+        if (virtualMachine == null) {
+            throw new RuntimeException("Couldn't start a VM");
+        }
 
-    //Assumes that the VM is stopped. Then goes in an builds a graph!
-    //It returns a single snapshot of the program
-    private Graph interrogate(){
+        //Start up the VM and wait for a graph to be generated
+        virtualMachine.resume();
+
+        //Lets listen for a step...
+        MethodEntryRequest mer = virtualMachine.eventRequestManager().createMethodEntryRequest();
+        mer.addClassFilter(triggerclassname);
+        mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
+        mer.enable();
+
+        try {
+            eventIterator = virtualMachine.eventQueue().remove().eventIterator();
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
+    /**
+     * Generates and returns the next graph
+     */
+    public Graph getNextGraph(){
+        Graph g = null;
+
+        try {
+            while(g == null){
+                if (eventIterator == null || eventIterator.hasNext() == false) {
+                    try{eventIterator = virtualMachine.eventQueue().remove().eventIterator();}
+                    catch(VMDisconnectedException vde){
+                        isAlive = false;
+                        return null;
+                    }
+                }
+                while(eventIterator.hasNext()){
+                    Event event = eventIterator.nextEvent();
+                    if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
+                        isAlive = false;
+                    }else if (event instanceof MethodEntryEvent){
+                        MethodEntryEvent mee = (MethodEntryEvent)event;
+                        if (mee.method().name().contains(triggermethodname)) {
+                            g = generateGraph();
+                        }
+                    }else if (event instanceof VMStartEvent){
+                      //Meh, who cares... the VM is starting... Parade?
+                    }else{
+                      System.err.println("Strange event" + event.getClass().getName());
+                    }
+                    if (isAlive) {
+                      virtualMachine.resume();
+                    }
+                }
+            }
+        } catch (InterruptedException ex) {
+          System.err.println("Couldn't wait for the vm to pause.");
+          ex.printStackTrace();
+        }
+        return g;
+    }
+
+    public boolean isAlive(){
+        return isAlive;
+    }
+
+    /**
+     * Generates the current object graph of the target program. Use this
+     * method on a VM that is launched but has all threads suspended.
+     * @return
+     */
+    public Graph generateGraph(){
         MutableNode root = new MutableNode();
         root.store(GraphNodeType.class, new ObjectGraphRoot());
 
         objectCache.clear();
         ObjectClassType.clearCache();
         for (ThreadReference thread :  virtualMachine.allThreads()) {
-          try {
-            if (thread.threadGroup().name().equals("system")) { continue; }
+           try {
+               if (thread.threadGroup().name().equals("system")) { continue; }
 
+               MutableNode threadNode = new MutableNode();
+               threadNode.store(GraphNodeType.class, new ThreadNode(thread));
+               MutableNode prev = threadNode;
 
-            MutableNode threadNode = new MutableNode();
-            threadNode.store(GraphNodeType.class, new ThreadNode(thread));
+               for (int d = thread.frameCount() - 1; d > 0; d--) {
+                   MutableNode newFrame = exploreStackFrame(thread.frame(d), d);
+                   prev.addChild(newFrame);
+                   prev = newFrame;
+               }
 
-            MutableNode prev = threadNode;
-
-            for (int d = thread.frameCount() - 1; d > 0; d--) {
-              MutableNode newFrame = exploreStackFrame(thread.frame(d), d);
-              prev.addChild(newFrame);
-              prev = newFrame;
-            }
-
-            root.addChild(threadNode);
-          } catch (IncompatibleThreadStateException ex) {
-            ex.printStackTrace();
-          }
+               root.addChild(threadNode);
+           } catch (IncompatibleThreadStateException ex) {
+             ex.printStackTrace();
+           }
         }
 
         return new Graph(root);
     }
-
 
     private MutableNode exploreStackFrame(StackFrame frame, int d) throws IncompatibleThreadStateException {
         MutableNode stackframe = new MutableNode();
@@ -186,7 +202,6 @@ public class JDBGraphGenerator implements GraphGenerator {
         }
         return stackframe;
     }
-
 
     /**
      * Make sure that we avoid cycles and only explore each object once

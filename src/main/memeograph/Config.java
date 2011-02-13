@@ -45,7 +45,7 @@ public class Config extends Properties{
   public static final String TRIGGER = "trigger";
   public static final String USE_OPENGL = "useopengl";
   public static final String VERBOSE = "verbose";
-  public static final String VM_OPTIONS = "vm_options";
+  public static final String TARGET_OPTIONS = "vm_options";
   public static final String SOURCE_PATHS = "sourcepath";
 
   //Some of our own properties...
@@ -68,8 +68,8 @@ public class Config extends Properties{
     return config;
   }
 
-  private GraphGenerator generator = null;
-  private GraphRenderer renderer = null;
+  private Generator generator = null;
+  private Renderer renderer = null;
   private SourceCodeManager target = null;
 
   private Config(String[] args){
@@ -83,7 +83,7 @@ public class Config extends Properties{
     for (String arg : args) { fullargs = fullargs.append(arg).append(" ");}
     putAll(parseArgs(fullargs.toString()));
 
-    String vm_args = getProperty(VM_OPTIONS);
+    String vm_args = getProperty(TARGET_OPTIONS);
     if (vm_args == null || vm_args.isEmpty()) {
       System.err.println("Please pass in a program to run!");
       System.exit(1);
@@ -113,16 +113,16 @@ public class Config extends Properties{
     return getProperty(property) != null && !getProperty(property).isEmpty();
   }
 
-  public GraphGenerator getGenerator() {
+  public Generator getGenerator() {
       if (generator == null) {
-        generator = getClass(GENERATOR, GraphGenerator.class);
+        generator = getClass(GENERATOR, Generator.class);
       }
       return generator;
   }
 
-  public GraphRenderer getRenderer() {
+  public Renderer getRenderer() {
       if (renderer == null) {
-        renderer = getClass(RENDERER, GraphRenderer.class);
+        renderer = getClass(RENDERER, Renderer.class);
       }
       return renderer;
   }
@@ -247,7 +247,7 @@ public class Config extends Properties{
              }
              commandLine = commandLine.substring(best.end());
           }else{
-             properties.put(VM_OPTIONS, commandLine);
+             properties.put(TARGET_OPTIONS, commandLine);
              return properties;
           }
           commandLine = commandLine.trim();

@@ -1,6 +1,7 @@
 package memeograph;
 
 import java.util.Iterator;
+import memeograph.graph.Graph;
 
 /**
  *  Creates an sequence of graphs that the GraphRenderer will be responsible to
@@ -11,7 +12,8 @@ import java.util.Iterator;
  *
  *  getGraphs() is not allowed to return null.
  */
-public interface GraphGenerator {
+public interface Generator {
   public void start();
-  public abstract Iterator<memeograph.graph.Graph> getGraphs();
+  public boolean isAlive();
+  public Graph getNextGraph();
 }

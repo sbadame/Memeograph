@@ -6,22 +6,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import memeograph.Config;
-import memeograph.GraphGenerator;
+import memeograph.Generator;
 import memeograph.graph.Graph;
 
 /**
  *  Loads a set of ObjectGraphs from a file saved by the JDBGraphGenerator.
  */
-public class GraphFileLoader implements GraphGenerator{
+public class GraphFileLoader implements Generator{
 
   public static final String FILE_OPTION = "fileloader.file";
 
   private File file;
+  private List<Graph> graphs = new ArrayList<Graph>();
 
   public GraphFileLoader(Config c){
       if (c.isPropertySet(FILE_OPTION)) {
@@ -29,32 +27,35 @@ public class GraphFileLoader implements GraphGenerator{
       }
   }
 
+  @SuppressWarnings("unchecked")
   public void start() {
       if (file == null) {
           System.out.println("No file specificied to be loaded...");
       }
+      try {
+          FileInputStream fileInputStream = new FileInputStream(file);
+          ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+          Object loadedGraph = objectInputStream.readObject();
+          if (loadedGraph instanceof List) {
+             graphs = (List<Graph>) loadedGraph;
+          }else{
+            throw new ClassCastException("The file loaded does not contain a list of Graphs, expected: List<Graph>");
+          }
+      } catch (FileNotFoundException ex) {
+          ex.printStackTrace();
+      } catch (IOException ex) {
+          ex.printStackTrace();
+      } catch (ClassNotFoundException ex) {
+          ex.printStackTrace();
+      }
   }
 
-  @SuppressWarnings("unchecked")
-  public Iterator<Graph> getGraphs() {
-    try {
-      FileInputStream fileInputStream = new FileInputStream(file);
-      ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-      Object loadedGraph = objectInputStream.readObject();
-      if (loadedGraph instanceof List) {
-        List<Graph> list = (List<Graph>) loadedGraph;
-        return list.iterator();
-      }else{
-        throw new ClassCastException("The file loaded does not contain a list of Graphs, expected: List<Graph>");
-      }
-    } catch (FileNotFoundException ex) {
-      Logger.getLogger(GraphFileLoader.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (IOException ex) {
-      Logger.getLogger(GraphFileLoader.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (ClassNotFoundException ex) {
-      Logger.getLogger(GraphFileLoader.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    return new ArrayList<Graph>().iterator();
+  public boolean isAlive() {
+      return !graphs.isEmpty();
+  }
+
+  public Graph getNextGraph() {
+      return graphs.remove(0);
   }
 
 }

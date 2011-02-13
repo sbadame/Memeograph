@@ -194,24 +194,24 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     }
     
     public void addGraph(Graph newGraph){
-      GraphLayoutHandler layout = new GraphLayoutHandler(newGraph, this);
-      newGraph.getRoot().store(GraphLayoutHandler.class, layout);
+        GraphLayoutHandler layout = new GraphLayoutHandler(newGraph, this);
+        newGraph.getRoot().store(GraphLayoutHandler.class, layout);
 
-      if (!isSetup) {
-          layoutqueue.add(newGraph);
-          return;
-      }
+        if (!isSetup) {
+            layoutqueue.add(newGraph);
+            return;
+        }
 
-      while(!layoutqueue.isEmpty()){
-          Graph graph = layoutqueue.pop();
-          graph.getRoot().lookup(GraphLayoutHandler.class).doLayout();
-          graphs.add(graph);
-          if (currentgraph == null) { currentgraph = graph; }
-      }
+        while(!layoutqueue.isEmpty()){
+            Graph graph = layoutqueue.pop();
+            graph.getRoot().lookup(GraphLayoutHandler.class).doLayout();
+            graphs.add(graph);
+            if (currentgraph == null) { currentgraph = graph; }
+        }
 
-      layout.doLayout();
-      graphs.add(newGraph);
-      if (currentgraph == null) { currentgraph = newGraph; }
+        layout.doLayout();
+        graphs.add(newGraph);
+        if (currentgraph == null) { currentgraph = newGraph; }
     }
 
     /**

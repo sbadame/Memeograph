@@ -3,10 +3,10 @@ package memeograph.renderer.dot;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import memeograph.Config;
-import memeograph.GraphRenderer;
+import memeograph.Renderer;
 import memeograph.generator.jdb.nodes.GraphNodeType;
 import memeograph.graph.Graph;
 import memeograph.graph.Node;
@@ -22,22 +22,24 @@ import memeograph.util.ACyclicIterator;
  * and install dot along with gnome-open. The renderer will then automatically
  * compile the output and open the pdf for you.
  */
-public class DOTRenderer implements GraphRenderer{
+public class DOTRenderer implements Renderer{
 
   private boolean show = true;
+  private ArrayList<Graph> graphs = new ArrayList<Graph>();
 
   public DOTRenderer(Config c){
     show = c.isSwitchSet("dotdisplayer.show", Boolean.TRUE);
   }
 
-  public void init() {
+  public void init() { }
+
+  public void addGraph(Graph g){
+    graphs.add(g);
   }
 
-  public void setGraphs(Iterator<Graph> graphs) {
+  public void finish() {
     StringBuilder sb = new StringBuilder("digraph Memeograph {");
-
-    while(graphs.hasNext()){
-      Graph graph = graphs.next();
+    for (Graph graph : graphs) {
       Iterator<Node> aCyclicTraversal = new ACyclicIterator<Node>(graph.preorderTraversal());
       while(aCyclicTraversal.hasNext()){
         Node n = aCyclicTraversal.next();
@@ -50,6 +52,7 @@ public class DOTRenderer implements GraphRenderer{
         }
       }
     }
+
     sb.append("}");
 
     if (show && System.getProperty("os.name").equalsIgnoreCase("Linux")) {
