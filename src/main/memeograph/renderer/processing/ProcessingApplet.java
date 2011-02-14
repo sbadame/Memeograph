@@ -34,7 +34,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     private volatile boolean isSetup = false;
 
-    private UI ui = new UI(this);
+    private UI ui = createUI();
     private CameraHandler cameraHandler = new CameraHandler(this);
 
     public ProcessingApplet(){
@@ -227,5 +227,9 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     public Graph getCurrentGraph(){
         return currentgraph;
+    }
+
+    protected UI createUI(){
+        return new UI(this);
     }
 }

@@ -1,7 +1,6 @@
 package memeograph.generator.jdi;
 
-import com.sun.jdi.ThreadReference;
-import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.Location;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.request.EventRequest;
@@ -41,6 +40,7 @@ public class InteractiveStep extends JDI{
 
     private boolean hasNextStep = false;
     private final Object stepLock = new Object();
+    private volatile Location currentlocation = null;
 
     public InteractiveStep(Config c){
         super(c);
@@ -55,6 +55,7 @@ public class InteractiveStep extends JDI{
         addVMEventListener(sr, new EventAction() {
             public Graph doAction(Event e) {
                 e.request().disable();
+                currentlocation = ((StepEvent)e).location();
                 return generateGraph();
             }
         });
@@ -80,9 +81,12 @@ public class InteractiveStep extends JDI{
        }
     }
 
-
     @Override
     public void VMStarted(){
         step(Size.STEP_MIN, Depth.STEP_INTO);
+    }
+
+    public Location getCurrentLocation(){
+        return currentlocation;
     }
 }

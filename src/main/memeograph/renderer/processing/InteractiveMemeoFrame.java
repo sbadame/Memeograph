@@ -4,6 +4,8 @@ public class InteractiveMemeoFrame extends MemeoFrame{
 
     @Override
     public ProcessingApplet getGraphDisplayer(){
-        return new InteractiveProcessingApplet();
+        InteractiveProcessingApplet p = new InteractiveProcessingApplet();
+        p.frame = this;
+        return p;
     }
 }

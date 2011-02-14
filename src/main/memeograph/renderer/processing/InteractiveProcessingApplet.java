@@ -3,7 +3,10 @@ package memeograph.renderer.processing;
 import memeograph.Config;
 import memeograph.Generator;
 import memeograph.generator.jdi.InteractiveStep;
+import memeograph.generator.jdi.InteractiveStep.Depth;
 import memeograph.graph.Graph;
+import memeograph.renderer.processing.ui.InteractiveUI;
+import memeograph.renderer.processing.ui.UI;
 
 public class InteractiveProcessingApplet extends ProcessingApplet{
 
@@ -24,12 +27,16 @@ public class InteractiveProcessingApplet extends ProcessingApplet{
     public void keyPressed(){
         if (currentgraph != null && is != null) {
              char k = (char) key;
+             Depth d = null;
              switch(k){
                  case 'i':
-                 case 'I': is.step(InteractiveStep.Size.STEP_LINE, InteractiveStep.Depth.STEP_INTO); break;
+                 case 'I': d = Depth.STEP_INTO; break;
                  case 'o':
-                 case 'O': is.step(InteractiveStep.Size.STEP_LINE, InteractiveStep.Depth.STEP_OVER); break;
-                 default: super.keyPressed();
+                 case 'O': d = Depth.STEP_OVER; break;
+                 default: super.keyPressed(); return;
+             }
+             if (d != null) {
+                is.step(InteractiveStep.Size.STEP_LINE, d);
              }
         }else{
             super.keyPressed();
@@ -40,5 +47,10 @@ public class InteractiveProcessingApplet extends ProcessingApplet{
     public void addGraph(Graph g){
         super.addGraph(g);
         showNextGraph();
+    }
+
+    @Override
+    protected UI createUI(){
+        return new InteractiveUI(this);
     }
 }
