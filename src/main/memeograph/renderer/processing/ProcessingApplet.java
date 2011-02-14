@@ -25,10 +25,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     Graph currentgraph = null;
 
     PFont font3D;
-
-    //Camera Info
-    CameraHandler cameraHandler = new CameraHandler(this);
-
     private final String rendertype;
 
     //Text Rendering info
@@ -38,8 +34,8 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     private volatile boolean isSetup = false;
 
-    //UI
-    private WidgetContainer topleft, bottomright;
+    private UI ui = new UI(this);
+    private CameraHandler cameraHandler = new CameraHandler(this);
 
     public ProcessingApplet(){
         addMouseWheelListener(this);
@@ -52,44 +48,21 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     @Override
     public void setup(){
-        size(1024, 700, rendertype); //THIS MUST BE THE FIRST LINE OF CODE
+        size(width, height, rendertype); //THIS MUST BE THE FIRST LINE OF CODE
                                      //NO REALLY, IF IT ISN'T THEN PROCESSING'S
                                      //REFELECTION KILLS OPENGL AND YOUR DREAMS
         background(102);
         frame.setResizable(true);
 
+        smooth();
         font3D = createFont("SansSerif.bold", 18);
         textFont(font3D);
         textAlign(CENTER, CENTER);
 
         cameraHandler.setup();
-        smooth();
+        ui.init();
 
         //Setup the UI
-        topleft = new LeftJustifiedWidgetContainer(){{
-            add(new TextWidget(){
-                public String getText() { return "FPS: " + round(frameRate); }
-            });
-
-            newRow();
-
-            add(new TextWidget(){
-                public String getText() { return "Graph " + (graphs.indexOf(currentgraph) + 1) + " of " + graphs.size();}
-            });
-        }};
-
-        bottomright = new RightJustifiedWidgetContainer(){{
-            add(new TextWidget(){
-                public String getText() { return "Controls"; }
-            });
-
-            newRow();
-            add(new TextWidget(){public String getText(){return "N : next graph"; }});
-
-            newRow();
-            add(new TextWidget(){public String getText(){return "Mouse Wheel: zoom out"; }});
-        }};
-
         isSetup = true;
     }
     
@@ -121,15 +94,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
           drawNode(j.next());
         }
 
-        hint(DISABLE_DEPTH_TEST);
-        camera();
-        textAlign(LEFT, TOP);
-
-        final int padding = 5;
-        translate(padding,padding,0);
-        topleft.draw(this);
-        translate(width-padding-2, height-padding, 0);
-        bottomright.draw(this);
+        ui.draw();
     }
 
 
@@ -256,5 +221,11 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         cameraHandler.mouseWheelMoved(e);
     }
 
+    public ArrayList<Graph> getGraphs() {
+        return graphs;
+    }
 
+    public Graph getCurrentGraph(){
+        return currentgraph;
+    }
 }

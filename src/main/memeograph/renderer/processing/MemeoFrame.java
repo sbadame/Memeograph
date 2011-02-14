@@ -2,24 +2,17 @@ package memeograph.renderer.processing;
 
 import javax.swing.*;
 import java.util.*;
-import java.io.*;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import memeograph.Config;
+import java.awt.GraphicsEnvironment;
 import memeograph.Renderer;
-import memeograph.generator.filebuilder.GraphFileLoader;
 import memeograph.graph.Graph;
 
 public class MemeoFrame extends JFrame implements Renderer{
 
-    private JButton savegraph, loadgraph, graphit;
     private ProcessingApplet papplet;
     private final List<Graph> graphs = Collections.synchronizedList(new ArrayList<Graph>());
 
-    private final Object waitLock = new Object();
 
     public MemeoFrame(){
         super("Memeographer!");
@@ -27,73 +20,30 @@ public class MemeoFrame extends JFrame implements Renderer{
     }
 
     public void init() {
-          try {
-              UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-          } catch (InstantiationException ex) {
-              ex.printStackTrace();
-          } catch (UnsupportedLookAndFeelException ex) {
-              ex.printStackTrace();
-          }catch (IllegalAccessException ex) {
-              ex.printStackTrace();
-          } catch (ClassNotFoundException ex){
-              ex.printStackTrace();
-          }
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+            System.err.println("Couldn't load the Native Look and Feel.");
+            ex.printStackTrace();
+        }
 
-          //Make out processing applet
-          papplet = getApplet();
-          papplet.frame = this;
+        //Make out processing applet
+        papplet = getGraphDisplayer();
 
-          //The load the graph button
-          loadgraph = new JButton("Open a Saved Graph"){{
-              addActionListener(new ActionListener(){
-                  public void actionPerformed(ActionEvent e) {loadGraph();}
-              });
-          }};
+        setLayout(new BorderLayout());
 
-          //The save the graph button
-          savegraph = new JButton("Save"){{
-              addActionListener(new ActionListener(){
-                  public void actionPerformed(ActionEvent e) {saveGraph();}
-              });
-          }};
+        setVisible(true);
+        add(papplet, BorderLayout.CENTER);
 
-          graphit = new JButton("Run Memeographer!"){{
-              addActionListener(new ActionListener(){
-                  public void actionPerformed(ActionEvent e) { doGraph(); }
-              });
-          }};
+        //The only way that is actually aware of multiple monitors...
+        int width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+        int height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+        width -= 20;
+        height -= 40;
+        setSize(width, height);
+        setLocationRelativeTo(null);
 
-          final JPanel topBar = new JPanel();
-          topBar.setOpaque(true);
-          topBar.add(graphit);
-          topBar.add(loadgraph);
-
-          setLayout(new BorderLayout());
-          add(topBar, BorderLayout.NORTH);
-
-          setSize(1024, 768);
-          setLocationRelativeTo(null); //Centers the frame
-          setVisible(true);
-          add(papplet, BorderLayout.CENTER);
-          papplet.init();
-
-          synchronized(waitLock) {
-            try {
-              waitLock.wait();
-            } catch (InterruptedException ex) {
-              ex.printStackTrace();
-            }
-          }
-
-          SwingUtilities.invokeLater(new Runnable(){
-              public void run() {
-                topBar.remove(loadgraph);
-                topBar.remove(graphit);
-                topBar.add(savegraph);
-                topBar.validate();
-                topBar.repaint();
-              }
-          });
+        papplet.init();
     }
 
     public void addGraph(Graph g) {
@@ -102,41 +52,11 @@ public class MemeoFrame extends JFrame implements Renderer{
         papplet.addGraph(g);
     }
 
-    private void doGraph(){
-        synchronized(waitLock){
-            waitLock.notify();
-        }
-    }
-
-    private void saveGraph(){
-        JFileChooser fc = new JFileChooser();
-        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION){
-            File selectedFile = fc.getSelectedFile();
-            try {
-              FileOutputStream fos = new FileOutputStream(selectedFile);
-              ObjectOutputStream oos = new ObjectOutputStream(fos);
-              oos.writeObject(graphs);
-              oos.flush();
-              oos.close();
-            }catch (IOException ex) {
-              ex.printStackTrace();
-            }
-        }
-    }
-
-    private void loadGraph(){
-        JFileChooser fc = new JFileChooser();
-        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fc.getSelectedFile();
-            Config.getConfig().setProperty(Config.GENERATOR, GraphFileLoader.class.getCanonicalName());
-            Config.getConfig().setProperty(GraphFileLoader.FILE_OPTION, selectedFile.getAbsolutePath());
-        }
-        synchronized (waitLock){ waitLock.notify(); }
-    }
-
     public void finish(){}
 
-    public ProcessingApplet getApplet(){
-       return new ProcessingApplet();
+    public ProcessingApplet getGraphDisplayer(){
+        ProcessingApplet pApplet = new ProcessingApplet();
+        pApplet.frame = this;
+        return pApplet;
     }
 }

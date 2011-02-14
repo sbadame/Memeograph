@@ -5,19 +5,15 @@ import com.sun.jdi.connect.*;
 import com.sun.jdi.connect.Connector.Argument;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.EventRequest;
+import memeograph.generator.jdi.nodes.*;
 
 import java.util.*;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import memeograph.generator.jdi.nodes.*;
 
 import memeograph.Generator;
 import memeograph.Config;
 import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
-import sun.jvmstat.monitor.event.VmEvent;
 
 /**
  * This will generateGraph a VM for an object graph whenever a trigger method is
