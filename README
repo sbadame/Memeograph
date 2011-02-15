@@ -24,12 +24,13 @@ How does the code work?
             memeograph.Config       //Information about how objects are created, configured and extended
             memeograph.graph.Node   //Information about how nodes in the graph store information
 
-Current Features missing that shouldn't take much work add (ie. Features that can be implemented in less that a day's work):
+Current concrete missing features:
     - Implementing the physics layout for GraphLayoutHandler (Where did all of that phsyics code go anyway?)
     - Implement Peter's cool 3-D layout algorithm (currently in LaTeX and not Java) -- Matt is on this
     - Bring back the animations for transitioning between graphs. (Easier once the above is done)
-    - Have the stackframe display the actual line of code that is beign run in that frame. (Modification to StackFrameNode would be needed.)
 
 Current Features that I want to see that will take lots of work:
+    - Make the creation of the graph interactive so that people can step through their code line-by-line
+    - Allow for people to be able to type in their code and watch it run.
     - Getting it to work with jython,closure,scala and some of the more badass JVM languages
     - Attachment to an IDE plugin so that more "novice" users can take advantage of this
