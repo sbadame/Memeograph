@@ -36,6 +36,7 @@ public abstract class JDI implements Generator {
     private final String target_args;
     private EventIterator eventIterator = null;
     private HashMap<EventRequest, EventAction> actions = new HashMap<EventRequest, EventAction>();
+    private boolean hasDied = false;
 
     public JDI(Config config){
         String target_options = config.getProperty(Config.TARGET_OPTIONS, "");
@@ -133,7 +134,10 @@ public abstract class JDI implements Generator {
                         }
                     }else{
                       if (event instanceof VMStartEvent) {
+                          mainThread = ((VMStartEvent)event).thread();
                           VMStarted();
+                      } else if (event instanceof VMDeathEvent){
+                          hasDied = true;
                       }
                     }
                 }
@@ -234,4 +238,7 @@ public abstract class JDI implements Generator {
         return mainThread;
     }
 
+    public boolean hasDied(){
+        return hasDied;
+    }
 }

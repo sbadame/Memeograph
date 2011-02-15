@@ -35,8 +35,18 @@ public class InteractiveProcessingApplet extends ProcessingApplet{
                  case 'O': d = Depth.STEP_OVER; break;
                  default: super.keyPressed(); return;
              }
+
+             //Run this in it's own thread because we shouldn't do intensive
+             //stuff in the UI thread, also because if step crashes, so does
+             //the program and that's just dumb.
+             final Depth finalDepth = d;
              if (d != null) {
-                is.step(InteractiveStep.Size.STEP_LINE, d);
+               new Thread(){
+                  @Override
+                  public void run(){
+                    is.step(InteractiveStep.Size.STEP_LINE, finalDepth);
+                  }
+               }.start();
              }
         }else{
             super.keyPressed();

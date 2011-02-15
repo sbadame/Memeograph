@@ -42,11 +42,27 @@ public class InteractiveStep extends JDI{
     private final Object stepLock = new Object();
     private volatile Location currentlocation = null;
 
+    private volatile boolean waitingOnGraph = false;//The only case of a volatile
+                                                    //boolean that I've ever seen!
+
     public InteractiveStep(Config c){
         super(c);
     }
 
+    /**
+     * Listens for a step of the given size. This will queue the next call
+     * to {@link #getNextGraph()} to return the object graph when this step
+     * is detected. If there are multiple calls to step the subsequent calls
+     * will be discarded until the graph at getNextGraph() is consumed.
+     * @param s the size of the next step
+     * @param d the depth of the next step
+     */
     public void step(Size s, Depth d){
+        if (waitingOnGraph || hasDied()) {
+            return;
+        }else{
+            waitingOnGraph = true;
+        }
         StepRequest sr = getVirtualMachine().eventRequestManager().createStepRequest(getMainThread(), s.value(), d.value() );
         sr.setSuspendPolicy(EventRequest.SUSPEND_ALL);
         sr.addClassFilter(Config.getConfig().getProperty(Config.TARGET_MAIN));
@@ -61,7 +77,6 @@ public class InteractiveStep extends JDI{
         });
 
         sr.enable();
-
         synchronized(stepLock){hasNextStep = true; stepLock.notify();}
     }
 
@@ -77,6 +92,7 @@ public class InteractiveStep extends JDI{
            }
            Graph g = super.getNextGraph();
            hasNextStep = false;
+           waitingOnGraph = false;
            return g;
        }
     }

@@ -26,26 +26,37 @@ public class InteractiveUI extends UI{
     }
 
     @Override
+    public WidgetContainer getTopLeft(){
+        return null;
+    }
+
+    @Override
     public WidgetContainer getBottomLeft(){
         if (is == null) { return super.getBottomLeft(); }
 
         return new LeftJustifiedBottomUp(){{
             add(new TextWidget(){
+                @Override
                 public String getText(){
                     Location loc = is.getCurrentLocation();
                     try {
-                        return "About to run line " + loc.lineNumber()
-                                + " in " + loc.sourceName();
+                        if (is.hasDied())
+                            return "Program has terminated.";
+                        else
+                            return "About to run line " + loc.lineNumber() + " in " + loc.sourceName();
                     } catch (AbsentInformationException ex) {
                         return "";
                     }
                 }
             });
+
             newRow();
+
             add(new TextWidget(){
                 @Override
                 public String getText(){
                     try {
+                        if (is.hasDied()) { return ""; }
                         Location loc = is.getCurrentLocation();
                         return "    " + scm.getLineFinder(loc.sourceName()).getLine(loc.lineNumber()).trim();
                     } catch (AbsentInformationException ex) {
