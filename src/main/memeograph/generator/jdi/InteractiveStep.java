@@ -1,10 +1,12 @@
 package memeograph.generator.jdi;
 
 import com.sun.jdi.Location;
+import com.sun.jdi.ThreadReference;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.StepRequest;
+import com.sun.jdi.request.ThreadStartRequest;
 import memeograph.Config;
 import memeograph.graph.Graph;
 
@@ -76,6 +78,12 @@ public class InteractiveStep extends JDI{
             }
         });
 
+        if (getMainThread().status() == 0) { //Thread is dead??
+            for ( ThreadReference t : getVirtualMachine().allThreads()){
+                System.out.println("t.name() = " + t.name());
+                System.out.println("t.status() = " + t.status());
+            }
+        }
         sr.enable();
         synchronized(stepLock){hasNextStep = true; stepLock.notify();}
     }
@@ -104,5 +112,15 @@ public class InteractiveStep extends JDI{
 
     public Location getCurrentLocation(){
         return currentlocation;
+    }
+
+    @Override
+    public void startupEventRequests(){
+        //This looks insane, but we need an event that can stall the VM before it
+        //dies, listening to VMStarted doesn't seem to do the trick for some
+        // odd reason...
+        ThreadStartRequest es = getVirtualMachine().eventRequestManager().createThreadStartRequest();
+        es.setSuspendPolicy(EventRequest.SUSPEND_ALL);
+        es.enable();
     }
 }
