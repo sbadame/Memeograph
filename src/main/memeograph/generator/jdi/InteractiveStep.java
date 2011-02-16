@@ -78,12 +78,6 @@ public class InteractiveStep extends JDI{
             }
         });
 
-        if (getMainThread().status() == 0) { //Thread is dead??
-            for ( ThreadReference t : getVirtualMachine().allThreads()){
-                System.out.println("t.name() = " + t.name());
-                System.out.println("t.status() = " + t.status());
-            }
-        }
         sr.enable();
         synchronized(stepLock){hasNextStep = true; stepLock.notify();}
     }
