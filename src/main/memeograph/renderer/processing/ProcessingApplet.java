@@ -99,6 +99,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
 
     private void drawLine(Node f, Node t){
+        pushStyle();
         if (f.lookup(GraphNodeType.class) instanceof ObjectGraphRoot) { return; }
         NodeGraphicsInfo from = f.lookup(NodeGraphicsInfo.class);
         NodeGraphicsInfo to = t.lookup(NodeGraphicsInfo.class);
@@ -106,11 +107,12 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         strokeWeight(5);
         stroke(1f,Math.min(from.opacity, to.opacity));
         line(from.x, from.y, from.z, to.x, to.y, to.z);
+        popStyle();
     }
 
     private void drawNode(Node node){
         if (node.lookup(GraphNodeType.class) instanceof ObjectGraphRoot) { return; }
-        pushMatrix();
+        pushMatrix(); pushStyle();
         NodeGraphicsInfo n = node.lookup(NodeGraphicsInfo.class);
         GraphNodeType t = node.lookup(GraphNodeType.class);
 
@@ -155,7 +157,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
             textAlign(LEFT);
             text(t.toString(), -size/2, 0f);
         }
-        popMatrix();
+        popMatrix(); popStyle();
     }
     
     public void addGraph(Graph newGraph){

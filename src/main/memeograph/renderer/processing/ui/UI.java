@@ -1,5 +1,6 @@
 package memeograph.renderer.processing.ui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +27,7 @@ public class UI {
     }
 
     public void draw(){
+        p.fill(Color.BLACK.getRGB());
         p.hint(PApplet.DISABLE_DEPTH_TEST);
         p.camera();
         p.textAlign(PApplet.LEFT, PApplet.TOP);

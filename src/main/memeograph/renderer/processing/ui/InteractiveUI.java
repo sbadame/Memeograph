@@ -27,14 +27,9 @@ public class InteractiveUI extends UI{
 
     @Override
     public WidgetContainer getTopLeft(){
-        return null;
-    }
-
-    @Override
-    public WidgetContainer getBottomLeft(){
         if (is == null) { return super.getBottomLeft(); }
 
-        return new LeftJustifiedBottomUp(){{
+        return new LeftJustifiedTopDown(){{
             add(new TextWidget(){
                 @Override
                 public String getText(){
@@ -67,6 +62,11 @@ public class InteractiveUI extends UI{
                 }
             });
         }};
+    }
+
+    @Override
+    public WidgetContainer getBottomLeft(){
+        return null;
     }
 
     @Override
