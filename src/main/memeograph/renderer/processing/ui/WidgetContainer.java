@@ -53,4 +53,43 @@ public abstract class WidgetContainer extends UIWidget{
         return new Dimension(width, height);
     }
 
+    public UIWidget removeWidgetByName(String name){
+        ArrayList<UIWidget> r = null;
+        UIWidget w = null;
+
+        for (ArrayList<UIWidget> row : rows) {
+            r = row;
+            for (UIWidget uiw : row) {
+                w = uiw;
+                if (uiw.getName().equals(name)) {
+                    w = uiw;
+                    break;
+                } else if (uiw instanceof WidgetContainer){
+                    w = ((WidgetContainer)uiw).removeWidgetByName(name);
+                    if (w != null) { break; }
+                }
+            }
+            if (w != null) {
+                break;
+            }
+        }
+
+        if (w != null) {
+            r.remove(w);
+            if (r.isEmpty()) {
+              rows.remove(r);
+            }
+        }
+
+        return w;
+    }
+
+    public void clear(){
+        rows.clear();
+    }
+
+    public boolean isEmpty(){
+        return rows.isEmpty();
+    }
+
 }

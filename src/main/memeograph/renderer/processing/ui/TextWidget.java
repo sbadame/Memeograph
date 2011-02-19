@@ -8,11 +8,17 @@ public class TextWidget extends UIWidget{
   private String text = "";
 
   public TextWidget(String text){
+      super();
+      this.text = text;
+  }
+
+  public TextWidget(String name, String text){
+      super(name);
       this.text = text;
   }
 
   public TextWidget(){
-
+      super();
   }
 
   public String getText(){
@@ -27,7 +33,7 @@ public class TextWidget extends UIWidget{
   @Override
   public void draw(PApplet p) {
       p.noFill();
-      p.text(getText(), 0, 0, 0);
+      p.text(getText(), 0, 0);
   }
 
 }

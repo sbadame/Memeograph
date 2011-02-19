@@ -34,6 +34,7 @@ public class InteractiveUI extends UI{
                 @Override
                 public String getText(){
                     Location loc = is.getCurrentLocation();
+                    if (loc == null) { return ""; }
                     try {
                         if (is.hasDied())
                             return "Program has terminated.";
@@ -53,6 +54,7 @@ public class InteractiveUI extends UI{
                     try {
                         if (is.hasDied()) { return ""; }
                         Location loc = is.getCurrentLocation();
+                        if (loc == null) { return ""; }
                         return "    " + scm.getLineFinder(loc.sourceName()).getLine(loc.lineNumber()).trim();
                     } catch (AbsentInformationException ex) {
                     } catch (FileNotFoundException fnfe) {

@@ -73,29 +73,34 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         textAlign(CENTER, CENTER);
         cameraHandler.draw();
 
-        if (currentgraph == null) { return; }
+        boolean havegraph = currentgraph != null
+                            && currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone();
 
-        if (!currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone()){
-          return;
-        }
+        if (havegraph) {
+            //Now draw the lines between the nodes
+            ACyclicIterator<Node> i = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+            while( i.hasNext()){
+                Node parent = i.next();
+                for (Node kid : parent.getChildren()) {
+                    drawLine(parent, kid);
+                }
+            }
 
-        //Now draw the lines between the nodes
-        ACyclicIterator<Node> i = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
-        while( i.hasNext()){
-          Node parent = i.next();
-          for (Node kid : parent.getChildren()) {
-            drawLine(parent, kid);
-          }
-        }
+            //And now to actually draw the nodes
+            ACyclicIterator<Node> j = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+            while(j.hasNext()) {
+                drawNode(j.next());
+            }
 
-        //And now to actually draw the nodes
-        ACyclicIterator<Node> j = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
-        while(j.hasNext()) {
-          drawNode(j.next());
+
+            //Removing the loading graphic...
+            //Total hack but I'm not gonna add more code than needed for this
+            if (!ui.getCenter().isEmpty()) { ui.getCenter().clear(); }
         }
 
         ui.draw();
     }
+
 
 
     private void drawLine(Node f, Node t){
