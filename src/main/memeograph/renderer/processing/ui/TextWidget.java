@@ -1,5 +1,6 @@
 package memeograph.renderer.processing.ui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import processing.core.PApplet;
 
@@ -32,8 +33,10 @@ public class TextWidget extends UIWidget{
 
   @Override
   public void draw(PApplet p) {
-      p.noFill();
-      p.text(getText(), 0, 0);
+      p.pushStyle();
+        p.noFill();
+        p.text(getText(), 0, 0);
+      p.popStyle();
   }
 
 }
