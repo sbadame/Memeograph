@@ -20,6 +20,7 @@ public class CameraHandler {
     private PVector dir;
 
     private Mover xmove = null;
+    private Mover ymove = null;
 
     public CameraHandler(PApplet papplet){
         processing = papplet;
@@ -31,6 +32,11 @@ public class CameraHandler {
     }
 
     public void draw(){
+        if (ymove != null) {
+            PVector d = ymove.delta();
+            pos.add(d);
+            dir.add(d);
+        }
         if (xmove != null) {
             PVector d = xmove.delta();
             pos.add(d);
@@ -76,13 +82,13 @@ public class CameraHandler {
         char k = (char)processing.key;
         switch(k){
             case 'w':
-            case 'W': translateCameraY(-MOVE_TICK); break;
+            case 'W': ymove = new YMover(DIRECTION.POSITIVE); break;
             case 's':
-            case 'S': translateCameraY(MOVE_TICK); break;
+            case 'S': ymove = new YMover(DIRECTION.NEGATIVE); break;
             case 'a':
-            case 'A': xmove = new Mover(DIRECTION.POSITIVE); break;
+            case 'A': xmove = new XMover(DIRECTION.POSITIVE); break;
             case 'd':
-            case 'D': xmove = new Mover(DIRECTION.NEGATIVE); break;
+            case 'D': xmove = new XMover(DIRECTION.NEGATIVE); break;
             default: break;
         }
     }
@@ -99,11 +105,11 @@ public class CameraHandler {
       dir.add(PVector.mult(camera, (float)notches * 100f));
   }
 
-  private class Mover{
+  private abstract class Mover{
       private final int start = processing.millis();
       private int lastcall = start;
       private boolean isDisabled = false;
-      private final DIRECTION direction;
+      public final DIRECTION direction;
 
       public Mover(DIRECTION direction){
           this.direction = direction;
@@ -135,25 +141,30 @@ public class CameraHandler {
           return d;
       }
 
-      private PVector getDir(){
-        PVector camera = PVector.sub(dir,pos);
-        PVector cross = camera.cross(camNorth);
-        cross.normalize();
-        cross.mult(direction == DIRECTION.POSITIVE ? MOVE_TICK : -MOVE_TICK);
-        return cross;
-      }
+      public abstract PVector getDir();
   }
 
-
-    private void translateCameraY(float amount){
-        PVector camera = PVector.sub(dir,pos);
-        PVector cross = camera.cross(camNorth);
-        PVector up = cross.cross(camera);
-        up.normalize();
-        up.mult(amount);
-        pos.add(up);
-        dir.add(up);
+    private class XMover extends Mover{
+        public XMover(DIRECTION direction){super(direction);}
+        public PVector getDir(){
+          PVector camera = PVector.sub(dir,pos);
+          PVector cross = camera.cross(camNorth);
+          cross.normalize();
+          cross.mult(direction == DIRECTION.POSITIVE ? MOVE_TICK : -MOVE_TICK);
+          return cross;
+        }
     }
 
+    private class YMover extends Mover{
+        public YMover(DIRECTION direction){super(direction);}
+        public PVector getDir(){
+            PVector camera = PVector.sub(dir,pos);
+            PVector cross = camera.cross(camNorth);
+            PVector up = cross.cross(camera);
+            up.normalize();
+            up.mult(direction == DIRECTION.POSITIVE ? MOVE_TICK : -MOVE_TICK);
+            return up;
+        }
+    }
 
 }
