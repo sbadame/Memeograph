@@ -8,12 +8,17 @@ import processing.core.PVector;
 
 
 public class CameraHandler {
+    private static final PVector DO_NOTHING = new PVector(0, 0, 0);
     private static final PVector camNorth = new PVector(0, 1, 0);
     private static final int MOVE_TICK = 50;
+
+    public enum DIRECTION {POSITIVE, NEGATIVE};
 
     private PApplet processing;
     private PVector pos;
     private PVector dir;
+
+    private Mover xmove = null;
 
     public CameraHandler(PApplet papplet){
         processing = papplet;
@@ -25,11 +30,14 @@ public class CameraHandler {
     }
 
     public void draw(){
-        processing.camera(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, camNorth.x, camNorth.y, camNorth.z);
-    }
-
-    public void scrollUp(){
-
+        if (xmove != null) {
+            PVector d = xmove.delta();
+            pos.add(d);
+            dir.add(d);
+        }
+        processing.camera(pos.x, pos.y, pos.z,
+                          dir.x, dir.y, dir.z,
+                          camNorth.x, camNorth.y, camNorth.z);
     }
 
     private float dtheta = .03f;
@@ -71,9 +79,9 @@ public class CameraHandler {
             case 's':
             case 'S': translateCameraY(MOVE_TICK); break;
             case 'a':
-            case 'A': translateCameraX(-MOVE_TICK); break;
+            case 'A': xmove = new Mover(DIRECTION.POSITIVE); break;
             case 'd':
-            case 'D': translateCameraX(MOVE_TICK); break;
+            case 'D': xmove = new Mover(DIRECTION.NEGATIVE); break;
             default: break;
         }
     }
@@ -89,15 +97,6 @@ public class CameraHandler {
         dir.add(up);
     }
 
-    private void translateCameraX(float amount){
-        PVector camera = PVector.sub(dir,pos);
-        PVector cross = camera.cross(camNorth);
-        cross.normalize();
-        cross.mult(amount);
-        pos.add(cross);
-        dir.add(cross);
-    }
-
   void mouseWheelMoved(MouseWheelEvent e) {
       int notches = -1*e.getWheelRotation(); //notches goes negative if the
                                           //wheel is scrolled up.
@@ -109,5 +108,49 @@ public class CameraHandler {
       dir.add(PVector.mult(camera, (float)notches * 100f));
   }
 
+  private class Mover{
+      private final int start = processing.millis();
+      private int lastcall = start;
+      private boolean isDisabled = false;
+      private final DIRECTION direction;
+
+      public Mover(DIRECTION direction){
+          this.direction = direction;
+      }
+
+      public void enable(){
+          isDisabled = false;
+      }
+
+      public void disable(){
+          isDisabled = true;
+      }
+
+      public PVector delta(){
+          if (isDisabled) {
+            return DO_NOTHING;
+          }
+          int now = processing.millis();
+          int totalMoveTime = now-start;
+          if (totalMoveTime >= 1000) {
+             disable();
+             return DO_NOTHING;
+          }
+
+          int timePassed = now - lastcall;
+          lastcall = now;
+          PVector d = getDir();
+          d.mult(timePassed/1000.0f);
+          return d;
+      }
+
+      private PVector getDir(){
+        PVector camera = PVector.sub(dir,pos);
+        PVector cross = camera.cross(camNorth);
+        cross.normalize();
+        cross.mult(direction == DIRECTION.POSITIVE ? MOVE_TICK : -MOVE_TICK);
+        return cross;
+      }
+  }
 
 }
