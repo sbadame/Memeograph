@@ -10,7 +10,8 @@ import processing.core.PVector;
 public class CameraHandler {
     private static final PVector DO_NOTHING = new PVector(0, 0, 0);
     private static final PVector camNorth = new PVector(0, 1, 0);
-    private static final int MOVE_TICK = 50;
+    private static final int MOVE_TICK = 150; //How much move to move in TIME_TICK millis
+    private static final int TIME_TICK = 350; //How time per move
 
     public enum DIRECTION {POSITIVE, NEGATIVE};
 
@@ -87,16 +88,6 @@ public class CameraHandler {
     }
 
 
-    private void translateCameraY(float amount){
-        PVector camera = PVector.sub(dir,pos);
-        PVector cross = camera.cross(camNorth);
-        PVector up = cross.cross(camera);
-        up.normalize();
-        up.mult(amount);
-        pos.add(up);
-        dir.add(up);
-    }
-
   void mouseWheelMoved(MouseWheelEvent e) {
       int notches = -1*e.getWheelRotation(); //notches goes negative if the
                                           //wheel is scrolled up.
@@ -132,7 +123,7 @@ public class CameraHandler {
           }
           int now = processing.millis();
           int totalMoveTime = now-start;
-          if (totalMoveTime >= 1000) {
+          if (totalMoveTime >= TIME_TICK) {
              disable();
              return DO_NOTHING;
           }
@@ -140,7 +131,7 @@ public class CameraHandler {
           int timePassed = now - lastcall;
           lastcall = now;
           PVector d = getDir();
-          d.mult(timePassed/1000.0f);
+          d.mult(timePassed/(float)TIME_TICK);
           return d;
       }
 
@@ -152,5 +143,17 @@ public class CameraHandler {
         return cross;
       }
   }
+
+
+    private void translateCameraY(float amount){
+        PVector camera = PVector.sub(dir,pos);
+        PVector cross = camera.cross(camNorth);
+        PVector up = cross.cross(camera);
+        up.normalize();
+        up.mult(amount);
+        pos.add(up);
+        dir.add(up);
+    }
+
 
 }
