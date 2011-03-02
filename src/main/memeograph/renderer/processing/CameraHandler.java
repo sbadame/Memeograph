@@ -5,24 +5,25 @@ import processing.core.PApplet;
 import static processing.core.PApplet.*;
 import processing.core.PVector;
 
+
+
 public class CameraHandler {
     private static final PVector DO_NOTHING = new PVector(0, 0, 0);
     private static final PVector camNorth = new PVector(0, 1, 0);
     private static final int MOVE_TICK = 150; //How much move to move in TIME_TICK millis
     private static final int TIME_TICK = 350; //How time per move
 
-    public enum DIRECTION {POSITIVE, NEGATIVE, NONE};
+    public enum DIRECTION {POSITIVE, NEGATIVE};
 
-    private final PApplet processing;
+    private PApplet processing;
     private PVector pos;
     private PVector dir;
 
-    private Mover xmove, ymove;
+    private Mover xmove = null;
+    private Mover ymove = null;
 
     public CameraHandler(PApplet papplet){
         processing = papplet;
-        xmove = new XMover(DIRECTION.NONE);
-        ymove = new YMover(DIRECTION.NONE);
     }
 
     public void setup(){
@@ -31,14 +32,16 @@ public class CameraHandler {
     }
 
     public void draw(){
-        PVector temp = ymove.delta();
-        pos.add(temp);
-        dir.add(temp);
-
-        temp = xmove.delta();
-        pos.add(temp);
-        dir.add(temp);
-
+        if (ymove != null) {
+            PVector d = ymove.delta();
+            pos.add(d);
+            dir.add(d);
+        }
+        if (xmove != null) {
+            PVector d = xmove.delta();
+            pos.add(d);
+            dir.add(d);
+        }
         processing.camera(pos.x, pos.y, pos.z,
                           dir.x, dir.y, dir.z,
                           camNorth.x, camNorth.y, camNorth.z);
@@ -79,58 +82,67 @@ public class CameraHandler {
         char k = (char)processing.key;
         switch(k){
             case 'w':
-            case 'W': ymove = new YMover(DIRECTION.NEGATIVE); break;
+            case 'W': ymove = new YMover(DIRECTION.POSITIVE); break;
             case 's':
-            case 'S': ymove = new YMover(DIRECTION.POSITIVE); break;
+            case 'S': ymove = new YMover(DIRECTION.NEGATIVE); break;
             case 'a':
-            case 'A': xmove = new XMover(DIRECTION.NEGATIVE); break;
+            case 'A': xmove = new XMover(DIRECTION.POSITIVE); break;
             case 'd':
-            case 'D': xmove = new XMover(DIRECTION.POSITIVE); break;
+            case 'D': xmove = new XMover(DIRECTION.NEGATIVE); break;
             default: break;
         }
     }
 
 
-    void mouseWheelMoved(MouseWheelEvent e) {
-        int notches = -1*e.getWheelRotation(); //notches goes negative if the
-                                            //wheel is scrolled up.
+  void mouseWheelMoved(MouseWheelEvent e) {
+      int notches = -1*e.getWheelRotation(); //notches goes negative if the
+                                          //wheel is scrolled up.
 
-        PVector camera = PVector.sub(dir,pos);
-        camera.normalize();
+      PVector camera = PVector.sub(dir,pos);
+      camera.normalize();
 
-        pos.add(PVector.mult(camera, (float)notches * 100f));
-        dir.add(PVector.mult(camera, (float)notches * 100f));
-    }
+      pos.add(PVector.mult(camera, (float)notches * 100f));
+      dir.add(PVector.mult(camera, (float)notches * 100f));
+  }
 
-      private abstract class Mover{
-          private final int start = processing.millis();
-          private int lastcall = start;
-          protected DIRECTION direction;
+  private abstract class Mover{
+      private final int start = processing.millis();
+      private int lastcall = start;
+      private boolean isDisabled = false;
+      public final DIRECTION direction;
 
-          public Mover(DIRECTION direction){
-              this.direction = direction;
-          }
-
-          public PVector delta(){
-              if (direction == DIRECTION.NONE) {
-                return DO_NOTHING;
-              }
-              int now = processing.millis();
-              int totalMoveTime = now-start;
-              if (totalMoveTime >= TIME_TICK) {
-                 direction = DIRECTION.NONE;
-                 return DO_NOTHING;
-              }
-
-              int timePassed = now - lastcall;
-              lastcall = now;
-              PVector d = getDir();
-              d.mult(timePassed/(float)TIME_TICK);
-              return d;
-          }
-
-          public abstract PVector getDir();
+      public Mover(DIRECTION direction){
+          this.direction = direction;
       }
+
+      public void enable(){
+          isDisabled = false;
+      }
+
+      public void disable(){
+          isDisabled = true;
+      }
+
+      public PVector delta(){
+          if (isDisabled) {
+            return DO_NOTHING;
+          }
+          int now = processing.millis();
+          int totalMoveTime = now-start;
+          if (totalMoveTime >= TIME_TICK) {
+             disable();
+             return DO_NOTHING;
+          }
+
+          int timePassed = now - lastcall;
+          lastcall = now;
+          PVector d = getDir();
+          d.mult(timePassed/(float)TIME_TICK);
+          return d;
+      }
+
+      public abstract PVector getDir();
+  }
 
     private class XMover extends Mover{
         public XMover(DIRECTION direction){super(direction);}
