@@ -82,13 +82,13 @@ public class CameraHandler {
         char k = (char)processing.key;
         switch(k){
             case 'w':
-            case 'W': ymove = new YMover(DIRECTION.POSITIVE); break;
+            case 'W': ymove = new YMover(DIRECTION.NEGATIVE); break;
             case 's':
-            case 'S': ymove = new YMover(DIRECTION.NEGATIVE); break;
+            case 'S': ymove = new YMover(DIRECTION.POSITIVE); break;
             case 'a':
-            case 'A': xmove = new XMover(DIRECTION.POSITIVE); break;
+            case 'A': xmove = new XMover(DIRECTION.NEGATIVE); break;
             case 'd':
-            case 'D': xmove = new XMover(DIRECTION.NEGATIVE); break;
+            case 'D': xmove = new XMover(DIRECTION.POSITIVE); break;
             default: break;
         }
     }
