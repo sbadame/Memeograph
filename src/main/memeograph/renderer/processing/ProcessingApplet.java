@@ -18,6 +18,10 @@ import memeograph.util.ACyclicIterator;
  * We also do the user input handling here.
  */
 public class ProcessingApplet extends PApplet implements MouseWheelListener{
+public static final int animationCountMax=50;
+    public static final float OPACITY_COUNT = ((255.0f)/animationCountMax);
+    int animationCount = animationCountMax;
+    int currentgraphindex=0;
 
     //Just to have something and avoid the dreaded null
     ArrayList<Graph> graphs = new ArrayList<Graph>();
@@ -75,29 +79,74 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
         boolean havegraph = currentgraph != null
                             && currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone();
+        if (currentgraph == null) { return; }
 
-        if (havegraph) {
-            //Now draw the lines between the nodes
-            ACyclicIterator<Node> i = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
-            while( i.hasNext()){
-                Node parent = i.next();
-                for (Node kid : parent.getChildren()) {
-                    drawLine(parent, kid);
-                }
+        //Slowly Fade away old graph then fade in new graph.
+        //This is seperate from next if statement
+        if (animationCount == animationCountMax - 1 && currentgraphindex < graphs.size() - 1){
+            currentgraph=graphs.get(currentgraphindex + 1);
+            currentgraphindex++;
+            ACyclicIterator<Node> k;
+            k=new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+            while(k.hasNext()){
+              Node node = k.next();
+              //previous graph does not contain this node
+              if(node != null && hasNode(graphs.get(currentgraphindex - 1),node) == null)
+                if(node.lookup(NodeGraphicsInfo.class) != null)
+                  node.lookup(NodeGraphicsInfo.class).opacity = 0;
             }
+            animationCount--;
+        }
 
-            //And now to actually draw the nodes
-            ACyclicIterator<Node> j = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
-            while(j.hasNext()) {
-                drawNode(j.next());
+        //animate nodes (right now only fade in works. Need to fix objectrefence problem)
+        if (animationCount < animationCountMax - 1 && currentgraphindex < graphs.size()){
+          ACyclicIterator<Node> k;
+          k = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+          while(k.hasNext()){
+            Node node = k.next();
+            Node nextnode;
+            if(currentgraphindex < graphs.size() - 1 && 
+               ((nextnode = hasNode(graphs.get(currentgraphindex+1),node)) != null && 
+               nextnode.lookup(NodeGraphicsInfo.class) != null && 
+               node.lookup(NodeGraphicsInfo.class) != null && 
+               (nextnode.lookup(NodeGraphicsInfo.class).x > node.lookup(NodeGraphicsInfo.class).x))){
+                    System.out.println("SUCCESS!!");
+                    node.lookup(NodeGraphicsInfo.class).x++;
+            }else if(currentgraphindex > 0 &&
+                     hasNode(graphs.get(currentgraphindex-1),node) == null &&
+                     node.lookup(NodeGraphicsInfo.class) != null){
+              node.lookup(NodeGraphicsInfo.class).opacity+=OPACITY_COUNT;
             }
+          }
+          animationCount--;
+        }
+        //end of animation...reset animation count
+        if(animationCount == 0){
+           animationCount = animationCountMax;
+        }
+        if (!currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone()){
+          return;
+        }
 
+        //Now draw the lines between the nodes
+        ACyclicIterator<Node> i = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+        while( i.hasNext()){
+          Node parent = i.next();
+          for (Node kid : parent.getChildren()) {
+            drawLine(parent, kid);
+          }
+        }
+
+        //And now to actually draw the nodes
+        ACyclicIterator<Node> j = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+        while(j.hasNext()) {
+          drawNode(j.next());
+        }
 
             //Removing the loading graphic...
             //Total hack but I'm not gonna add more code than needed for this
             if (!ui.getCenter().isEmpty()) { ui.getCenter().clear(); }
-        }
-
+        
         ui.draw();
     }
 
@@ -189,16 +238,33 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     /**
      * This is called when the user wants to see the next graph
      */
-    public void showNextGraph(){
-      int i = graphs.indexOf(currentgraph);
-      if (i >= graphs.size() - 1) {
+    protected void showNextGraph(){
+      if (currentgraphindex >= graphs.size() - 1) {
         System.err.println("No more to show you...");
         return;
-      }else{
-        currentgraph = graphs.get(i + 1);
+      }else if(animationCount == animationCountMax){
+        animationCount--;
       }
     }
 
+    /*
+     * This is called when the user wants to see the previous graph
+     */
+    private void showPrevGraph(){
+      if(currentgraphindex <= 0) {
+        System.err.println("No more to show you...");
+        return;
+      }else{
+        currentgraph = graphs.get(currentgraphindex - 1);
+        currentgraphindex--;
+        ACyclicIterator<Node> k = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+        while(k.hasNext()){
+            Node n = k.next();
+            if(n != null && n.lookup(NodeGraphicsInfo.class)!=null)
+               n.lookup(NodeGraphicsInfo.class).opacity=255;
+        }
+      }
+    }
 
     @Override
     public void mouseDragged()
@@ -217,6 +283,8 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
             case 'T': toggleRenderMode(); break;
             case 'n':
             case 'N': showNextGraph(); break;
+            case 'p':
+            case 'P': showPrevGraph(); break;
         }
     }
 
@@ -238,5 +306,16 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     protected UI createUI(){
         return new UI(this);
+    }
+
+    private Node hasNode(Graph g, Node thisNode){
+      ACyclicIterator<Node> k = new ACyclicIterator<Node>(g.preorderTraversal());
+      while(k.hasNext()){
+        Node graphNode = k.next();
+        if(thisNode.equals(graphNode)){
+          return thisNode;
+        }
+      }
+      return null;
     }
 }
