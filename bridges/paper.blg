@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.7)
+The top-level auxiliary file: paper.aux
+The style file: plain.bst
+Database file #1: mybib.bib
+Warning--to sort, need author or key in memeograph
+You've used 4 entries,
+            2118 wiz_defined-function locations,
+            517 strings with 4569 characters,
+and the built_in function-call counts, 1246 in all, are:
+= -- 117
+> -- 60
+< -- 1
++ -- 25
+- -- 20
+* -- 75
+:= -- 200
+add.period$ -- 11
+call.type$ -- 4
+change.case$ -- 20
+chr.to.int$ -- 0
+cite$ -- 5
+duplicate$ -- 52
+empty$ -- 102
+format.name$ -- 20
+if$ -- 268
+int.to.chr$ -- 0
+int.to.str$ -- 4
+missing$ -- 4
+newline$ -- 21
+num.names$ -- 6
+pop$ -- 37
+preamble$ -- 1
+purify$ -- 18
+quote$ -- 0
+skip$ -- 39
+stack$ -- 0
+substring$ -- 53
+swap$ -- 13
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 14
+warning$ -- 1
+while$ -- 9
+width$ -- 5
+write$ -- 40
+(There was 1 warning)
