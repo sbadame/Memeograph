@@ -199,37 +199,36 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         popMatrix(); popStyle();
     }
 
-    private DisplayGraph displayGraph(Graph graph){
-      NodeGraphicsInfo root = new NodeGraphicsInfo(null,graph.getRoot());
-      LinkedList<Node> temp;
-      LinkedList<NodeGraphicsInfo> ngitemp;
-      LinkedList<Node> list = new LinkedList<Node>();
-      LinkedList<NodeGraphicsInfo> ngilist = new LinkedList<NodeGraphicsInfo>();
-      Node node;
-      NodeGraphicsInfo ngi;
-      list.add(root.node);
-      ngilist.add(root);
-      DisplayGraph dg = new DisplayGraph(root);
+  private DisplayGraph displayGraph(Graph graph) {
+    LinkedList<Node> list = new LinkedList<Node>();
+    HashMap<Node, NodeGraphicsInfo> nodemap = new HashMap<Node, NodeGraphicsInfo>();
+    HashSet<Node> seen = new HashSet<Node>();
 
-      while(!list.isEmpty()){
-        temp = new LinkedList<Node>();
-        ngitemp = new LinkedList<NodeGraphicsInfo>();
-        for(int j = 0; j < list.size(); j++){//parents
-          node = list.get(j);
-          ngi = ngilist.get(j);
-          for(Node child : node.getChildren()){//children
-            temp.add(child);
-            NodeGraphicsInfo ngichild = new NodeGraphicsInfo(null,child);
-            ngitemp.add(ngichild);
-            ngi.addChild(ngichild);
-
-          }
-        }
-        list = temp;
-        ngilist = ngitemp;
+    list.add(graph.getRoot());
+    while (!list.isEmpty()) {
+      Node node = list.pop();
+      if (seen.contains(node)) {
+        continue;
       }
-      return dg;
+      seen.add(node);
+
+      if (!nodemap.containsKey(node)) {
+        nodemap.put(node, new NodeGraphicsInfo(null, node));
+      }
+      NodeGraphicsInfo parent = nodemap.get(node);
+
+      for (Node child : node.getChildren()) {//children
+        list.add(child);
+
+        if (!nodemap.containsKey(child)) {
+          nodemap.put(child, new NodeGraphicsInfo(null, child));
+        }
+        parent.addChild(nodemap.get(child));
+      }
     }
+
+    return new DisplayGraph(nodemap.get(graph.getRoot()));
+  }
 
     public void addGraph(Graph newGraph){
         DisplayGraph dg = displayGraph(newGraph);
