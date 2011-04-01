@@ -11,4 +11,9 @@ public class Leaf extends BST {
         return new BST(n);
     }
 
+    @Override
+    public String toString()
+    {
+        return "";
+    }
 }

@@ -37,4 +37,10 @@ public class BST {
 
     protected int memeographcolor = 0xCDB79E;
     protected String memeographname = "BST()";
+
+    @Override
+    public String toString()
+    {
+        return "(" + left + " " + data + " " + right + ")";
+    }
 }

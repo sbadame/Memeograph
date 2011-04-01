@@ -18,15 +18,15 @@ import memeograph.util.ACyclicIterator;
  * We also do the user input handling here.
  */
 public class ProcessingApplet extends PApplet implements MouseWheelListener{
-public static final int animationCountMax=50;
-    public static final float OPACITY_COUNT = ((255.0f)/animationCountMax);
-    int animationCount = animationCountMax;
-    int currentgraphindex=0;
+    private static final int animationCountMax = 20;
+    private static final float OPACITY_COUNT = ((255.0f)/animationCountMax);
+    private int animationCount = animationCountMax;
+    private int currentgraphindex = 0;
 
     //Just to have something and avoid the dreaded null
-    ArrayList<Graph> graphs = new ArrayList<Graph>();
-    LinkedList<Graph> layoutqueue = new LinkedList<Graph>();
-    Graph currentgraph = null;
+    ArrayList<DisplayGraph> dgraphs = new ArrayList<DisplayGraph>();
+    LinkedList<DisplayGraph> layoutqueue = new LinkedList<DisplayGraph>();
+    DisplayGraph currentgraph;
 
     PFont font3D;
     private final String rendertype;
@@ -77,86 +77,68 @@ public static final int animationCountMax=50;
         textAlign(CENTER, CENTER);
         cameraHandler.draw();
 
-        boolean havegraph = currentgraph != null
-                            && currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone();
         if (currentgraph == null) { return; }
 
         //Slowly Fade away old graph then fade in new graph.
-        //This is seperate from next if statement
-        if (animationCount == animationCountMax - 1 && currentgraphindex < graphs.size() - 1){
-            currentgraph=graphs.get(currentgraphindex + 1);
+        if (animationCount == animationCountMax - 1 && currentgraphindex < dgraphs.size() - 1){
+            currentgraph=dgraphs.get(currentgraphindex + 1);
             currentgraphindex++;
-            ACyclicIterator<Node> k;
-            k=new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+            
+            ACyclicIterator<NodeGraphicsInfo> k;
+            k=new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
             while(k.hasNext()){
-              Node node = k.next();
-              //previous graph does not contain this node
-              if(node != null && hasNode(graphs.get(currentgraphindex - 1),node) == null)
-                if(node.lookup(NodeGraphicsInfo.class) != null)
-                  node.lookup(NodeGraphicsInfo.class).opacity = 0;
+              NodeGraphicsInfo node = k.next();
+              node.opacity = 0;
             }
             animationCount--;
         }
 
-        //animate nodes (right now only fade in works. Need to fix objectrefence problem)
-        if (animationCount < animationCountMax - 1 && currentgraphindex < graphs.size()){
-          ACyclicIterator<Node> k;
-          k = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+        //animate nodes
+        if (animationCount < animationCountMax - 1 && currentgraphindex < dgraphs.size()){
+          ACyclicIterator<NodeGraphicsInfo> k;
+          k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
           while(k.hasNext()){
-            Node node = k.next();
-            Node nextnode;
-            if(currentgraphindex < graphs.size() - 1 && 
-               ((nextnode = hasNode(graphs.get(currentgraphindex+1),node)) != null && 
-               nextnode.lookup(NodeGraphicsInfo.class) != null && 
-               node.lookup(NodeGraphicsInfo.class) != null && 
-               (nextnode.lookup(NodeGraphicsInfo.class).x > node.lookup(NodeGraphicsInfo.class).x))){
-                    System.out.println("SUCCESS!!");
-                    node.lookup(NodeGraphicsInfo.class).x++;
-            }else if(currentgraphindex > 0 &&
-                     hasNode(graphs.get(currentgraphindex-1),node) == null &&
-                     node.lookup(NodeGraphicsInfo.class) != null){
-              node.lookup(NodeGraphicsInfo.class).opacity+=OPACITY_COUNT;
+            NodeGraphicsInfo node = k.next();
+            if(currentgraphindex > 0 //&&
+                     /*hasNode(dgraphs.get(currentgraphindex-1),node) == null*/){
+              node.opacity+=OPACITY_COUNT;
             }
           }
           animationCount--;
         }
+
         //end of animation...reset animation count
         if(animationCount == 0){
            animationCount = animationCountMax;
         }
-        if (!currentgraph.getRoot().lookup(GraphLayoutHandler.class).isLayoutDone()){
-          return;
-        }
 
         //Now draw the lines between the nodes
-        ACyclicIterator<Node> i = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+        ACyclicIterator<NodeGraphicsInfo> i = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
         while( i.hasNext()){
-          Node parent = i.next();
-          for (Node kid : parent.getChildren()) {
+          NodeGraphicsInfo parent = i.next();
+          for (NodeGraphicsInfo kid : parent.getChildren()) {
             drawLine(parent, kid);
           }
         }
-
         //And now to actually draw the nodes
-        ACyclicIterator<Node> j = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+        ACyclicIterator<NodeGraphicsInfo> j = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
         while(j.hasNext()) {
           drawNode(j.next());
         }
+        //Removing the loading graphic...
+        //Total hack but I'm not gonna add more code than needed for this
+        if (!ui.getCenter().isEmpty()) { ui.getCenter().clear(); }
 
-            //Removing the loading graphic...
-            //Total hack but I'm not gonna add more code than needed for this
-            if (!ui.getCenter().isEmpty()) { ui.getCenter().clear(); }
-        
         ui.draw();
     }
 
 
 
-    private void drawLine(Node f, Node t){
+    private void drawLine(NodeGraphicsInfo f, NodeGraphicsInfo t){
         pushStyle();
-        if (f.lookup(GraphNodeType.class) instanceof ObjectGraphRoot) { return; }
-        NodeGraphicsInfo from = f.lookup(NodeGraphicsInfo.class);
-        NodeGraphicsInfo to = t.lookup(NodeGraphicsInfo.class);
+        if (f.gnt instanceof ObjectGraphRoot) { return; }
+        NodeGraphicsInfo from = f;
+        NodeGraphicsInfo to = t;
 
         strokeWeight(5);
         stroke(1f,Math.min(from.opacity, to.opacity));
@@ -164,11 +146,11 @@ public static final int animationCountMax=50;
         popStyle();
     }
 
-    private void drawNode(Node node){
-        if (node.lookup(GraphNodeType.class) instanceof ObjectGraphRoot) { return; }
+    private void drawNode(NodeGraphicsInfo node){
+        if (node.gnt instanceof ObjectGraphRoot) { return; }
         pushMatrix(); pushStyle();
-        NodeGraphicsInfo n = node.lookup(NodeGraphicsInfo.class);
-        GraphNodeType t = node.lookup(GraphNodeType.class);
+        NodeGraphicsInfo n = node;
+        GraphNodeType t = node.gnt;
 
         translate(n.x, n.y, n.z);
 
@@ -180,19 +162,22 @@ public static final int animationCountMax=50;
         String data = null;
 
         if ((rendermode & renderfrontback) != 0) {
-            data = t.toString();
-            size = textWidth(data);
+            try{
+              data = t.toString();
+              size = textWidth(data);
+              pushMatrix();
+              translate(0f, 0f, 11f);
+              fill(5);
+              text(data, 0, 0f);
 
-            pushMatrix();
-            translate(0f, 0f, 11f);
-            fill(5);
-            text(data, 0, 0f);
+              translate(0f, 0f, -22f);
 
-            translate(0f, 0f, -22f);
-
-            rotateY(PI);
-            text(data, 0f, 0f);
-            popMatrix();
+              rotateY(PI);
+              text(data, 0f, 0f);
+              popMatrix();
+            }catch(NullPointerException npe){
+              
+          }
         }
 
         if ((rendermode & rendertopbottom) != 0) {
@@ -213,33 +198,62 @@ public static final int animationCountMax=50;
         }
         popMatrix(); popStyle();
     }
-    
-    public void addGraph(Graph newGraph){
-        GraphLayoutHandler layout = new GraphLayoutHandler(newGraph, this);
-        newGraph.getRoot().store(GraphLayoutHandler.class, layout);
 
+    private DisplayGraph displayGraph(Graph graph){
+      NodeGraphicsInfo root = new NodeGraphicsInfo(null,graph.getRoot());
+      LinkedList<Node> temp;
+      LinkedList<NodeGraphicsInfo> ngitemp;
+      LinkedList<Node> list = new LinkedList<Node>();
+      LinkedList<NodeGraphicsInfo> ngilist = new LinkedList<NodeGraphicsInfo>();
+      Node node;
+      NodeGraphicsInfo ngi;
+      list.add(root.node);
+      ngilist.add(root);
+      DisplayGraph dg = new DisplayGraph(root);
+
+      while(!list.isEmpty()){
+        temp = new LinkedList<Node>();
+        ngitemp = new LinkedList<NodeGraphicsInfo>();
+        for(int j = 0; j < list.size(); j++){//parents
+          node = list.get(j);
+          ngi = ngilist.get(j);
+          for(Node child : node.getChildren()){//children
+            temp.add(child);
+            NodeGraphicsInfo ngichild = new NodeGraphicsInfo(null,child);
+            ngitemp.add(ngichild);
+            ngi.addChild(ngichild);
+
+          }
+        }
+        list = temp;
+        ngilist = ngitemp;
+      }
+      return dg;
+    }
+
+    public void addGraph(Graph newGraph){
+        DisplayGraph dg = displayGraph(newGraph);
+        GraphLayoutHandler layout = new GraphLayoutHandler(dg, this);
         if (!isSetup) {
-            layoutqueue.add(newGraph);
+            layoutqueue.add(dg);
             return;
         }
-
         while(!layoutqueue.isEmpty()){
-            Graph graph = layoutqueue.pop();
-            graph.getRoot().lookup(GraphLayoutHandler.class).doLayout();
-            graphs.add(graph);
+            DisplayGraph graph = layoutqueue.pop();
+            graph.getRoot().glh.doLayout();
+            dgraphs.add(graph);
             if (currentgraph == null) { currentgraph = graph; }
         }
-
         layout.doLayout();
-        graphs.add(newGraph);
-        if (currentgraph == null) { currentgraph = newGraph; }
+        dgraphs.add(dg);
+        if (currentgraph == null) { currentgraph = dg; }
     }
 
     /**
      * This is called when the user wants to see the next graph
      */
     protected void showNextGraph(){
-      if (currentgraphindex >= graphs.size() - 1) {
+      if (currentgraphindex >= dgraphs.size() - 1) {
         System.err.println("No more to show you...");
         return;
       }else if(animationCount == animationCountMax){
@@ -255,13 +269,13 @@ public static final int animationCountMax=50;
         System.err.println("No more to show you...");
         return;
       }else{
-        currentgraph = graphs.get(currentgraphindex - 1);
+        currentgraph = dgraphs.get(currentgraphindex - 1);
         currentgraphindex--;
-        ACyclicIterator<Node> k = new ACyclicIterator<Node>(currentgraph.preorderTraversal());
+        ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
         while(k.hasNext()){
-            Node n = k.next();
-            if(n != null && n.lookup(NodeGraphicsInfo.class)!=null)
-               n.lookup(NodeGraphicsInfo.class).opacity=255;
+            NodeGraphicsInfo ngi = k.next();
+            if(ngi != null)
+               ngi.opacity=255;
         }
       }
     }
@@ -296,11 +310,15 @@ public static final int animationCountMax=50;
         cameraHandler.mouseWheelMoved(e);
     }
 
-    public ArrayList<Graph> getGraphs() {
-        return graphs;
+    public ArrayList<DisplayGraph> getGraphs() {
+        return dgraphs;
     }
 
-    public Graph getCurrentGraph(){
+    public ArrayList<DisplayGraph> getDisplayGraphs() {
+      return dgraphs;
+    }
+
+    public DisplayGraph getCurrentGraph(){
         return currentgraph;
     }
 
@@ -308,10 +326,10 @@ public static final int animationCountMax=50;
         return new UI(this);
     }
 
-    private Node hasNode(Graph g, Node thisNode){
-      ACyclicIterator<Node> k = new ACyclicIterator<Node>(g.preorderTraversal());
+    private NodeGraphicsInfo hasNode(DisplayGraph g, NodeGraphicsInfo thisNode){
+      ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
       while(k.hasNext()){
-        Node graphNode = k.next();
+        NodeGraphicsInfo graphNode = k.next();
         if(thisNode.equals(graphNode)){
           return thisNode;
         }

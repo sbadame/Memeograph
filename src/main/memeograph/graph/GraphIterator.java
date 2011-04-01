@@ -13,19 +13,19 @@ import memeograph.util.Util;
  */
 class GraphIterator implements Iterator<Node> {
 
-  private static Filter<Node> ALL_PASS_FILTER = new Filter<Node>(){
+  protected static Filter<Node> ALL_PASS_FILTER = new Filter<Node>(){
     public Boolean filter(Node from) { return true; }
   };
 
-  private static Closure<Node> DO_NOTHING = new Closure<Node>(){
+  protected static Closure<Node> DO_NOTHING = new Closure<Node>(){
     public void execute(Node e) {}
   };
 
-  private final Node head;
-  private Iterator<Node> childIterator;
-  private boolean usedHead = false;
-  private Filter<Node> filter = ALL_PASS_FILTER;
-  private Closure<Node> onNext = DO_NOTHING;
+  protected Node head;
+  protected Iterator<Node> childIterator;
+  protected boolean usedHead = false;
+  protected Filter<Node> filter = ALL_PASS_FILTER;
+  protected Closure<Node> onNext = DO_NOTHING;
 
   public GraphIterator(Node head){
     this.head = head;

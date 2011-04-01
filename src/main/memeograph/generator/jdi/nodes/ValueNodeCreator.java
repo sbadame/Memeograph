@@ -34,7 +34,7 @@ public class ValueNodeCreator {
 
   private MutableNode getArrayNode(ArrayReference arrayReference) {
     MutableNode n = new MutableNode();
-    n.store(GraphNodeType.class, new ArrayNode(arrayReference));
+    n.gnt = new ArrayNode(arrayReference);
 
     for (Value value : arrayReference.getValues()) {
       if (value == null) { continue; }
@@ -48,7 +48,7 @@ public class ValueNodeCreator {
 
     MutableNode n = new MutableNode();
     ObjectNode on = new ObjectNode(or);
-    n.store(GraphNodeType.class, on);
+    n.gnt = on;
 
     //Fields
     ClassType type = (ClassType)or.type();
@@ -77,10 +77,10 @@ public class ValueNodeCreator {
 
   private boolean isSpecialCase(Field field, Value val, MutableNode n) {
     if (field.name().equals("memeographcolor") && field.typeName().equals("int")) {
-        ((ObjectNode)n.lookup(GraphNodeType.class)).color = new Color(((IntegerValue)val).value());
+        ((ObjectNode)n.gnt).color = new Color(((IntegerValue)val).value());
         return true;
     }else if (field.name().equals("memeographname") && field.typeName().equals("java.lang.String")){
-        ((ObjectNode)n.lookup(GraphNodeType.class)).name = ((StringReference)val).value();
+        ((ObjectNode)n.gnt).name = ((StringReference)val).value();
         return true;
     }
     return false;
@@ -127,23 +127,23 @@ public class ValueNodeCreator {
     MutableNode n = new MutableNode();
 
     if (val instanceof BooleanValue) {
-        n.store(GraphNodeType.class, new BooleanNode((BooleanValue)val));
+        n.gnt = new BooleanNode((BooleanValue)val);
     }else if (val instanceof CharValue){
-        n.store(GraphNodeType.class, new CharNode((CharValue)val));
+        n.gnt = new CharNode((CharValue)val);
     }else if (val instanceof ShortValue){
-        n.store(GraphNodeType.class, new ShortNode((ShortValue)val));
+        n.gnt = new ShortNode((ShortValue)val);
     }else if (val instanceof LongValue){
-        n.store(GraphNodeType.class, new LongNode((LongValue)val));
+        n.gnt = new LongNode((LongValue)val);
     }else if (val instanceof IntegerValue){
-        n.store(GraphNodeType.class, new IntegerNode((IntegerValue)val));
+        n.gnt = new IntegerNode((IntegerValue)val);
     }else if (val instanceof FloatValue){
-        n.store(GraphNodeType.class, new FloatNode((FloatValue)val));
+        n.gnt = new FloatNode((FloatValue)val);
     }else if (val instanceof DoubleValue){
-        n.store(GraphNodeType.class, new DoubleNode((DoubleValue)val));
+        n.gnt = new DoubleNode((DoubleValue)val);
     }else if (val instanceof ByteValue){
-        n.store(GraphNodeType.class, new ByteNode((ByteValue)val));
+        n.gnt = new ByteNode((ByteValue)val);
     }else{
-        n.store(GraphNodeType.class, new UnknownNode(val));
+        n.gnt = new UnknownNode(val);
     }
 
     return n;

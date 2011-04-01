@@ -32,7 +32,7 @@ public class MemeoFrame extends JFrame implements Renderer{
 
         setLayout(new BorderLayout());
 
-        setVisible(true);
+        
         add(papplet, BorderLayout.CENTER);
 
         //The only way that is actually aware of multiple monitors...
@@ -42,7 +42,7 @@ public class MemeoFrame extends JFrame implements Renderer{
         height -= 40;
         setSize(width, height);
         setLocationRelativeTo(null);
-
+        setVisible(true);
         papplet.init();
     }
 
