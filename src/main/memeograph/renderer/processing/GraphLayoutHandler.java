@@ -1,6 +1,7 @@
 package memeograph.renderer.processing;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import memeograph.generator.jdi.nodes.ObjectClassType;
@@ -17,58 +18,36 @@ import processing.core.PApplet;
  * Those coordinates are then stored in the node in a NodeGraphicsInfo Object.
  */
 public class GraphLayoutHandler {
-  public static final int PADDING = 10;
+  public static final int PADDING = 80;
 
-  private final Graph g;
+  //private final Graph g;
+  private final DisplayGraph dg;
   private final PApplet applet;
   private boolean didLayout = false;
 
 
   //The Grid!!!
   //Lookup the node stored on an (y,z) rail
-  private HashMap<Integer, HashMap<Integer, ArrayList<Node>>> grid =
-          new HashMap<Integer, HashMap<Integer, ArrayList<Node>>>();
+  private HashMap<Integer, HashMap<Integer, ArrayList<NodeGraphicsInfo>>> grid =
+          new HashMap<Integer, HashMap<Integer, ArrayList<NodeGraphicsInfo>>>();
 
 
-  public GraphLayoutHandler(Graph g, PApplet applet){
-    this.g = g;
+  public GraphLayoutHandler(DisplayGraph graph, PApplet applet){
+    dg = graph;
     this.applet = applet;
   }
 
-  public void doLayout(){
-      for (Node thread : g.getRoot().getChildren()) {
-        assert(thread.lookup(GraphNodeType.class) instanceof ThreadNode); //Sanity check
-        layout(thread, -10, 0);
-
-        if(!thread.hasChildren()) continue;
-
-        Node sf = thread;
-        int y = 0;
-        HashSet<Node> seen = new HashSet<Node>();
-        do{
-            sf = thread.getChildren().iterator().next();
-            if (seen.contains(sf)) break;
-            y += 1;
-            layout(sf, -10, y);
-            seen.add(sf);
-        }while(sf.hasChildren());
-      }
-      setXPositions(g);
-      didLayout = true;
-  }
-
-    private void layout(Node n, int z, int y)
+    private void layout(NodeGraphicsInfo n, int z, int y)
     {
-        NodeGraphicsInfo newInfo = new NodeGraphicsInfo(n.lookup(GraphNodeType.class).getColor());
-        newInfo.x = 0; //We don't know X yet, we have to go back and add it later
-        newInfo.y = y * 50;
-        newInfo.z = z * 50;
-        newInfo.width = applet.textWidth(n.lookup(GraphNodeType.class).toString());
+        n.x = 0; //We don't know X yet, we have to go back and add it later
+        n.y = y * 50;
+        n.z = z * 50;
+        if(n.gnt != null && (n.width = applet.textWidth(n.gnt.toString())) < 150)
+          n.width = 150f;
+          
         addToGrid(n, y, z);
 
-        n.store(NodeGraphicsInfo.class, newInfo);
-
-        for (Node child : n.getChildren()) {
+        for (NodeGraphicsInfo child : n.getChildren()) {
            assert(child != null);
            if (isZChild(n, child)) {
              layout(child, z-1, y);
@@ -78,44 +57,88 @@ public class GraphLayoutHandler {
         }
     }
 
-    private void addToGrid(Node n, int y, int z) {
+    public void doLayout(){
+      for (NodeGraphicsInfo thread : dg.getRoot().getChildren()) {
+        assert(thread.gnt instanceof ThreadNode);
+        layout(thread, -10, 0);
+
+        if(!thread.getChildren().isEmpty()) continue;
+
+        NodeGraphicsInfo sf = thread;
+        int y = 0;
+        HashSet<NodeGraphicsInfo> seen = new HashSet<NodeGraphicsInfo>();
+        //////////////////////////////
+        /*do*/while(!sf.getChildren().isEmpty()){
+            sf = thread.getChildren().iterator().next();
+            if (seen.contains(sf)) break;
+            y += 1;
+            layout(sf, -10, y);
+            seen.add(sf);
+        }//while(!sf.children().isEmpty());
+      }
+      setXPositions();
+      didLayout = true;
+    }
+
+    private void addToGrid(NodeGraphicsInfo n, int y, int z) {
         if (!grid.containsKey(z)) {
-            grid.put(z, new HashMap<Integer, ArrayList<Node>>());
+            grid.put(z, new HashMap<Integer, ArrayList<NodeGraphicsInfo>>());
         }
-        HashMap<Integer, ArrayList<Node>> zPlane = grid.get(z);
-
+        HashMap<Integer, ArrayList<NodeGraphicsInfo>> zPlane = grid.get(z);
         if (!zPlane.containsKey(y)){
-            zPlane.put(y, new ArrayList<Node>());
+            zPlane.put(y, new ArrayList<NodeGraphicsInfo>());
         }
-
-        ArrayList<Node> rail = zPlane.get(y);
+        ArrayList<NodeGraphicsInfo> rail = zPlane.get(y);
         rail.add(n);
     }
 
-    private void setXPositions(Graph g){
-        HashSet<Node> seen = new HashSet<Node>();
-        for (Integer y : grid.keySet()) {
-            //Go down the ladder...
-            HashMap<Integer, ArrayList<Node>> zPlane = grid.get(y);
-            for (Integer z : zPlane.keySet()) {
-                float xPosition = 0;
-                ArrayList<Node> spike = zPlane.get(z);
-                for (Node node : spike) {
-                   if (seen.contains(node)) { continue; }
-                   NodeGraphicsInfo ngi = node.lookup(NodeGraphicsInfo.class);
-                   ngi.x = xPosition;
-                   seen.add(node);
-                   xPosition += (xPosition == 0 ? ngi.width/2 : ngi.width);
-                   xPosition += PADDING*10;
+    private void setXPositions(){
+        HashSet<NodeGraphicsInfo> seen = new HashSet<NodeGraphicsInfo>();
+        float mid = findMid();
+        float xPos = 0;
+        float width = 0;
+        for( Integer y : grid.keySet()){
+            HashMap<Integer, ArrayList<NodeGraphicsInfo>> zPlane = grid.get(y);
+            for(Integer z : zPlane.keySet()){
+                width = 0;
+                for(int i = 0; i < zPlane.get(z).size(); i++){
+                    NodeGraphicsInfo node = zPlane.get(z).get(i);
+                    if(seen.contains(node)){ continue; }
+                    width += 150 + PADDING;
+                    seen.add(node);
+                }
+                xPos = mid - (width/2);
+                seen = new HashSet<NodeGraphicsInfo>();
+                for(int i = 0; i < zPlane.get(z).size(); i++){
+                    NodeGraphicsInfo node = zPlane.get(z).get(i);
+                    if (seen.contains(node)) { continue; }
+                    node.x = xPos + PADDING;
+                    seen.add(node);
+                    xPos += node.width + PADDING;
                 }
             }
         }
     }
-
+    private float findMid(){
+      float max=0;
+      float curmax;
+      for(Integer y : grid.keySet()){
+        HashMap<Integer, ArrayList<NodeGraphicsInfo>> zPlane = grid.get(y);
+        curmax = 0;
+        for(Integer z : zPlane.keySet()){
+          for(NodeGraphicsInfo node : zPlane.get(z)){
+            curmax += node.width;
+          }
+          if(curmax > max)
+            max = curmax;
+        }
+      }
+      return max/2;
+    }
     //A Z child goes into the plane...
-    public boolean isZChild(Node parent, Node child){
-      GraphNodeType p = parent.lookup(GraphNodeType.class);
-      GraphNodeType c = child.lookup(GraphNodeType.class);
+    public boolean isZChild(NodeGraphicsInfo parent, NodeGraphicsInfo child){
+      GraphNodeType p = parent.node.gnt;
+      GraphNodeType c = child.node.gnt;
       if ((p instanceof ThreadNode || p instanceof StackFrameNode) && (c instanceof StackFrameNode) ) {
         return false;
       }else if (p instanceof StackFrameNode){
@@ -127,10 +150,7 @@ public class GraphLayoutHandler {
       }
       return false;
     }
-
     public boolean isLayoutDone() {
       return didLayout;
     }
-
-
 }

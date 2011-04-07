@@ -20,7 +20,7 @@ public class SimpleNode extends MutableNode {
 
   @Override
   public String toString(){
-    StringBuilder b = new StringBuilder(lookup(String.class));
+    StringBuilder b = new StringBuilder(super.toString());
     b.append("{");
     if (hasChildren()) {
       for (Node node : children) b.append(node.toString()).append(",");

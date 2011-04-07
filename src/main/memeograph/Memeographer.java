@@ -1,6 +1,9 @@
 package memeograph;
 
+import memeograph.generator.jdi.nodes.ObjectNode;
 import memeograph.graph.Graph;
+import memeograph.graph.Node;
+import memeograph.util.ACyclicIterator;
 
 /**
  * Seriously, this is the whole program in a nutshell.
@@ -29,11 +32,19 @@ public class Memeographer {
 
         Generator generator = config.getGenerator();
         generator.start();
-
         Graph g = null;
-        while( (g = generator.getNextGraph()) != null )
+        int k = 0;
+        while( (g = generator.getNextGraph()) != null ){
             renderer.addGraph(g);
-
+            /*ACyclicIterator<Node> i = new ACyclicIterator<Node>(g.preorderTraversal());
+            int j = 0;
+            while(i.hasNext()){
+              Node n = i.next();
+              if (n.gnt instanceof ObjectNode)
+                System.out.println(++j+":"+((ObjectNode)n.gnt).getUniqueID());
+            }
+            System.out.println(++k+ "-----------------");//*/
+        }
         renderer.finish();
     }
 

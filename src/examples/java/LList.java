@@ -12,6 +12,6 @@ public class LList {
         memeographname = "LList(" + data + ")";
     }
 
-    protected int memeographcolor = 0xAA3344;
+    protected Color memeographcolor = new Color(200, 100, 100);
     protected String memeographname = "LList()";
 }

@@ -16,15 +16,15 @@ import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
 
 /**
- * This will generateGraph a VM for an object graph whenever a trigger method is
- * called in the SuT.
- *
- * Has the slightly strange side effect that if "jdbgrapher.savefile" is set it
- * will serialize the graph and save it to the filename pointed to by the property.
- * that graph can then be loaded using the GraphFileLoader which is much faster
- * then re-running the program and building the graph from scratch in most
- * cases.
- */
+* This will generateGraph a VM for an object graph whenever a trigger method is
+* called in the SuT.
+*
+* Has the slightly strange side effect that if "jdbgrapher.savefile" is set it
+* will serialize the graph and save it to the filename pointed to by the property.
+* that graph can then be loaded using the GraphFileLoader which is much faster
+* then re-running the program and building the graph from scratch in most
+* cases.
+*/
 public abstract class JDI implements Generator {
 
     private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
@@ -37,6 +37,7 @@ public abstract class JDI implements Generator {
     private EventIterator eventIterator = null;
     private HashMap<EventRequest, EventAction> actions = new HashMap<EventRequest, EventAction>();
     private boolean hasDied = false;
+    private int graph =1;
 
     public JDI(Config config){
         String target_options = config.getProperty(Config.TARGET_OPTIONS, "");
@@ -94,21 +95,21 @@ public abstract class JDI implements Generator {
     }
 
     /**
-     * Adds EventRequests to the VM on VM startup.
-     */
+      * Adds EventRequests to the VM on VM startup.
+      */
     public void startupEventRequests(){}
 
     /**
-     * Called when the VM has started.
-     */
+      * Called when the VM has started.
+      */
     public void VMStarted(){ }
 
     /**
-     * Generate and return the next graph.
-     * Assumes that the VM has already been paused. It will resume the VM
-     * and wait for a graph to be generated. The first graph that is generated
-     * is returned and the VM is kept in in a suspended state.
-     */
+      * Generate and return the next graph.
+      * Assumes that the VM has already been paused. It will resume the VM
+      * and wait for a graph to be generated. The first graph that is generated
+      * is returned and the VM is kept in in a suspended state.
+      */
     public Graph getNextGraph(){
         Graph g = null;
         vm.resume();
@@ -150,48 +151,45 @@ public abstract class JDI implements Generator {
         return g;
     }
 
-    /**
-     * Generates the current object graph of the target program. Use this
-     * method on a VM that is launched but has all threads suspended.
-     * @return
-     */
+/**
+  * Generates the current object graph of the target program. Use this
+  * method on a VM that is launched but has all threads suspended.
+  * @return
+  */
     public Graph generateGraph(){
         MutableNode root = new MutableNode();
-        root.store(GraphNodeType.class, new ObjectGraphRoot());
+        root.gnt = new ObjectGraphRoot();
 
         objectCache.clear();
         ObjectClassType.clearCache();
-        for (ThreadReference thread :  vm.allThreads()) {
+        for (ThreadReference thread : vm.allThreads()) {
            try {
                if (thread.threadGroup().name().equals("system")) { continue; }
                MutableNode threadNode = new MutableNode();
-               threadNode.store(GraphNodeType.class, new ThreadNode(thread));
+               threadNode.gnt = new ThreadNode(thread);
                MutableNode prev = threadNode;
-
                for (int d = thread.frameCount() - 1; d >= 0; d--) {
                    MutableNode newFrame = exploreStackFrame(thread.frame(d), d);
                    prev.addChild(newFrame);
                    prev = newFrame;
                }
-
                root.addChild(threadNode);
            } catch (IncompatibleThreadStateException ex) {
              ex.printStackTrace();
            }
         }
-
         return new Graph(root);
     }
 
     private MutableNode exploreStackFrame(StackFrame frame, int d) throws IncompatibleThreadStateException {
         MutableNode stackframe = new MutableNode();
-        stackframe.store(GraphNodeType.class, new StackFrameNode(frame, d));
+        stackframe.gnt = new StackFrameNode(frame, d);
 
         //Make sure that we don't forget the "This" object
         ObjectReference thisObject = frame.thisObject();
         if (thisObject != null) {
           MutableNode objectReference = getObjectReference(thisObject);
-          stackframe.addChild(  objectReference );
+          stackframe.addChild( objectReference );
         }
         try {
           for (LocalVariable local : frame.visibleVariables()) { //This throws AbsentInformationException
@@ -209,22 +207,22 @@ public abstract class JDI implements Generator {
     }
 
     /**
-     * Make sure that we avoid cycles and only explore each object once
-     * @param thisObject
-     * @return
-     */
+* Make sure that we avoid cycles and only explore each object once
+* @param thisObject
+* @return
+*/
     private MutableNode getObjectReference(ObjectReference thisObject) {
       if (!objectCache.containsKey(thisObject.uniqueID())) {
         MutableNode node = new MutableNode();
-        node.store(GraphNodeType.class, new ObjectNode(thisObject));
+        node.gnt = new ObjectNode(thisObject);
         objectCache.put(thisObject.uniqueID(), node);
       }
       return objectCache.get(thisObject.uniqueID());
     }
 
     /**
-     * Adds an event listener that goes off when the event has been detected.
-     */
+* Adds an event listener that goes off when the event has been detected.
+*/
     public void addVMEventListener(EventRequest e, EventAction ea){
         actions.put(e, ea);
     }
@@ -242,3 +240,4 @@ public abstract class JDI implements Generator {
         return hasDied;
     }
 }
+

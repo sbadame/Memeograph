@@ -1,6 +1,6 @@
 
 public class BST {
-    final BST left, right;
+    BST left, right;
     final int data;
 
     private BST(int data, BST left, BST right) {
@@ -27,12 +27,20 @@ public class BST {
     public BST insert(int n)
     {
         if (n < data){
-            return new BST(data, left.insert(n), right);
+            left = left.insert(n);
+            return this;
         }else{
-            return new BST(data, left, right.insert(n));
+            right = right.insert(n);
+            return this;
         }
     }
 
     protected int memeographcolor = 0xCDB79E;
     protected String memeographname = "BST()";
+
+    @Override
+    public String toString()
+    {
+        return "(" + left + " " + data + " " + right + ")";
+    }
 }
