@@ -5,6 +5,7 @@ import com.sun.jdi.connect.*;
 import com.sun.jdi.connect.Connector.Argument;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.EventRequest;
+import com.sun.jdi.request.MethodEntryRequest;
 import memeograph.generator.jdi.nodes.*;
 
 import java.util.*;
@@ -14,6 +15,7 @@ import memeograph.Generator;
 import memeograph.Config;
 import memeograph.graph.Graph;
 import memeograph.graph.MutableNode;
+import memeograph.graph.Node;
 
 /**
 * This will generateGraph a VM for an object graph whenever a trigger method is
@@ -25,8 +27,7 @@ import memeograph.graph.MutableNode;
 * then re-running the program and building the graph from scratch in most
 * cases.
 */
-public abstract class JDI implements Generator {
-
+public class JDI implements Generator {
     private final HashMap<Long, MutableNode> objectCache = new HashMap<Long, MutableNode>();
     private final ValueNodeCreator valueCache = new ValueNodeCreator();
 
@@ -37,12 +38,17 @@ public abstract class JDI implements Generator {
     private EventIterator eventIterator = null;
     private HashMap<EventRequest, EventAction> actions = new HashMap<EventRequest, EventAction>();
     private boolean hasDied = false;
-    private int graph =1;
+    private final String triggermethodname;
+    private final String triggerclassname;
 
     public JDI(Config config){
         String target_options = config.getProperty(Config.TARGET_OPTIONS, "");
         target = target_options.substring(target_options.lastIndexOf(' '));
         target_args = target_options.substring(0, target_options.lastIndexOf(' '));
+        
+        String t = Config.getConfig().getProperty(Config.TRIGGER);
+        triggermethodname = t.substring(t.lastIndexOf('.')+1);
+        triggerclassname = t.substring(0, t.lastIndexOf('.'));
     }
 
     @Override
@@ -97,7 +103,26 @@ public abstract class JDI implements Generator {
     /**
       * Adds EventRequests to the VM on VM startup.
       */
-    public void startupEventRequests(){}
+    public void startupEventRequests(){
+        //Lets listen for a step...
+        MethodEntryRequest mer = getVirtualMachine().eventRequestManager().createMethodEntryRequest();
+        mer.addClassFilter(triggerclassname);
+        mer.setSuspendPolicy(EventRequest.SUSPEND_ALL);
+        mer.enable();
+        
+        addVMEventListener(mer, new EventAction(){
+            public Graph doAction(Event event) {
+                MethodEntryEvent mee = (MethodEntryEvent)event;
+                System.out.println(event);
+                if (mee.method().name().equals(triggermethodname)) {
+                    return generateGraph();
+                }
+                return null;
+            }
+        });
+        
+        mer.enable();
+    }
 
     /**
       * Called when the VM has started.
@@ -111,7 +136,35 @@ public abstract class JDI implements Generator {
       * is returned and the VM is kept in in a suspended state.
       */
     public Graph getNextGraph(){
-        Graph g = null;
+        /*Graph g = null;
+        vm.resume();
+        try{
+            boolean vmAlive = true;
+            while(vmAlive){
+                EventIterator e = vm.eventQueue().remove().eventIterator();
+                while(e.hasNext()){
+                    Event event = e.nextEvent();
+                    if (event instanceof VMDeathEvent) {
+                        vmAlive = false;
+                    }else if (event instanceof MethodEntryEvent){
+                        MethodEntryEvent mee = (MethodEntryEvent)event;
+                        if (mee.method().name().contains(triggermethodname)) {
+                            g = generateGraph();
+                        }
+                    }else{
+                        System.err.println("Strange event: " + event.getClass().getName());
+                    }
+                    if (vmAlive) {
+                        vm.resume();
+                    }
+                }
+            }
+        } catch (InterruptedException ex){
+          System.err.println("Couldn't wait for the vm to pause.");
+          ex.printStackTrace();
+        }
+        return g;
+      */Graph g = null;
         vm.resume();
         try {
             while(g == null){
@@ -140,15 +193,15 @@ public abstract class JDI implements Generator {
                       } else if (event instanceof VMDeathEvent){
                           hasDied = true;
                       }
-                    }
-                }
+                 }
                 if (resume) { vm.resume(); }
+              }
             }
         } catch (InterruptedException ex) {
           System.err.println("Couldn't wait for the vm to pause.");
           ex.printStackTrace();
         }
-        return g;
+        return g;//*/
     }
 
 /**
@@ -165,10 +218,13 @@ public abstract class JDI implements Generator {
         for (ThreadReference thread : vm.allThreads()) {
            try {
                if (thread.threadGroup().name().equals("system")) { continue; }
+               //System.out.println("   "+thread.name());
                MutableNode threadNode = new MutableNode();
                threadNode.gnt = new ThreadNode(thread);
+               
                MutableNode prev = threadNode;
-               for (int d = thread.frameCount() - 1; d >= 0; d--) {
+               for (int d = thread.frameCount() - 1; d > 0; d--) {
+                   //System.out.println("      "+prev.gnt);
                    MutableNode newFrame = exploreStackFrame(thread.frame(d), d);
                    prev.addChild(newFrame);
                    prev = newFrame;
@@ -184,7 +240,6 @@ public abstract class JDI implements Generator {
     private MutableNode exploreStackFrame(StackFrame frame, int d) throws IncompatibleThreadStateException {
         MutableNode stackframe = new MutableNode();
         stackframe.gnt = new StackFrameNode(frame, d);
-
         //Make sure that we don't forget the "This" object
         ObjectReference thisObject = frame.thisObject();
         if (thisObject != null) {
@@ -192,11 +247,27 @@ public abstract class JDI implements Generator {
           stackframe.addChild( objectReference );
         }
         try {
-          for (LocalVariable local : frame.visibleVariables()) { //This throws AbsentInformationException
+          for (LocalVariable local : frame.visibleVariables()) {//This throws AbsentInformationException
             if (local == null) { continue; }
             Value val = frame.getValue(local);
             if (val != null && val.type() != null) {
-              stackframe.addChild(valueCache.getNode(val));
+              MutableNode mn = valueCache.getNode(val);
+              /*LinkedList<Node> l = new LinkedList<Node>();
+              l.add(mn);
+              LinkedList<Node> temp = new LinkedList<Node>();
+              String space = "         ";
+              while(!l.isEmpty()){
+                for(int i = 0; i < l.size(); i++){
+                 System.out.println(space + l.get(i).gnt);
+                 for(Node node : l.get(i).getChildren()){
+                    temp.add(node);  
+                 }
+                }
+                l =temp;
+                temp = new LinkedList<Node>();
+                space += "   ";
+              }*/
+              stackframe.addChild(mn);
             }
           }
         } catch (AbsentInformationException ex) {
