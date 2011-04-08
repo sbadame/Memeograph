@@ -142,6 +142,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                     nextGraphList.add(node);
               }
           }
+                  
           //continue node animation and fading out
           else if(animationCount < (animationCountMax - 1)){
               while(k.hasNext()){
