@@ -138,13 +138,8 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
               while(acyc.hasNext()){
                 NodeGraphicsInfo node = acyc.next();
                 if(!hasNode(node.node,currentgraph))
-                    System.out.println("true");
-                    node.opacity = OPACITY_COUNT;
+                    node.opacity = 0;
                     nextGraphList.add(node);
-              }
-              for(NodeGraphicsInfo ngi : nextGraphList)
-              {
-                  drawNode(ngi);
               }
           }
           //continue node animation and fading out
@@ -161,8 +156,10 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
               }
               for(NodeGraphicsInfo ngi : nextGraphList)
               {
-                  ngi.opacity += OPACITY_COUNT;
-                  drawNode(ngi);
+                  if(!hasNode(ngi.node,currentgraph)){
+                      ngi.opacity += OPACITY_COUNT;
+                      drawNode(ngi);
+                  }
               }
           }
           animationCount--;
