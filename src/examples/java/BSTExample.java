@@ -1,18 +1,29 @@
 
 public class BSTExample{
     public static void main(String[] args){
-        System.out.println("BSTEXAMPLE SAYS HELLO");
+        LList l = new LList();
+        l.pause();
         BST b = new BST(5);
+        l.pause();
         b = b.insert(10);
+        l.pause();
         b = b.insert(15);
         b = b.insert(12);
+        l.pause();
         b = b.insert(2);
+        l.pause();
         b = b.insert(1);
-        BST b2 = new BST(900);
-        b2.insert(500);
-        System.out.println("" + b + b2);
-        b2.insert(500);
-
+        
+        l.insert(-3);
+        l.pause();
+        l.insert(6);
+        l.pause();
+        l.insert(7);
+        l.pause();
+        l.insert(8);
+        l.pause();
+        
+        b = b.insert(5);
     }
 
 }

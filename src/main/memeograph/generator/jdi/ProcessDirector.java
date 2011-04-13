@@ -26,7 +26,7 @@ public class ProcessDirector{
     inputStream = p.getInputStream();
     errorStream = p.getErrorStream();
     outputStream = p.getOutputStream();
-    this.process = p;
+    process = p;
   }
 
   public void start(){
@@ -57,8 +57,7 @@ public class ProcessDirector{
         } catch (IOException ex) {
           if (!kill) {
             ex.printStackTrace();
-            Logger.getLogger(ProcessDirector.class.getName()).log(Level.SEVERE,
-                                                                null, ex);
+            Logger.getLogger(ProcessDirector.class.getName()).log(Level.SEVERE,null, ex);
           }
         }
       }
@@ -95,7 +94,6 @@ public class ProcessDirector{
         t3.interrupt();
       }
     }.start();
-
     t1.start();
     t2.start();
     t3.start();

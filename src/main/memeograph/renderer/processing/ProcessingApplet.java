@@ -152,7 +152,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                       ngi.y += (locationYMap.get(ngi) - getY(currentgraph,ngi)) / (animationCount);
                       ngi.z += (locationZMap.get(ngi) - getZ(currentgraph,ngi)) / (animationCount);
                   }else{
-                      ngi.opacity -= OPACITY_COUNT;
+                      ngi.opacity -= OPACITY_COUNT*1.3f;
                   }
               }
               for(NodeGraphicsInfo ngi : nextGraphList)
@@ -185,16 +185,18 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         popStyle();
     }
 
-    private void drawNode(NodeGraphicsInfo node){
-        if (node.gnt instanceof ObjectGraphRoot) { return; }
+    private void drawNode(NodeGraphicsInfo n){
+        if (n.gnt instanceof ObjectGraphRoot) { return; }
         pushMatrix(); pushStyle();
-        NodeGraphicsInfo n = node;
-        GraphNodeType t = node.gnt;
+        GraphNodeType t = n.gnt;
 
         translate(n.x, n.y, n.z);
 
+
+
         fill(n.r, n.g, n.b, n.opacity);
-        strokeWeight(1);
+        float strokeWeight = (n.opacity > 255f) ? 1 : (n.opacity / 255f);
+        strokeWeight(strokeWeight);  
         box(n.width, 20f, 20f);
 
         float size = 0;
@@ -206,13 +208,13 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
               size = textWidth(data);
               pushMatrix();
               translate(0f, 0f, 11f);
-              fill(5);
+              fill(5,n.opacity);
               text(data, 0, 0f);
 
               translate(0f, 0f, -22f);
 
               rotateY(PI);
-              text(data, 0f, 0f);
+              //text(data, 0f, 0f);
               popMatrix();
             }catch(NullPointerException npe){
               
@@ -237,6 +239,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         }
         popMatrix(); popStyle();
     }
+    
     private Color getColor(Node n){
         if(n.gnt instanceof IntegerNode)
           return Color.lightGray;
@@ -332,7 +335,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
       if(currentgraphindex <= 0) {
         System.err.println("No more to show you...");
         return;
-      }else{
+      }else if(animationCount == animationCountMax){
         currentgraph = dgraphs.get(currentgraphindex - 1);
         currentgraphindex--;
         ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
