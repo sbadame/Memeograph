@@ -1,7 +1,6 @@
 package memeograph.renderer.processing;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import memeograph.generator.jdi.nodes.ObjectClassType;
@@ -9,8 +8,6 @@ import memeograph.generator.jdi.nodes.ObjectNode;
 import memeograph.generator.jdi.nodes.StackFrameNode;
 import memeograph.generator.jdi.nodes.ThreadNode;
 import memeograph.generator.jdi.nodes.GraphNodeType;
-import memeograph.graph.Graph;
-import memeograph.graph.Node;
 import processing.core.PApplet;
 
 /**
@@ -58,6 +55,7 @@ public class GraphLayoutHandler {
     }
 
     public void doLayout(){
+      ThreeDTree tdt = new ThreeDTree(dg.getRoot());
       for (NodeGraphicsInfo thread : dg.getRoot().getChildren()) {
         assert(thread.gnt instanceof ThreadNode);
         layout(thread, -10, 0);
@@ -67,15 +65,16 @@ public class GraphLayoutHandler {
         NodeGraphicsInfo sf = thread;
         int y = 0;
         HashSet<NodeGraphicsInfo> seen = new HashSet<NodeGraphicsInfo>();
-        //////////////////////////////
-        /*do*/while(!sf.getChildren().isEmpty()){
+
+        while(!sf.getChildren().isEmpty()){
             sf = thread.getChildren().iterator().next();
             if (seen.contains(sf)) break;
             y += 1;
             layout(sf, -10, y);
             seen.add(sf);
-        }//while(!sf.children().isEmpty());
+        }
       }
+
       setXPositions();
       didLayout = true;
     }
@@ -136,7 +135,7 @@ public class GraphLayoutHandler {
       return max/2;
     }
     //A Z child goes into the plane...
-    public boolean isZChild(NodeGraphicsInfo parent, NodeGraphicsInfo child){
+    public static boolean isZChild(NodeGraphicsInfo parent, NodeGraphicsInfo child){
       GraphNodeType p = parent.node.gnt;
       GraphNodeType c = child.node.gnt;
       if ((p instanceof ThreadNode || p instanceof StackFrameNode) && (c instanceof StackFrameNode) ) {
