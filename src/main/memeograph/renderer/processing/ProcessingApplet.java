@@ -20,18 +20,16 @@ import memeograph.util.ACyclicIterator;
  */
 public class ProcessingApplet extends PApplet implements MouseWheelListener{
     private static final int animationCountMax = 50;
-    private static final float OPACITY_COUNT = ((255.0f)/(animationCountMax/2));
+    private static final float OPACITY_COUNT = ((255.0f) / (animationCountMax / 2));
     private int animationCount = animationCountMax;
     private int currentgraphindex = 0;
-    private HashMap<NodeGraphicsInfo,Float> locationXMap;
-    private HashMap<NodeGraphicsInfo,Float> locationYMap;
-    private HashMap<NodeGraphicsInfo,Float> locationZMap;
+    private HashMap<NodeGraphicsInfo,Coordinate> locationMap;
+    private HashMap<NodeGraphicsInfo,Coordinate> tempMap;
     private ArrayList<NodeGraphicsInfo> nextGraphList;
 
-    //Just to have something and avoid the dreaded null
-    ArrayList<DisplayGraph> dgraphs = new ArrayList<DisplayGraph>();
-    LinkedList<DisplayGraph> layoutqueue = new LinkedList<DisplayGraph>();
-    DisplayGraph currentgraph;
+    private ArrayList<DisplayGraph> dgraphs = new ArrayList<DisplayGraph>();
+    private LinkedList<DisplayGraph> layoutqueue = new LinkedList<DisplayGraph>();
+    private DisplayGraph currentgraph;
 
     PFont font3D;
     private final String rendertype;
@@ -45,7 +43,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
     private UI ui = createUI();
     private CameraHandler cameraHandler = new CameraHandler(this);
-
+    
     public ProcessingApplet(){
         addMouseWheelListener(this);
         if (Config.getConfig().isSwitchSet(Config.USE_OPENGL, false)){
@@ -83,15 +81,16 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         cameraHandler.draw();
 
         if (currentgraph == null) { return; }
-    
-        animationStep();
+        
+        if(currentgraphindex < dgraphs.size() - 1 && animationCount != animationCountMax)
+            animationStep();
         
         //Now draw the lines between the nodes
         ACyclicIterator<NodeGraphicsInfo> i = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
         while( i.hasNext()){
           NodeGraphicsInfo parent = i.next();
           for (NodeGraphicsInfo kid : parent.getChildren()) {
-            drawLine(parent, kid);
+              drawLine(parent, kid);
           }
         }
         //And now to actually draw the nodes
@@ -100,79 +99,84 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
           drawNode(j.next());
         }
         //Removing the loading graphic...
-        //Total hack but I'm not gonna add more code than needed for this
+        //Total hack but I'm not gon55na add more code than needed for this
         if (!ui.getCenter().isEmpty()) { ui.getCenter().clear(); }
 
         ui.draw();
     }
 
     private void animationStep(){
-      if(currentgraphindex < dgraphs.size() -1 && animationCount != animationCountMax){
-          ACyclicIterator<NodeGraphicsInfo> k;
-          k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
-
-          //setup and start the animation of nodes
-          if(animationCount == (animationCountMax - 1)){
-              locationXMap = new HashMap<NodeGraphicsInfo,Float>();
-              locationYMap = new HashMap<NodeGraphicsInfo,Float>();
-              locationZMap = new HashMap<NodeGraphicsInfo,Float>();
-              while(k.hasNext()){
-                  NodeGraphicsInfo ngi = k.next();
-                  if(hasNode(ngi.node,dgraphs.get(currentgraphindex + 1))){
-                      DisplayGraph dg = dgraphs.get(currentgraphindex + 1);
-                      locationXMap.put(ngi,getX(dg,ngi));
-                      locationYMap.put(ngi,getY(dg,ngi));
-                      locationZMap.put(ngi,getZ(dg,ngi));
-                      ngi.x += (locationXMap.get(ngi) - getX(currentgraph,ngi)) / (animationCount / 2);
-                      ngi.y += (locationYMap.get(ngi) - getY(currentgraph,ngi)) / (animationCount / 2);
-                      ngi.z += (locationZMap.get(ngi) - getZ(currentgraph,ngi)) / (animationCount / 2);
-                  }else{
+        //setup and start the animation of nodes
+        if(animationCount == (animationCountMax - 1)){
+            ACyclicIterator<NodeGraphicsInfo> k;
+            k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
+            locationMap = new HashMap<NodeGraphicsInfo,Coordinate>();
+            tempMap = new HashMap<NodeGraphicsInfo,Coordinate>();
+            while(k.hasNext()){
+                NodeGraphicsInfo ngi = k.next();
+                tempMap.put(ngi, new Coordinate(ngi.x,ngi.y,ngi.z));
+                if(hasNode(ngi.node,dgraphs.get(currentgraphindex + 1))){
+                    DisplayGraph dg = dgraphs.get(currentgraphindex + 1);
+                    locationMap.put(ngi,getCoordinate(dg,ngi));
+                    ngi.x += (locationMap.get(ngi).x - ngi.x) / (animationCount / 2);
+                    ngi.y += (locationMap.get(ngi).y - ngi.y) / (animationCount / 2);
+                    ngi.z += (locationMap.get(ngi).z - ngi.z) / (animationCount / 2);
+                }else{
                     ngi.opacity -= OPACITY_COUNT;
-                  }
-              }
-              
-              //Now check for nodes to be faded in
-              nextGraphList = new ArrayList<NodeGraphicsInfo>();
-              ACyclicIterator<NodeGraphicsInfo> acyc;
-              acyc = new ACyclicIterator<NodeGraphicsInfo>(dgraphs.get(currentgraphindex + 1).preorderTraversal());
-              while(acyc.hasNext()){
+                }
+            }          
+            //Now check for nodes to be faded in
+            nextGraphList = new ArrayList<NodeGraphicsInfo>();
+            ACyclicIterator<NodeGraphicsInfo> acyc;
+            acyc = new ACyclicIterator<NodeGraphicsInfo>(dgraphs.get(currentgraphindex + 1).preorderTraversal());
+            while(acyc.hasNext()){
                 NodeGraphicsInfo node = acyc.next();
                 if(!hasNode(node.node,currentgraph))
                     node.opacity = 0;
-                    nextGraphList.add(node);
-              }
-          }
-                  
-          //continue node animation and fading out
-          else if(animationCount < (animationCountMax - 1)){
-              while(k.hasNext()){
-                  NodeGraphicsInfo ngi = k.next();
-                  if(hasNode(ngi.node,dgraphs.get(currentgraphindex + 1))){
-                      ngi.x += (locationXMap.get(ngi) - getX(currentgraph,ngi)) / (animationCount);
-                      ngi.y += (locationYMap.get(ngi) - getY(currentgraph,ngi)) / (animationCount);
-                      ngi.z += (locationZMap.get(ngi) - getZ(currentgraph,ngi)) / (animationCount);
-                  }else{
-                      ngi.opacity -= OPACITY_COUNT*1.3f;
-                  }
-              }
-              for(NodeGraphicsInfo ngi : nextGraphList)
-              {
-                  if(!hasNode(ngi.node,currentgraph)){
-                      ngi.opacity += OPACITY_COUNT;
-                      drawNode(ngi);
-                  }
-              }
-          }
-          animationCount--;
-
-        //end of animation...reset animation count
-        if(animationCount == 0){
-           currentgraph = dgraphs.get(currentgraphindex + 1);
-           currentgraphindex++;
-           animationCount = animationCountMax;
+                nextGraphList.add(node);
+            }
+            System.out.println("---------");
+        }          
+        //continue node animation and fading out
+        else if(animationCount < (animationCountMax - 1)){
+            ACyclicIterator<NodeGraphicsInfo> k;
+            k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
+            while(k.hasNext()){
+                NodeGraphicsInfo ngi = k.next();
+                if(hasNode(ngi.node,dgraphs.get(currentgraphindex + 1))){
+                    (ngi).x += (locationMap.get(ngi).x - ngi.x) / (animationCount);
+                    (ngi).y += (locationMap.get(ngi).y - ngi.y) / (animationCount);
+                    (ngi).z += (locationMap.get(ngi).z - ngi.z) / (animationCount);
+                }else{
+                    ngi.opacity -= OPACITY_COUNT*1.3f;
+                }
+            }
+            for(NodeGraphicsInfo ngi : nextGraphList)
+            {
+                if(!hasNode(ngi.node,currentgraph)){
+                    ngi.opacity += OPACITY_COUNT;
+                    drawNode(ngi);
+                    drawLine(ngi,getParent(dgraphs.get(currentgraphindex + 1),ngi));
+                }
+            }
+        }
+        animationCount--;
+        //end of animation...reset animation count and reset coordinates
+        if(animationCount <= 0){
+            ACyclicIterator<NodeGraphicsInfo> k;
+            k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
+            while(k.hasNext()){
+                NodeGraphicsInfo ngi = k.next();
+                System.out.println(ngi);
+                ngi.x = tempMap.get(ngi).x;
+                ngi.y = tempMap.get(ngi).y;
+                ngi.z = tempMap.get(ngi).z;
+            }
+            currentgraph = dgraphs.get(currentgraphindex + 1);
+            currentgraphindex++;
+            animationCount = animationCountMax;
         }
     }
-}
     private void drawLine(NodeGraphicsInfo f, NodeGraphicsInfo t){
         pushStyle();
         if (f.gnt instanceof ObjectGraphRoot) { return; }
@@ -191,8 +195,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         GraphNodeType t = n.gnt;
 
         translate(n.x, n.y, n.z);
-
-
 
         fill(n.r, n.g, n.b, n.opacity);
         float strokeWeight = (n.opacity > 255f) ? 1 : (n.opacity / 255f);
@@ -288,6 +290,18 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     return new DisplayGraph(nodemap.get(graph.getRoot()));
   }
 
+    public NodeGraphicsInfo getParent(DisplayGraph dg, NodeGraphicsInfo ngi){
+        ACyclicIterator<NodeGraphicsInfo> acyc = new ACyclicIterator<NodeGraphicsInfo>(dg.preorderTraversal());
+        while(acyc.hasNext()){
+            NodeGraphicsInfo parent = acyc.next();
+            for(NodeGraphicsInfo child : parent.getChildren()){
+                if(child.gnt.getUniqueID().equals(ngi.gnt.getUniqueID()))
+                    return parent;
+            }
+        }
+        return null;
+    }
+    
     public void addGraph(Graph newGraph){
         DisplayGraph dg = displayGraph(newGraph);
         GraphLayoutHandler layout = new GraphLayoutHandler(dg, this);
@@ -331,7 +345,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     /*
      * This is called when the user wants to see the previous graph
      */
-    private void showPrevGraph(){
+    protected void showPrevGraph(){
       if(currentgraphindex <= 0) {
         System.err.println("No more to show you...");
         return;
@@ -393,34 +407,13 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         return new UI(this);
     }
 
-    private Float getX(DisplayGraph g, NodeGraphicsInfo thisNode){
+    private Coordinate getCoordinate(DisplayGraph g, NodeGraphicsInfo thisNode){
       ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
       while(k.hasNext()){
           NodeGraphicsInfo ngi = k.next();
           if(thisNode.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()))
-              return ngi.x;
+              return new Coordinate(ngi.x,ngi.y,ngi.z);
       }
-      return -1f;
+      return null;
     }
-    
-    private Float getY(DisplayGraph g, NodeGraphicsInfo thisNode){
-      ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
-      while(k.hasNext()){
-          NodeGraphicsInfo ngi = k.next();
-          if(thisNode.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()))
-              return ngi.y;
-      }
-      return -1f;
-    }
-    
-    private Float getZ(DisplayGraph g, NodeGraphicsInfo thisNode){
-      ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
-      while(k.hasNext()){
-          NodeGraphicsInfo ngi = k.next();
-          if(thisNode.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()))
-              return ngi.z;
-      }
-      return -1f;
-    }
-    
 }
