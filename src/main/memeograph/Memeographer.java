@@ -1,5 +1,6 @@
 package memeograph;
 
+import java.util.Iterator;
 import memeograph.generator.jdi.nodes.ObjectNode;
 import memeograph.graph.Graph;
 import memeograph.graph.Node;
@@ -32,18 +33,9 @@ public class Memeographer {
 
         Generator generator = config.getGenerator();
         generator.start();
-        Graph g = null;
-        int k = 0;
-        while( (g = generator.getNextGraph()) != null ){
-            renderer.addGraph(g);
-            /*ACyclicIterator<Node> i = new ACyclicIterator<Node>(g.preorderTraversal());
-            int j = 0;
-            while(i.hasNext()){
-              Node n = i.next();
-              if (n.gnt instanceof ObjectNode)
-                System.out.println(++j+":"+((ObjectNode)n.gnt).getUniqueID());
-            }
-            System.out.println(++k+ "-----------------");//*/
+        Iterator<Graph> i = generator.getGraphs();
+        while(i.hasNext()){
+            renderer.addGraph(i.next());
         }
         renderer.finish();
     }

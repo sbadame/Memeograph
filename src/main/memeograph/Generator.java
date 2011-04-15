@@ -1,6 +1,6 @@
 package memeograph;
 
-import memeograph.graph.Graph;
+import java.util.Iterator;
 
 /**
  *  Creates an sequence of graphs that the GraphRenderer will be responsible to
@@ -12,10 +12,5 @@ import memeograph.graph.Graph;
  */
 public interface Generator {
   public void start();
-
-  /**
-   * Blocks until the next graph is generated. Returns null if there are no
-   * more graphs.
-   */
-  public Graph getNextGraph();
+  public abstract Iterator<memeograph.graph.Graph> getGraphs();
 }

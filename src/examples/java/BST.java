@@ -1,7 +1,7 @@
 
 public class BST {
     BST left, right;
-    final int data;
+    final Integer data;
 
     private BST(int data, BST left, BST right) {
         this.data = data;

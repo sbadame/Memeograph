@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import memeograph.Config;
 import memeograph.Generator;
@@ -54,8 +55,8 @@ public class GraphFileLoader implements Generator{
       return !graphs.isEmpty();
   }
 
-  public Graph getNextGraph() {
-      return graphs.remove(0);
+  public Iterator<Graph> getGraphs() {
+      return graphs.iterator();
   }
 
 }

@@ -11,6 +11,10 @@ public class ValueNodeCreator {
 
   private HashMap<Value, MutableNode> valueCache = new HashMap<Value, MutableNode>();
 
+  public void clear() {
+    valueCache.clear();
+  }
+  
   public MutableNode getNode(Value val){
     if (valueCache.containsKey(val)) { return valueCache.get(val); }
 

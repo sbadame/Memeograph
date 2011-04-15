@@ -1,30 +1,28 @@
 package memeograph.renderer.processing;
 
+import java.awt.event.MouseWheelListener;
 import memeograph.Config;
 import memeograph.Generator;
-import memeograph.generator.jdi.InteractiveStep;
-import memeograph.generator.jdi.InteractiveStep.Depth;
 import memeograph.graph.Graph;
 import memeograph.renderer.processing.ui.InteractiveUI;
 import memeograph.renderer.processing.ui.UI;
 
-public class InteractiveProcessingApplet extends ProcessingApplet{
-
-    private InteractiveStep is = null;
+public class InteractiveProcessingApplet extends ProcessingApplet implements MouseWheelListener{
 
     public InteractiveProcessingApplet(){
         super();
 
         Generator generator = Config.getConfig().getGenerator();
-        if (! (generator instanceof InteractiveStep) ) {
+        /*if (! (generator instanceof InteractiveStep) ) {
             System.err.println("WARNING: You're using InteractiveProcessingApplet with a generator that isn't InteractiveStep!" );
         }else{
             is = (InteractiveStep)generator;
-        }
+        }*/
     }
 
-    @Override
+    /*@Override
     public void keyPressed(){
+      System.out.println("i");
         if (currentgraph != null && is != null) {
              char k = (char) key;
              Depth d = null;
@@ -44,14 +42,14 @@ public class InteractiveProcessingApplet extends ProcessingApplet{
                new Thread(){
                   @Override
                   public void run(){
-                    is.step(InteractiveStep.Size.STEP_LINE, finalDepth);
+                    //is.step(InteractiveStep.Size.STEP_LINE, finalDepth);
                   }
                }.start();
              }
         }else{
             super.keyPressed();
         }
-    }
+    }*/
 
     @Override
     public void addGraph(Graph g){
