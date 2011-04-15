@@ -46,11 +46,12 @@ We describe a new system which animates the changing call stack and object-refer
 
 \section{Animating the Execution of a Program}
 
-Computer programs have, in the past, been treated as art, and programs that
-produce artistic output have even shown in art galleries next to the works they
-created.  Unfortunately, these efforts have never caught on.  This is in part
+In the past computer programs that produced artistic output have been exhibited
+in art galleries next to the creations that they rendered. Often, the
+program itself has been considered a work of art in its own right.
+ Unfortunately, these efforts have never caught on.  This is in part
 because the beauty of a computer program lies not in its source code, but in
-the unfolding of its execution.  
+the unfolding of its execution.
 
 To an experienced reader, source code can be quite elegant and beautiful, but
 it is completely inaccessible to the non-programmer.  This inaccessibility is
@@ -62,7 +63,10 @@ time. Animation seems perfect for this as it is an art form that allows
 drawings, much like programs, to change over time.
 
 In this paper, we debut a new system which animates the execution of Java
-programs.  These Java programs need not be written with animation in mind, but our system will still manage to display, in a pleasing way, the execution of the program.  If a programmer would like, it is possible to tweak their program so that the animation looks even better than the defaults.
+programs.  These Java programs need not be written with animation in mind, but our
+system will display the execution of the program in a pleasing way.
+If a programmer would like, it is possible to tweak their program so that
+the animation looks even better than the defaults.
 
 Previously, we developed a system for the animation of the execution of
 programs which can be represented as trees (roughly speaking, a subset of
@@ -76,25 +80,27 @@ have its own rewards.
 
 \section{Our System: Memeograph}
 
-When choosing what to visualize, one must choose both what to show, and also
-what not to show.  In our case, we display the program stack, all stack frames,
-all non-garbage objects, and all references between those items.  We do not
-show the program source code, and we also ignore all the system threads of the
-Java virtual machine (most of which are concerned with garbage collection).
-
 Our system, Memeograph, works by running the ``work of art'' program (WOA) in
 a separate Java Virtual Machine (JVM) that has been started in debug mode.
 Usually debug mode is for traditional debuggers to connect to the JVM and allow
 a programmer to debug their program. In our case, we use the debugger
 connection to pause the WOA and retrieve from it all live objects, stack
-frames, and object references.  
+frames, and object references.
+
+When choosing what to visualize, one must choose both what to show, and also
+what not to show.  In our case, we display the program stack, all stack frames,
+all reachable objects, and all references between those items.  We do not
+show the program source code, and we also ignore all the system threads of the
+Java virtual machine (most of which are concerned with garbage collection).
 
 We treat this data as a graph, with objects and stack frames as vertices, and
 object references as edges between vertices.  We then lay out this graph in
 3-dimensions according to our layout algorithm (next section).  Subsequently,
 we advance the virtual machine step by step, animating the transition from
-layout to layout.  Memeograph remembers past graphs, and so can animate the
-execution of the WOA both forwards and backwards in time.
+layout to layout. What defines a step is configured through Memeograph but it
+is most commonly defined as a point of extection directly before a function of interest
+is executed. Memeograph remembers past graphs, and so can animate the execution of the WOA
+both forwards and backwards in time.
 
 \section{Layout of Program Memory}
 \label{sec:layout}
