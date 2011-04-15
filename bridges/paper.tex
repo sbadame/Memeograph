@@ -40,7 +40,13 @@
 
 \begin{abstract}
 
-We describe a new system which animates the changing call stack and object-reference graph of an object-oriented program that has not (necessarily) been designed to be visualized.  We have sought to make the drawings and animations produced by our system be beautiful in an effort to show non-programmers what beauty and elegance might mean in the context of source code.  Our animation system uses a new graph layout algorithm which produces high-quality layouts in which many data structures naturally ``look right''.
+We describe a new system which animates the changing call stack and
+object-reference graph of an object-oriented program that has not (necessarily)
+been designed to be visualized.  We have sought to make the drawings and
+animations produced by our system be beautiful in an effort to show
+non-programmers what beauty and elegance might mean in the context of source
+code.  Our animation system uses a new graph layout algorithm which produces
+high-quality layouts in which many data structures naturally ``look right''.
 
 \end{abstract}
 
@@ -58,32 +64,33 @@ it is completely inaccessible to the non-programmer.  This inaccessibility is
 because in order to see the elegance of a program, one is forced to ``play
 computer'' in ones head to imagine the execution of the program.  If we want to
 show people that computer programs can be beautiful, then we should use an art
-form which can show program execution, that is, a system which changes over
-time. Animation seems perfect for this as it is an art form that allows
-drawings, much like programs, to change over time.
+form which can show program execution, that is, can display a system which
+changes over time. Animation seems perfect for this as it is an art form that
+allows drawings, much like programs, to change over time.
 
 In this paper, we debut a new system which animates the execution of Java
-programs.  These Java programs need not be written with animation in mind, but our
-system will display the execution of the program in a pleasing way.
-If a programmer would like, it is possible to tweak their program so that
-the animation looks even better than the defaults.
+programs.  These Java programs need not be written with animation in mind, but
+our system will display the execution of the program in a pleasing way.  If a
+programmer would like, it is possible to tweak their program so that the
+animation looks even better than the defaults, by changing the labels and
+colors from their default values.
 
-Previously, we developed a system for the animation of the execution of
-programs which can be represented as trees (roughly speaking, a subset of
-Lisp)\cite{boca}, but that system required that the programs be written in a
-custom dialect of Lisp, and, therefore, be written solely for the purpose of
-being displayed.  Previous efforts at program animation in general have never
-had beauty as the goal.  In all cases, the goal was more practical, and was
-either for comprehension, debugging, or for pedagogical help.  Although we hope
-our tool might be useful in practical ways, the pursuit of beauty has proven to
+Previously, we developed a system\cite{boca} for the animation of the execution
+of programs which can be represented as trees (roughly speaking, a subset of
+Lisp), but that system required that the programs be written in a custom
+dialect of Lisp, and, therefore, be written solely for the purpose of being
+displayed.  Previous efforts at program animation in general have never had
+beauty as the goal.  In all cases, the goal was more practical, and was either
+for comprehension, debugging, or for pedagogical help.  Although we hope our
+tool might be useful in practical ways, the pursuit of beauty has proven to
 have its own rewards.
 
 \section{Our System: Memeograph}
 
-Our system, Memeograph, works by running the ``work of art'' program (WOA) in
-a separate Java Virtual Machine (JVM) that has been started in debug mode.
-Usually debug mode is for traditional debuggers to connect to the JVM and allow
-a programmer to debug their program. In our case, we use the debugger
+Our system, Memeograph, works by running the ``work of art'' program (WOA) in a
+separate Java Virtual Machine (JVM) that has been started in debug mode.
+Usually debug mode is for more-traditional debuggers to connect to the JVM and
+allow a programmer to debug their program. In our case, we use the debugger
 connection to pause the WOA and retrieve from it all live objects, stack
 frames, and object references.
 
@@ -93,20 +100,21 @@ all reachable objects, and all references between those items.  We do not
 show the program source code, and we also ignore all the system threads of the
 Java virtual machine (most of which are concerned with garbage collection).
 
-We treat this data as a graph, with objects and stack frames as vertices, and
-object references as edges between vertices.  We then lay out this graph in
-3-dimensions according to our layout algorithm (next section).  Subsequently,
-we advance the virtual machine step by step, animating the transition from
-layout to layout. What defines a step is configured through Memeograph but it
-is most commonly defined as a point of extection directly before a function of interest
-is executed. Memeograph remembers past graphs, and so can animate the execution of the WOA
-both forwards and backwards in time.
+We treat our non-ignored data as a graph, with objects and stack frames as
+vertices, and object references as edges between vertices.  We then lay out
+this graph in 3-dimensions according to our layout algorithm (next section).
+Subsequently, we advance the virtual machine step by step, animating the
+transition from layout to layout. What defines a step is configured through
+Memeograph but it is most commonly defined as a point of execution directly
+before a function of interest is called. Memeograph remembers past graphs,
+and so can animate the execution of the WOA both forwards and backwards in
+time.
 
 \section{Layout of Program Memory}
 \label{sec:layout}
 
 Layout of general graphs is a hard problem with a rich literature surrounding
-it (the 19th Graph Drawing symposium will be this year, Di~Battista et
+it (the 19th Graph Drawing symposium will be held this year --- Di~Battista et
 al.\cite{gd}\ is a recommended introductory text), and the layout of graphs in
 3-dimensions remains an area of active research.  In our system, we lay out the
 objects using only the spanning-tree of the graph created from a breadth-first
@@ -114,24 +122,44 @@ search starting from the very top stack frame.  When layout out the program, we
 note that there are two ways a program might be considered elegant. 
 
 Some programs achieve elegance through beautiful and intricate data structures
-such as red-black trees or B+ trees or skip lists.  Other programs achieve
-elegance through unique and surprising connections between components --- a very
-different sort of achievement in a very different domain.  We would like our
-system to show both kinds of elegance which may exist in the WOA, so we have a
-heuristic which, literally, attempts to make these two concerns orthogonal to
-one another.
+such as red-black trees or B+ trees or skip lists.  This is an elegance based
+in using interesting data structures.  Other programs achieve elegance through
+unique and surprising connections between components --- a very different sort
+of achievement in a very different domain.  This second kind of elegance might
+be called elegance in software engineering.  We would like our system to show
+both kinds of elegance which may exist in the WOA, so we have a heuristic
+which, literally, attempts to make these two concerns orthogonal to one
+another.
 
-Our heuristic is that, when a link goes between two vertices $(u,v)$ and $u$ and $v$ have the same type, or one type is a child of the other, then $u$ and $v$ are given the same $y$ coordinate, and instead $v$ is placed with a $z$ coordinate behind $u$.  In all other cases, $u$ and $v$ are given the same $z$ coordinate, and the $v$ is placed below $u$ via a greater $y$ component.  This makes the $(x,y)$ plane the ``software engineering'' plane, and the $(x,z)$ plane the ``data structures'' plane.  An example layout in this style may be seen in Figure~\ref{fig:basic}, which contains a program with almost no interesting features in the software engineering plane. but does contain both a linked list and a binary search tree drawn in the data structures plane.  
+Our heuristic is that, when a link goes between two vertices $(u,v)$ and $u$
+and $v$ care objects of the same type, or one is a child of the other, then $u$
+and $v$ are given the same $y$ coordinate, and instead $v$ is placed with a $z$
+coordinate behind $u$.  In all other cases, $u$ and $v$ are given the same $z$
+coordinate, and the $v$ is placed below $u$ via a greater $y$ component.  This
+makes the $(x,y)$ plane the ``software engineering'' plane, and the $(x,z)$
+plane the ``data structures'' plane.  An example layout in this style may be
+seen in Figure~\ref{fig:basic}, which contains a program with almost no
+interesting features in the software engineering plane. but does contain both a
+linked list and a binary search tree drawn in the data structures plane.  
 
 \begin{figure}
 \begin{center}
 \includegraphics[width=5in]{figures/basic.png}
 \end{center}
-\caption{A program containing both a linked list (colored red) and a binary search tree (internal nodes are brown, and the leaves are green).  This program contains almost no interesting features in the software engineering plane, but does manage to draw some fundamental data structures in the data structures plane.}
+\caption{A program containing both a linked list (colored red) and a binary
+search tree (internal nodes are brown, and the leaves are green).  This program
+contains almost no interesting features in the software engineering plane, but
+does manage to draw some fundamental data structures in the data structures
+plane.}
 \label{fig:basic}
 \end{figure}
 
-When laying out trees, we have our choice of algorithms.  The most famous algorithm for tree animation comes from Cohen et al.\cite{tamassia}, which describes a geometrically inspired algorithm for 2-dimensional tree layout (called the $\square$-algorithm), a set of allowed update operations for the tree, and, for each operation, a smooth transition that allows the tree to be smoothly animated through the transition.
+When laying out trees, we have our choice of algorithms.  The most famous
+algorithm for tree animation comes from Cohen et al.\cite{tamassia}, which
+describes a geometrically inspired algorithm for 2-dimensional tree layout
+(called the $\square$-algorithm), a set of allowed update operations for the
+tree, and, for each operation, a smooth transition that allows the tree to be
+smoothly animated through the transition.
 
 Our layout algorithm, the cubic algorithm, is a straightforward extension of
 their algorithm into the third dimension.  In an effort to strive for
@@ -141,22 +169,39 @@ identify the vertices the two trees have in common.  Vertices present in the
 first tree, but not the second, are faded out in animation.  Vertices present
 in the second tree, but not in the first, are faded in.  Vertices present in
 both trees are gradually moved from their position in the first tree to their
-position in the second tree.
+position in the second tree.  Edges are faded in and out with the vertices to
+which they are incident.
 
 In this animation technique, we use the layout of each graph as ``key frames''
-in our animation, and Memeograph automatically produces the ``tween frames''
-to move from one key frame to the other.  Pleasantly, this mirrors how cartoons
-were often animated, with the lead cartoonist creating the key frames, and
-supporting artists doing the tween frames.  Our more-complicated layout
-algorithm produces the key frames, and then simple interpolation produces the
-tween frames.
+in our animation, and then produce the ``tween frames'' to move from one key
+frame to the other.  Pleasantly, this mirrors how cartoons were often animated,
+with the lead cartoonist creating the key frames, and supporting artists doing
+the tween frames.  Our more-complicated layout algorithm produces the key
+frames, and then simple linear interpolation produces the tween frames.
+
 
 \section{Overview}
 
 Visualizing software has never been done with beauty in mind, but programs can
-be beautiful, and we should show that beauty to others.  Our system, Memeograph\nocite{memeograph}, attempts to draw on the screen what was previously only available to the original programmer: the intricate and beautiful changing connection patterns of a running program.
+be beautiful, and we should show that beauty to others.  Our system,
+Memeograph\nocite{memeograph}, attempts to draw on the screen what was
+previously only available to the original programmer: the intricate and
+beautiful changing connection patterns of a running program.
 
-In pursuing this goal, we ended up extending an existing graph layout algorithm, as well as developing a heuristic that separates the drawing of the program into the two kinds of elegance a program might contain: elegance in software engineering (intricate connections between distinct components) and elegance in data structures (intricate connections between like components).  These two kinds of elegance are subsequently drawn in distinct planes, so that the viewer can choose the aspect on which to concentrate.
+In pursuing this goal, we ended up extending an existing graph layout
+algorithm, as well as developing a heuristic that separates the drawing of the
+program into the two kinds of elegance a program might contain: elegance in
+software engineering (intricate connections between distinct components) and
+elegance in data structures (intricate connections between like components).
+These two kinds of elegance are subsequently drawn in distinct planes, so that
+the viewer can choose the aspect on which to concentrate.
+
+The generality of this method is one of its strengths.  The programmer need not
+concern themselves with how their program looks, or, indeed, with any concern
+for layout at all.  A program can be animated with absolutely no modification
+by the original programmer.  It is possible to tweak the animation in order to
+more clearly show certain effects, but our animation tool is able to treat any
+Java program as a work of art.
 
 \setlength{\baselineskip}{13pt} 
 \bibliography{mybib}
