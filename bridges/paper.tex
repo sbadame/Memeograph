@@ -61,17 +61,17 @@ the unfolding of its execution.
 
 To an experienced reader, source code can be quite elegant and beautiful, but
 it is completely inaccessible to the non-programmer.  This inaccessibility is
-because in order to see the elegance of a program, one is forced to ``play
-computer'' in ones head to imagine the execution of the program.  If we want to
-show people that computer programs can be beautiful, then we should use an art
-form which can show program execution, that is, can display a system which
-changes over time. Animation seems perfect for this as it is an art form that
-allows drawings, much like programs, to change over time.
+because in order to see the elegance of a program, the viewer is forced to
+``play computer'' in their head to imagine the execution of the program.  If we
+want to show people that computer programs can be beautiful, then we should use
+an art form which can show program execution, that is, can display a system
+which changes over time. Animation seems perfect for this as it is an art form
+that allows drawings, much like programs, to change over time. 
 
 In this paper, we debut a new system which animates the execution of Java
-programs.  These Java programs need not be written with animation in mind, but
-our system will display the execution of the program in a pleasing way.  If a
-programmer would like, it is possible to tweak their program so that the
+programs.  These Java programs need not be written with animation in mind, our
+system will still display the execution of the program in a pleasing way.  If a
+programmer would like, it is possible to tweak a program so that the
 animation looks even better than the defaults, by changing the labels and
 colors from their default values.
 
@@ -79,11 +79,11 @@ Previously, we developed a system\cite{boca} for the animation of the execution
 of programs which can be represented as trees (roughly speaking, a subset of
 Lisp), but that system required that the programs be written in a custom
 dialect of Lisp, and, therefore, be written solely for the purpose of being
-displayed.  Previous efforts at program animation in general have never had
-beauty as the goal.  In all cases, the goal was more practical, and was either
-for comprehension, debugging, or for pedagogical help.  Although we hope our
-tool might be useful in practical ways, the pursuit of beauty has proven to
-have its own rewards.
+displayed.  Previous efforts at program animation have never had beauty as a
+goal.  In all cases, the goals were more practical, and animations were for
+comprehension, debugging, or for pedagogical help.  Although we hope our tool
+might be useful in practical ways, the pursuit of beauty has proven to have its
+own rewards.
 
 \section{Our System: Memeograph}
 
@@ -118,29 +118,41 @@ it (the 19th Graph Drawing symposium will be held this year --- Di~Battista et
 al.\cite{gd}\ is a recommended introductory text), and the layout of graphs in
 3-dimensions remains an area of active research.  In our system, we lay out the
 objects using only the spanning-tree of the graph created from a breadth-first
-search starting from the very top stack frame.  When layout out the program, we
-note that there are two ways a program might be considered elegant. 
+search starting from the very top stack frame.  When laying out the program for
+beauty, we note that there are multiple ways a program might be considered
+elegant. 
 
 Some programs achieve elegance through beautiful and intricate data structures
 such as red-black trees or B+ trees or skip lists.  This is an elegance based
-in using interesting data structures.  Other programs achieve elegance through
-unique and surprising connections between components --- a very different sort
-of achievement in a very different domain.  This second kind of elegance might
-be called elegance in software engineering.  We would like our system to show
-both kinds of elegance which may exist in the WOA, so we have a heuristic
-which, literally, attempts to make these two concerns orthogonal to one
-another.
+in using interesting or intricate data structures.  Even simple binary search
+trees have proven to be quite nice-looking.  Other programs achieve elegance
+through unique and surprising connections between software components --- a
+very different sort of elegance in a very different domain.  This second kind
+of elegance might be called elegance in software engineering.  We also note, for completeness, that there are more
+senses in which a program might be called elegant --- including its runtime
+efficiency or its brevity.  With Memeograph we attempt to deal with only two
+kinds of program elegance, and leave the remaining senses for future work.
 
-Our heuristic is that, when a link goes between two vertices $(u,v)$ and $u$
-and $v$ care objects of the same type, or one is a child of the other, then $u$
-and $v$ are given the same $y$ coordinate, and instead $v$ is placed with a $z$
-coordinate behind $u$.  In all other cases, $u$ and $v$ are given the same $z$
-coordinate, and the $v$ is placed below $u$ via a greater $y$ component.  This
-makes the $(x,y)$ plane the ``software engineering'' plane, and the $(x,z)$
-plane the ``data structures'' plane.  An example layout in this style may be
-seen in Figure~\ref{fig:basic}, which contains a program with almost no
-interesting features in the software engineering plane. but does contain both a
-linked list and a binary search tree drawn in the data structures plane.  
+We would like our system to show off any elegance of the data structures and
+software engineering in the WOA, so we have a heuristic which, literally,
+attempts to make these two concerns orthogonal to one another.  Our heuristic
+is that when a link goes between two vertices $(u,v)$, and $u$ and $v$ are
+objects of the same type, or one is a child of the other, then $u$ and $v$ are
+given the same $y$ coordinate, and instead $v$ is placed with a $z$ coordinate
+behind $u$.  In all other cases, $u$ and $v$ are given the same $z$ coordinate,
+and the $v$ is placed below $u$ via a greater $y$ component.  When like links
+to like, the two vertices are placed at the same height, but at different
+depths.  When like links to unlike, the two vertices are placed at the same
+depth, but at different heights.
+
+Data structures objects usually have large sub-parts where objects of the same
+type link to one another, which means the vertices of an instantiated data
+structure will tend to all have the same $y$ value.  This tendency makes the
+$(x,y)$ plane the ``software engineering'' plane, and the $(x,z)$ plane the
+``data structures'' plane.  An example layout in this style may be seen in
+Figure~\ref{fig:basic}, which contains a program with almost no interesting
+features in the software engineering plane. but does contain both a linked list
+and a binary search tree drawn in the data structures plane.  
 
 \begin{figure}
 \begin{center}
@@ -176,11 +188,18 @@ In this animation technique, we use the layout of each graph as ``key frames''
 in our animation, and then produce the ``tween frames'' to move from one key
 frame to the other.  Pleasantly, this mirrors how cartoons were often animated,
 with the lead cartoonist creating the key frames, and supporting artists doing
-the tween frames.  Our more-complicated layout algorithm produces the key
-frames, and then simple linear interpolation produces the tween frames.
+the tween frames.  In Memeograph, our more-complicated layout algorithm
+produces the key frames, and then simple linear interpolation produces the
+tween frames.
 
+The only remaining choice is when to make the key frames.  This is a
+configurable option.  We allow the program user to specify what function calls
+should generate a new tween frame.  As a promising default for new users, we
+suggest generating a new frame every time {\tt PrintStream.println(String s)}
+gets called, which will generate a new key frame every time the WOA prints a
+message to standard out.
 
-\section{Overview}
+\section{Summary}
 
 Visualizing software has never been done with beauty in mind, but programs can
 be beautiful, and we should show that beauty to others.  Our system,
