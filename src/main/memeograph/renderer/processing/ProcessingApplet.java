@@ -26,7 +26,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     private HashMap<NodeGraphicsInfo,Coordinate> locationMap;
     private HashMap<NodeGraphicsInfo,Coordinate> tempMap;
     private ArrayList<NodeGraphicsInfo> nextGraphList;
-
+    private ArrayList<ArrayList<Line>> graphLines = new ArrayList<ArrayList<Line>>();
     private ArrayList<DisplayGraph> dgraphs = new ArrayList<DisplayGraph>();
     private LinkedList<DisplayGraph> layoutqueue = new LinkedList<DisplayGraph>();
     private DisplayGraph currentgraph;
@@ -34,7 +34,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     PFont font3D;
     private final String rendertype;
 
-    //Text Rendering info
+    //Text Rendering info  
     private final int renderfrontback = 1;
     private final int rendertopbottom = 2;
     private int rendermode = renderfrontback;
@@ -84,19 +84,15 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         
         if(currentgraphindex < dgraphs.size() - 1 && animationCount != animationCountMax)
             animationStep();
-        
-        //Now draw the lines between the nodes
-        ACyclicIterator<NodeGraphicsInfo> i = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
-        while( i.hasNext()){
-          NodeGraphicsInfo parent = i.next();
-          for (NodeGraphicsInfo kid : parent.getChildren()) {
-              drawLine(parent, kid);
-          }
+        else if (graphLines.size() != 0){
+            for(Line line : graphLines.get(currentgraphindex) ){
+                line.draw(this);
+            }
         }
         //And now to actually draw the nodes
         ACyclicIterator<NodeGraphicsInfo> j = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
         while(j.hasNext()) {
-          drawNode(j.next());
+            drawNode(j.next());
         }
         //Removing the loading graphic...
         //Total hack but I'm not gon55na add more code than needed for this
@@ -108,6 +104,9 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     private void animationStep(){
         //setup and start the animation of nodes
         if(animationCount == (animationCountMax - 1)){
+            for(Line line : graphLines.get(currentgraphindex + 1)){
+                line.opacity = 0f;
+            }
             ACyclicIterator<NodeGraphicsInfo> k;
             k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
             locationMap = new HashMap<NodeGraphicsInfo,Coordinate>();
@@ -124,7 +123,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                 }else{
                     ngi.opacity -= OPACITY_COUNT;
                 }
-            }          
+            }
             //Now check for nodes to be faded in
             nextGraphList = new ArrayList<NodeGraphicsInfo>();
             ACyclicIterator<NodeGraphicsInfo> acyc;
@@ -135,7 +134,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                     node.opacity = 0;
                 nextGraphList.add(node);
             }
-            System.out.println("---------");
         }          
         //continue node animation and fading out
         else if(animationCount < (animationCountMax - 1)){
@@ -156,7 +154,16 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                 if(!hasNode(ngi.node,currentgraph)){
                     ngi.opacity += OPACITY_COUNT;
                     drawNode(ngi);
-                    drawLine(ngi,getParent(dgraphs.get(currentgraphindex + 1),ngi));
+                    for(Line line : graphLines.get(currentgraphindex)){
+                        if(animationCount > animationCountMax / 2){
+                            line.opacity -= OPACITY_COUNT/4;
+                            line.draw(this);
+                        }
+                    }
+                    for(Line line : graphLines.get(currentgraphindex + 1)){
+                        line.opacity += OPACITY_COUNT/10;
+                        line.draw(this);
+                    }
                 }
             }
         }
@@ -167,26 +174,17 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
             k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
             while(k.hasNext()){
                 NodeGraphicsInfo ngi = k.next();
-                System.out.println(ngi);
                 ngi.x = tempMap.get(ngi).x;
                 ngi.y = tempMap.get(ngi).y;
                 ngi.z = tempMap.get(ngi).z;
+            }
+            for(Line line : graphLines.get(currentgraphindex)){
+                line.opacity = 255f;
             }
             currentgraph = dgraphs.get(currentgraphindex + 1);
             currentgraphindex++;
             animationCount = animationCountMax;
         }
-    }
-    private void drawLine(NodeGraphicsInfo f, NodeGraphicsInfo t){
-        pushStyle();
-        if (f.gnt instanceof ObjectGraphRoot) { return; }
-        NodeGraphicsInfo from = f;
-        NodeGraphicsInfo to = t;
-
-        strokeWeight(5);
-        stroke(1f,Math.min(from.opacity, to.opacity));
-        line(from.x, from.y, from.z, to.x, to.y, to.z);
-        popStyle();
     }
 
     private void drawNode(NodeGraphicsInfo n){
@@ -246,8 +244,6 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         if(n.gnt instanceof IntegerNode)
           return Color.lightGray;
         else if(n.gnt instanceof ObjectNode){
-          if(n.gnt.getName().equals("Leaf()"))
-            return Color.green;
           return Color.cyan;
         }
         else if(n.gnt instanceof StackFrameNode)
@@ -318,6 +314,16 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         layout.doLayout();
         dgraphs.add(dg);
         if (currentgraph == null) { currentgraph = dg; }
+        ArrayList<Line> lineList = new ArrayList<Line>();
+        ACyclicIterator<NodeGraphicsInfo> i = new ACyclicIterator<NodeGraphicsInfo>(dg.preorderTraversal());
+        while( i.hasNext()){
+            NodeGraphicsInfo parent = i.next();
+            for (NodeGraphicsInfo kid : parent.getChildren()) {
+                if(parent.gnt instanceof ObjectGraphRoot){}else
+                    lineList.add(new Line(parent.getCoordinate(), kid.getCoordinate()));
+            }
+        }
+        graphLines.add(lineList);
     }
     
     

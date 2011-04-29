@@ -54,4 +54,9 @@ public class NodeGraphicsInfo implements Serializable{
       childcount++;
       children.add(n);
     }
+    
+    public Coordinate getCoordinate()
+    {
+        return new Coordinate(x,y,z);
+    }
 }
