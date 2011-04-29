@@ -16,6 +16,6 @@ public class LList {
     }
     public void pause(){}
 
-    protected int memeographcolor = 0x5555FF;
+    protected int memeographcolor = 0xaf4272;
     protected String memeographname = "LList()";
 }

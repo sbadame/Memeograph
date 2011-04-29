@@ -1,23 +1,38 @@
 
-public class LLRB<Key extends Comparable<Key>, Value>
-{
-    private static final boolean RED    = true;
-    private static final boolean BLACK = false;
-    private Node root;
-    private class Node {
-        private Key key;
-        private Value val;
-        private Node left, right;
+class Node<Key extends Comparable<Key>, Value> {
+        public Key key;
+        public Value val;
+        public Node<Key,Value> left, right;
         private boolean color;
-        Node(Key key, Value val) {        
+        private int memeographcolor;
+        public void flipColor()
+        {
+          setColor(!getColor());
+        }
+
+        public boolean getColor() { return color; }
+        public void setColor(boolean col)
+        {
+          color = col;
+          memeographcolor = color ? 0xAA1111 : 0x111111;
+        }
+
+        Node(Key key, Value val) {
             this.key = key;
             this.val = val;
-            this.color = RED;
-        }        
-    }    
+            setColor(LLRB.RED);
+        }
+    }
+
+public class LLRB<Key extends Comparable<Key>, Value>
+{
+    public static final boolean RED    = true;
+    public static final boolean BLACK = false;
+    private Node<Key, Value> root;
+   
 
     public Value search(Key key) {
-        Node x = root;
+        Node<Key, Value> x = root;
         while (x != null) {
             int cmp = key.compareTo(x.key);
             if (cmp == 0) return x.val;
@@ -30,12 +45,12 @@ public class LLRB<Key extends Comparable<Key>, Value>
     public void insert(Key key, Value value)
     {    
          root = insert(root, key, value);
-         root.color = BLACK;
+         root.setColor(BLACK);
     }    
 
-    private Node insert(Node h, Key key, Value value)
+    private Node<Key, Value> insert(Node<Key, Value> h, Key key, Value value)
     {    
-         if (h == null)        return new Node(key, value);
+         if (h == null)        return new Node<Key, Value>(key, value);
          if (isRed(h.left) && isRed(h.right)) colorFlip(h);
          int cmp = key.compareTo(h.key);
          if (cmp == 0)      h.val = value;
@@ -46,12 +61,12 @@ public class LLRB<Key extends Comparable<Key>, Value>
          return h;
     }
 
-    Node rotateLeft(Node h) {
-        Node x = h.right;
+    Node<Key, Value> rotateLeft(Node<Key, Value> h) {
+        Node<Key, Value> x = h.right;
         h.right = x.left;
         x.left = h;
-        x.color = h.color;
-        h.color = RED;
+        x.setColor(h.getColor());
+        h.setColor(RED);
         return x;
     }
 
@@ -61,22 +76,22 @@ Node rotateRight(Node h)
    Node x = h.left;
    h.left= x.right;
    x.right= h;
-   x.color = h.color;
-   h.color = RED;
+   x.setColor(h.getColor());
+   h.setColor(RED);
    return x;
 }
 
 void colorFlip(Node h)
 {
-   h.color = !h.color;
-   h.left.color =  !h.left.color;
-   h.right.color = !h.right.color;
+   h.flipColor();
+   h.left.flipColor();
+   h.right.flipColor();
 }
 
 boolean isRed(Node n) 
 {
     if (n == null) return false;
-    return n.color == RED;
+    return n.getColor() == RED;
 }
 
 void pause() {}
@@ -87,6 +102,7 @@ void pause() {}
         for (int i = 0; i < 100; i++) {
                 rbtree.insert(i, "" + i);
                 System.out.println(i);
+                rbtree.pause();
         }
         rbtree.pause();
     }

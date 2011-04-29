@@ -13,6 +13,7 @@ public class BSTExample{
         b = b.insert(2);
         l.pause();
         b = b.insert(1);
+        l.pause();
         
         l.insert(-3);
         l.pause();

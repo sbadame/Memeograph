@@ -30,7 +30,7 @@
 %% that there should be a space, but I find paragraphs hard to read
 %% without it.  I'm inserting a small space that you may choose to
 %% modify.
-\setlength{\parskip}{1ex}
+\setlength{\parskip}{.75ex}
 
 \begin{document}
 \maketitle
@@ -166,6 +166,24 @@ plane.}
 \label{fig:basic}
 \end{figure}
 
+\begin{figure}
+\begin{center}
+\includegraphics[width=1.5in]{figures/bar-010.png}
+\includegraphics[width=1.5in]{figures/bar-012.png}
+\includegraphics[width=1.5in]{figures/bar-014.png}
+\includegraphics[width=1.5in]{figures/bar-016.png}
+\includegraphics[width=1.5in]{figures/bar-018.png}
+\includegraphics[width=1.5in]{figures/bar-022.png}
+\includegraphics[width=1.5in]{figures/bar-024.png}
+\includegraphics[width=1.5in]{figures/bar-026.png}
+\includegraphics[width=1.5in]{figures/bar-028.png}
+\includegraphics[width=1.5in]{figures/bar-030.png}
+\includegraphics[width=1.5in]{figures/bar-032.png}
+\includegraphics[width=1.5in]{figures/bar-034.png}
+\end{center}
+\caption{Frames from the animation of the last insertion into the BST and the prepending to the linked list resulting in Figure~\ref{fig:basic}.}
+\end{figure}
+
 When laying out trees, we have our choice of algorithms.  The most famous
 algorithm for tree animation comes from Cohen et al.\cite{tamassia}, which
 describes a geometrically inspired algorithm for 2-dimensional tree layout
@@ -206,6 +224,16 @@ be beautiful, and we should show that beauty to others.  Our system,
 Memeograph\nocite{memeograph}, attempts to draw on the screen what was
 previously only available to the original programmer: the intricate and
 beautiful changing connection patterns of a running program.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=5in]{figures/llrb.png}
+\end{center}
+\caption{A data-structure plane view after inserting the numbers 1 through 13
+in order into a left-learing red-black tree.  Code taken from the original
+paper\cite{llrb}, with two lines of code modified to make black nodes appear
+black and red nodes appear red in our visualization.}
+\end{figure}
 
 In pursuing this goal, we ended up extending an existing graph layout
 algorithm, as well as developing a heuristic that separates the drawing of the
