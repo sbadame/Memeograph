@@ -244,7 +244,10 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         if(n.gnt instanceof IntegerNode)
           return Color.lightGray;
         else if(n.gnt instanceof ObjectNode){
-          return Color.cyan;
+          if (((ObjectNode)n.gnt).color != null)
+            return ((ObjectNode)n.gnt).color;
+          else
+            return Color.cyan;
         }
         else if(n.gnt instanceof StackFrameNode)
           return Color.red;

@@ -15,6 +15,7 @@ public class LList {
        this.next = l;
     }
     public void pause(){}
-    protected Color memeographcolor = new Color(200, 100, 100);
+
+    protected int memeographcolor = 0xaf4272;
     protected String memeographname = "LList()";
 }

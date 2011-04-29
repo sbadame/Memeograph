@@ -11,6 +11,12 @@ public class BSTExample{
         b = b.insert(2);
         l.insert(8);
         b = b.insert(1);
+        l.pause();
+        
+        l.insert(-3);
+        l.pause();
+        l.insert(6);
+        l.pause();
         l.insert(7);
         b = b.insert(5);
     }
