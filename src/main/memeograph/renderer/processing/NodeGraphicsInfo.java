@@ -22,6 +22,7 @@ public class NodeGraphicsInfo implements Serializable{
 
     public GraphLayoutHandler glh;
     public GraphNodeType gnt;
+    public Line line;
     protected LinkedList<NodeGraphicsInfo> children = new LinkedList<NodeGraphicsInfo>();
 
     public NodeGraphicsInfo(Color c,Node n){
@@ -58,5 +59,9 @@ public class NodeGraphicsInfo implements Serializable{
     public Coordinate getCoordinate()
     {
         return new Coordinate(x,y,z);
+    }
+    
+    public boolean equals(NodeGraphicsInfo ngi){
+        return (this.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()));
     }
 }
