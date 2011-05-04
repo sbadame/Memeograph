@@ -62,6 +62,8 @@ public class NodeGraphicsInfo implements Serializable{
     }
     
     public boolean equals(NodeGraphicsInfo ngi){
-        return (this.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()));
+        boolean x = (this.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()));
+        boolean y = this.node.gnt.toString().equals(ngi.node.gnt.toString());
+        return x && y;
     }
 }

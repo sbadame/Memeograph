@@ -128,9 +128,10 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
             acyc = new ACyclicIterator<NodeGraphicsInfo>(dgraphs.get(currentgraphindex + 1).preorderTraversal());
             while(acyc.hasNext()){
                 NodeGraphicsInfo node = acyc.next();
-                if(!hasNode(node,currentgraph))
+                if(!hasNode(node,currentgraph)){
                     node.opacity = 0;
-                nextGraphList.add(node);
+                    nextGraphList.add(node);
+                }
             }
         }          
         //continue node animation and fading out
@@ -278,17 +279,15 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
 
             for (Node child : node.getChildren()) {//children
                 list.add(child);
-
-            if (!nodemap.containsKey(child)) {
-                getColor(child);
-                nodemap.put(child, new NodeGraphicsInfo(getColor(child), child));
+                if (!nodemap.containsKey(child)) {
+                    getColor(child);
+                    nodemap.put(child, new NodeGraphicsInfo(getColor(child), child));
+                }
+                parent.addChild(nodemap.get(child));
             }
-            parent.addChild(nodemap.get(child));
         }
+        return new DisplayGraph(nodemap.get(graph.getRoot()));
     }
-
-    return new DisplayGraph(nodemap.get(graph.getRoot()));
-  }
 
     private NodeGraphicsInfo getParent(DisplayGraph dg, NodeGraphicsInfo ngi){
         ACyclicIterator<NodeGraphicsInfo> acyc;
@@ -357,31 +356,31 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
      * This is called when the user wants to see the next graph
      */
     protected void showNextGraph(){
-      if (currentgraphindex >= dgraphs.size() - 1) {
-        System.err.println("No more to show you...");
-        return;
-      }else if(animationCount == animationCountMax){
-        animationCount--;
-      }
+        if (currentgraphindex >= dgraphs.size() - 1) {
+            System.err.println("No more to show you...");
+            return;
+        }else if(animationCount == animationCountMax){
+            animationCount--;
+        }
     }
 
     /*
      * This is called when the user wants to see the previous graph
      */
     protected void showPrevGraph(){
-      if(currentgraphindex <= 0) {
-        System.err.println("No more to show you...");
-        return;
-      }else if(animationCount == animationCountMax){
-        currentgraph = dgraphs.get(currentgraphindex - 1);
-        currentgraphindex--;
-        ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
-        while(k.hasNext()){
-            NodeGraphicsInfo ngi = k.next();
-            if(ngi != null)
-               ngi.opacity=255;
+        if(currentgraphindex <= 0) {
+            System.err.println("No more to show you...");
+            return;
+        }else if(animationCount == animationCountMax){
+            currentgraph = dgraphs.get(currentgraphindex - 1);
+            currentgraphindex--;
+            ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(currentgraph.preorderTraversal());
+            while(k.hasNext()){
+                NodeGraphicsInfo ngi = k.next();
+                if(ngi != null)
+                    ngi.opacity=255;
+            }
         }
-      }
     }
 
     @Override
