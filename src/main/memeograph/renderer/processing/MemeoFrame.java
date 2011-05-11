@@ -19,17 +19,18 @@ import memeograph.graph.Graph;
 public class MemeoFrame extends JFrame implements Renderer{
 
     private JButton savegraph, loadgraph, graphit;
+    private JTextField method, program;
     private ProcessingApplet papplet;
     private final List<Graph> graphs = Collections.synchronizedList(new ArrayList<Graph>());
-
     private final Object waitLock = new Object();
     
     public MemeoFrame(){
         super("Memeographer!");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
-
-    public void init() {
+    public void init(){}
+    public void init(Config c) {
+        final Config config = c;
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
@@ -53,7 +54,11 @@ public class MemeoFrame extends JFrame implements Renderer{
                 public void actionPerformed(ActionEvent e) {saveGraph();}
             });
         }};
-
+        
+        method = new JTextField(config.getProperty(config.TRIGGER),25);
+        
+        program = new JTextField(config.getProperty(config.TARGET_OPTIONS),25);
+        
         graphit = new JButton("Run Memeographer!"){{
             addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) { synchronized(waitLock){waitLock.notify();} }
@@ -62,8 +67,10 @@ public class MemeoFrame extends JFrame implements Renderer{
 
         final JPanel topBar = new JPanel();
         topBar.setOpaque(true);
+        topBar.add(method);
         topBar.add(graphit);
         topBar.add(loadgraph);
+        topBar.add(program);
 
         
         setLayout(new BorderLayout());
@@ -81,7 +88,6 @@ public class MemeoFrame extends JFrame implements Renderer{
         papplet.init();
         setVisible(true);
         
-        
         synchronized(waitLock){
             try{
                 waitLock.wait();
@@ -92,8 +98,12 @@ public class MemeoFrame extends JFrame implements Renderer{
         
         SwingUtilities.invokeLater(new Runnable(){
             public void run(){
+              config.setProperty(config.TRIGGER,method.getText()); 
+              config.setProperty(config.TARGET_OPTIONS,program.getText());
               topBar.remove(loadgraph);
               topBar.remove(graphit);
+              topBar.remove(method);
+              topBar.remove(program);
               topBar.add(savegraph);
               topBar.validate();
               topBar.repaint();

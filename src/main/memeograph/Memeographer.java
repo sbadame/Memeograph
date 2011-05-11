@@ -29,7 +29,7 @@ public class Memeographer {
         Config config = Config.createConfig(args);
 
         Renderer renderer = config.getRenderer();
-        renderer.init();
+        renderer.init(config);
 
         Generator generator = config.getGenerator();
         generator.start();
