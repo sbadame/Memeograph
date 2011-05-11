@@ -118,7 +118,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                     ngi.x += (locationMap.get(ngi).x - ngi.x) / (animationCount / 2);
                     ngi.y += (locationMap.get(ngi).y - ngi.y) / (animationCount / 2);
                     ngi.z += (locationMap.get(ngi).z - ngi.z) / (animationCount / 2);
-                }else{
+                }else if(!hasNode(ngi,dgraphs.get(currentgraphindex + 1))){
                     ngi.opacity -= OPACITY_COUNT;
                 }
             }
@@ -128,12 +128,13 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
             acyc = new ACyclicIterator<NodeGraphicsInfo>(dgraphs.get(currentgraphindex + 1).preorderTraversal());
             while(acyc.hasNext()){
                 NodeGraphicsInfo node = acyc.next();
-                if(!hasNode(node,currentgraph)){
+                if(!hasSameNode(node,currentgraph)){
                     node.opacity = 0;
                     nextGraphList.add(node);
                 }
             }
         }          
+                
         //continue node animation and fading out
         else if(animationCount < (animationCountMax - 1)){
             ACyclicIterator<NodeGraphicsInfo> k;
@@ -144,33 +145,45 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                     ngi.x += (locationMap.get(ngi).x - ngi.x) / (animationCount);
                     ngi.y += (locationMap.get(ngi).y - ngi.y) / (animationCount);
                     ngi.z += (locationMap.get(ngi).z - ngi.z) / (animationCount);
-                }else{
+                }else if(!hasNode(ngi,dgraphs.get(currentgraphindex + 1))){
                     ngi.opacity -= OPACITY_COUNT * 1.3f;
                 }
             }
             for(NodeGraphicsInfo ngi : nextGraphList)
             {
-                if(!hasNode(ngi,currentgraph)){
+                if(!hasSameNode(ngi,currentgraph)){
                     ngi.opacity += OPACITY_COUNT;
-                    drawNode(ngi);
-                    NodeGraphicsInfo parent = null;
-                    NodeGraphicsInfo ngParent = getParent(dgraphs.get(currentgraphindex + 1),ngi);
-                    if(ngParent != null){
-                        NodeGraphicsInfo cgParent = getNodeInstance(currentgraph, ngParent);
-                        if(cgParent != null)
-                            parent = cgParent;
-                        else
-                            parent = ngParent;
-                        new Line(ngi,parent).draw(this);
-                    }
-                    for(NodeGraphicsInfo child : getNodeInstance(dgraphs.get(currentgraphindex + 1),ngi).getChildren())
-                        if(getNodeInstance(currentgraph,child) != null && !(ngi.gnt instanceof ObjectGraphRoot))
-                            new Line(getNodeInstance(currentgraph,child), ngi).draw(this);
+                    drawNode(ngi);     
                 }
             }
-            for(Line line : graphLines.get(currentgraphindex)){   
-                if(contains(graphLines.get(currentgraphindex + 1),line))
+            for(Line line : graphLines.get(currentgraphindex)){
+                if(contains(graphLines.get(currentgraphindex + 1),line)){
                     line.draw(this);
+                }
+            }
+            for(Line line : graphLines.get(currentgraphindex + 1)){
+                if(!contains(graphLines.get(currentgraphindex),line)){
+                    NodeGraphicsInfo from = getNodeInstance(nextGraphList,line.from);   
+                    NodeGraphicsInfo to = getNodeInstance(nextGraphList,line.to);
+                    Line l = null;
+                    if(to == null && from == null)
+                        ;//do nothing
+                    else if(to == null){
+                        if(getNodeInstance(currentgraph,line.to) != null)
+                            l = new Line(from,getNodeInstance(currentgraph,line.to));
+                        else
+                            l = new Line(from,line.to);
+                    }else if(from == null){
+                        if(getNodeInstance(currentgraph,line.from) != null)
+                            l = new Line(getNodeInstance(currentgraph,line.from),to);
+                        else
+                            l = new Line(line.from,to);
+                    }else{
+                        l = new Line(from,to);
+                    }
+                    if(l != null)
+                        l.draw(this);
+                }
             }
         }
         animationCount--;
@@ -289,17 +302,18 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         return new DisplayGraph(nodemap.get(graph.getRoot()));
     }
 
-    private NodeGraphicsInfo getParent(DisplayGraph dg, NodeGraphicsInfo ngi){
+    private ArrayList<NodeGraphicsInfo> getParents(DisplayGraph dg, NodeGraphicsInfo ngi){
+        ArrayList<NodeGraphicsInfo> parents = new ArrayList<NodeGraphicsInfo>();
         ACyclicIterator<NodeGraphicsInfo> acyc;
         acyc = new ACyclicIterator<NodeGraphicsInfo>(dg.preorderTraversal());
         while(acyc.hasNext()){
             NodeGraphicsInfo parent = acyc.next();
             for(NodeGraphicsInfo child : parent.getChildren()){
                 if(child.equals(ngi))
-                    return parent;
+                    parents.add(parent);
             }
         }
-        return null;
+        return parents;
     }
     
     private NodeGraphicsInfo getNodeInstance(DisplayGraph dg, NodeGraphicsInfo ngi){
@@ -310,6 +324,13 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
             if(ngi.equals(node))
                 return node;
         }
+        return null;
+    }
+    
+    private NodeGraphicsInfo getNodeInstance(ArrayList<NodeGraphicsInfo> ngiList, NodeGraphicsInfo ngi){
+        for(NodeGraphicsInfo n : ngiList)
+            if(n.equalsSame(ngi))
+                return n;
         return null;
     }
     
@@ -329,13 +350,14 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
         }
         layout.doLayout();
         dgraphs.add(dg);
-        if (currentgraph == null) { currentgraph = dg; }
+        if (currentgraph == null)
+            currentgraph = dg;
         ArrayList<Line> lineList = new ArrayList<Line>();
         ACyclicIterator<NodeGraphicsInfo> i = new ACyclicIterator<NodeGraphicsInfo>(dg.preorderTraversal());
         while( i.hasNext()){
             NodeGraphicsInfo parent = i.next();
             for (NodeGraphicsInfo kid : parent.getChildren()) {
-                if(parent.gnt instanceof ObjectGraphRoot){}else
+                if(!(parent.gnt instanceof ObjectGraphRoot))
                     lineList.add(new Line(parent, kid));
             }
         }
@@ -346,7 +368,18 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
     private boolean hasNode(NodeGraphicsInfo n, DisplayGraph g){
         ACyclicIterator<NodeGraphicsInfo> acyc = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
         while(acyc.hasNext()){
-          if(acyc.next().equals(n))
+          NodeGraphicsInfo ngi = acyc.next();
+          if(ngi.equals(n))
+            return true;
+        }
+        return false;
+    }
+    
+    private boolean hasSameNode(NodeGraphicsInfo n, DisplayGraph g){
+        ACyclicIterator<NodeGraphicsInfo> acyc = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
+        while(acyc.hasNext()){
+          NodeGraphicsInfo ngi = acyc.next();
+          if(ngi.equals(n) && ngi.gnt.toString().equals(n.gnt.toString()))
             return true;
         }
         return false;
@@ -433,7 +466,13 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
       ACyclicIterator<NodeGraphicsInfo> k = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
       while(k.hasNext()){
           NodeGraphicsInfo ngi = k.next();
-          if(thisNode.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()))
+          if(thisNode.equals(ngi) && thisNode.gnt.toString().equals(ngi.gnt.toString()))
+              return new Coordinate(ngi.x,ngi.y,ngi.z);
+      }
+      k = new ACyclicIterator<NodeGraphicsInfo>(g.preorderTraversal());
+      while(k.hasNext()){
+          NodeGraphicsInfo ngi = k.next();
+          if(thisNode.equals(ngi))
               return new Coordinate(ngi.x,ngi.y,ngi.z);
       }
       return null;
@@ -445,6 +484,14 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener{
                 return true;
         return false;
     }
+    
+    public boolean containsSame(ArrayList<Line> lines,Line line){
+        for(Line l : lines)
+            if(line.equalsSame(l))
+                return true;
+        return false;
+    }
+    
     public Line getLine(Line line, ArrayList<Line> lines){
         for(Line l : lines)
             if(line.equals(l))

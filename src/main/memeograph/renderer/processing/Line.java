@@ -26,6 +26,13 @@ public class Line {
     
     public boolean equals(Line line)
     {
-        return(from.equals(line.from) && to.equals(line.to));
+        return((from.equals(line.from) && to.equals(line.to)) ||
+                (from.equals(line.to) && to.equals(line.from)));
+    }
+    
+    public boolean equalsSame(Line line)
+    {
+        return((from.equalsSame(line.from) && to.equalsSame(line.to)) ||
+                (from.equalsSame(line.to) && to.equalsSame(line.from)));
     }
 }
