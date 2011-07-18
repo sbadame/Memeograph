@@ -13,7 +13,7 @@ public interface Renderer {
      * that if the Renderer is a GUI of some sort, it can popup at the very
      * start, before the builder has been created and is working.
      */
-    public void init();
+    public void init(Config config);
 
     /**
      * Adds a graph to the renderer

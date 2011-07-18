@@ -9,36 +9,30 @@ package memeograph.renderer.processing;
  * @author mwaldron74
  */
 public class Line {
-    Coordinate to,from;
-    float opacity;
-    public Line(Coordinate from, Coordinate to)
+    NodeGraphicsInfo from,to;
+    public Line(NodeGraphicsInfo from, NodeGraphicsInfo to)
     {
-        this(from, to, 255);
-    }
-    
-    public Line(Coordinate from, Coordinate to, float opacity)
-    {
-        this.to = to;
         this.from = from;
-        this.opacity = opacity;
+        this.to = to;
     }
-    
-    public void changeTo(Coordinate c)
-    {
-        to = c;
-    }
-    
-    public void opacity(float op)
-    {
-        opacity = op;
-    }
-    
     public void draw(ProcessingApplet p)
     {
         p.pushStyle();
         p.strokeWeight(5);
-        p.stroke(1f,opacity);
+        p.stroke(1f,Math.min(from.opacity, to.opacity));
         p.line(from.x, from.y, from.z, to.x, to.y, to.z);
         p.popStyle();
+    }
+    
+    public boolean equals(Line line)
+    {
+        return((from.equals(line.from) && to.equals(line.to)) ||
+                (from.equals(line.to) && to.equals(line.from)));
+    }
+    
+    public boolean equalsSame(Line line)
+    {
+        return((from.equalsSame(line.from) && to.equalsSame(line.to)) ||
+                (from.equalsSame(line.to) && to.equalsSame(line.from)));
     }
 }

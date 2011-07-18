@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Random;
 import memeograph.generator.jdi.nodes.GraphNodeType;
+import memeograph.generator.jdi.nodes.IntegerNode;
 import memeograph.graph.Node;
 
 /**
@@ -22,6 +23,7 @@ public class NodeGraphicsInfo implements Serializable{
 
     public GraphLayoutHandler glh;
     public GraphNodeType gnt;
+    public Line line;
     protected LinkedList<NodeGraphicsInfo> children = new LinkedList<NodeGraphicsInfo>();
 
     public NodeGraphicsInfo(Color c,Node n){
@@ -58,5 +60,20 @@ public class NodeGraphicsInfo implements Serializable{
     public Coordinate getCoordinate()
     {
         return new Coordinate(x,y,z);
+    }
+    
+    public boolean equals(NodeGraphicsInfo ngi){ 
+        if(node.gnt instanceof IntegerNode)
+            return false; // for our purposes, integer nodes are never equal
+        boolean x = (this.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()));
+        return x;
+    }
+    
+    public boolean equalsSame(NodeGraphicsInfo ngi){
+        if(node.gnt instanceof IntegerNode)
+            return false; // for our purposes, integer nodes are never equal
+        boolean x = (this.node.gnt.getUniqueID().equals(ngi.node.gnt.getUniqueID()));
+        boolean y = this.node.gnt.toString().equals(ngi.node.gnt.toString());
+        return x && y;
     }
 }
