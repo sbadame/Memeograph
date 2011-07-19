@@ -3,8 +3,8 @@
 
 \usepackage{url}
 \usepackage{graphicx}
-\usepackage{salgorithm}
 \usepackage{verbatim}
+\usepackage{array}
 \usepackage{amsthm, amsfonts, amsmath, amssymb, amsxtra}
 
 \newcommand{\NP}{\ensuremath{\mathcal{NP}}}
@@ -23,22 +23,28 @@ BRIDGES 2011}
 \begin{document}
 \frame{\titlepage}
 
-\section{Why}
+\section{Why visualize execution}
 
 \fst{Beautiful programs}{
-\begin{center}Programmers are beginning to talk about beauty
+\begin{center}
+Programmers have long talked about art and style...\\
+\includegraphics[height=.75in]{knuth.jpg}\ 
+\includegraphics[height=.75in]{pstyle.jpg}
+\includegraphics[height=.75in]{pearls.jpg}\ 
+\includegraphics[height=.75in]{handp.jpg}\ 
 
-\uncover<2->{\includegraphics[width=.5in]{barch.jpg}}
-\uncover<1->{\includegraphics[width=.5in]{bcode.jpg}}
-\uncover<5->{\includegraphics[width=.5in]{bdata.jpg}}
-\uncover<4->{\includegraphics[width=.5in]{bsec.jpg}}
-\uncover<3->{\includegraphics[width=.5in]{bteam.jpg}}
-\uncover<6->{\includegraphics[width=.5in]{btest.jpg}}
-\uncover<7->{\includegraphics[width=.5in]{bvis.jpg}}
+Programmers are beginning to talk about beauty\\
+\uncover<3->{\includegraphics[width=.5in]{barch.jpg}}
+\uncover<2->{\includegraphics[width=.5in]{bcode.jpg}}
+\uncover<6->{\includegraphics[width=.5in]{bdata.jpg}}
+\uncover<5->{\includegraphics[width=.5in]{bsec.jpg}}
+\uncover<4->{\includegraphics[width=.5in]{bteam.jpg}}
+\uncover<7->{\includegraphics[width=.5in]{btest.jpg}}
+\uncover<8->{\includegraphics[width=.5in]{bvis.jpg}}
 \end{center}
 
-\uncover<7->{My claim:}
-\uncover<8->{\LARGE \it The beauty of a program comes not from its source code, but from the unfolding of its execution.}
+\uncover<8->{My claim:}
+\uncover<9->{\LARGE \it The beauty of a program comes not from its source code, but from the unfolding of its execution.}
 }
 
 \fst{Programs are blueprints}{
@@ -57,6 +63,29 @@ BRIDGES 2011}
 
 \section{Past Examples}
 
+\fst{Atari Art}{
+\begin{tabular}{c p{3in}}
+\includegraphics[height=2.75in]{pacman-illus-150dpi.png} &
+\vspace{-2.5in}
+\begin{itemize}
+        \item Beautiful
+        \item No execution
+        \item Wrong level of abstraction
+\end{itemize}
+\vspace{1in}
+\small{\url{http://benfry.com/distellamap/}}
+\end{tabular}
+}
+
+\fst{Visual 6502}{
+\begin{center}
+\includegraphics[height=2in]{6502.png}\\
+Wrong level of abstraction.  Emphasizes hardware, not software.
+\small{\url{http://http://visual6502.org/}}
+\end{center}
+}
+
+
 \fst{Algorithm Visualization}{
 \begin{tabular}{c p{2in}}
 \includegraphics[width=2in]{algoviz.jpg} &
@@ -66,7 +95,7 @@ BRIDGES 2011}
 \item Tricky to write
 \item Not trying for beauty
 \item Only one kind of beauty
-\item Doesn't seem to help students learn
+\item Doesn't seem to help students learn, except for the students who write the visualization \cite{dandh}
 \end{itemize}
 \end{tabular}
 
@@ -78,9 +107,9 @@ Picture is from \url{http://research.cs.vt.edu/AVresearch/UF/}
 \subsection{Lisp}
 \frame[containsverbatim]{
 \frametitle{Lisp and Trees}
-\centering
-\begin{tabular}{p{2in} p{2in}}
-\vspace{-1.85in}
+\vspace{-.5in}
+\begin{center}
+\begin{tabular}{p{2in} p{.1in} p{2in}}
 \begin{verbatim}
 (((fun (f) (f f) ) 
   (fun (f) 
@@ -92,31 +121,65 @@ Picture is from \url{http://research.cs.vt.edu/AVresearch/UF/}
    )
  ) 6)
 \end{verbatim} 
-& \includegraphics[width=2in]{fact.png} \\
+& \vspace{1in} 
+$\to$ & \begin{figure}\includegraphics[width=2in]{fact.png}
+\caption{Factorial program as a tree\cite{boca}}
+\end{figure} \\
 \end{tabular}
+
+Animated, but requires programming in the visualizer.
+\end{center}
 }
 
 \fst{Debuggers}{
 \begin{center}
-\includegraphics[width=4in]{ddd.png}
+\includegraphics[width=3.75in]{ddd.png}
+
+Not animated, beauty is ignored. \\
+\tiny{(a DDD screenshot of a random binary search tree)}
 \end{center}
 }
 
-\fst{OO programs}{
+\section{Animating a program}
+\fst{Our goals}{
+\begin{itemize}
+        \item Look good
+        \item Animate execution
+        \item Be easy to use
+        \item Show algorithmic beauty in our programs
+        \item Show software engineering beauty
+\end{itemize}
+}
+\fst{Program $\to$ Graph}{
+\begin{itemize}
+        \item Every object instance is a vertex
+        \item Every stack frame is a vertex
+        \item Every reference to an object constitutes a directed edge to an object
+        \item Every function call constitutes a directed edge to a stack frame
+        \item We use the debugging libraries to find all this information
+\end{itemize}
 }
 
-\section{Programs $\to$ Graphs}
-
-\fst{Use the debugger}{}
-
-\section{Animating the program}
-
 \fst{Lay it out}{}
-\fst{Tween the states}{}
-\fst{Animate it}{}
+\fst{Animate it}{
+        \begin{itemize}
+                \item Lay out the start
+                \item Lay out the end
+                \item Generate all of the tween frames
+                \item Flip the flipbook
+        \end{itemize}
+}
 
 \section{Demo}
 
 \fst{Demo}{Here are a few programs, to end my talk}
+
+\fst{Bibliography}{
+        \bibliographystyle{apalike}
+{\footnotesize 
+        \bibliography{mybib}
+}
+}
+
 
 \end{document}
