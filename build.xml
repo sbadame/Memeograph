@@ -91,6 +91,22 @@
         </java>
     </target>
 
+    <target name="run-llrb" depends="build" description="Runs memeographer on LLRB creating a graph on every insert ">
+        <property name="target.main" value="LLRB" />
+        <property name="target.args" value="" />
+        <property name="target.classpath" value="bin/examples/java" />
+        <property name="target.sourcepath" value="src/examples/java" />
+        <property name="memeographer.args" value="" />
+        <java fork="true" classname="memeograph.Memeographer">
+            <sysproperty key="java.library.path" path="${nativelibrarypath}" />
+            <arg value="${memeographer_args} ${memeographer.args} +sourcepath=${target.sourcepath} -cp ${target.classpath} ${target.main} ${target.args}" />
+            <classpath>
+                <path location="bin/main" />
+                <path refid="lib.path" />
+            </classpath>
+        </java>
+    </target>
+
     <!-- Define all of our build targets here -->
     <target name="build" depends="-compile-main,-compile-examples,-compile-test"  description ="Builds the project, the tests and the examples."/>
 

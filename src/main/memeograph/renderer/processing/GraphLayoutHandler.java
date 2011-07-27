@@ -56,7 +56,9 @@ public class GraphLayoutHandler {
 
     public void doLayout(){
       ThreeDTree tdt = new ThreeDTree(dg.getRoot());
+      NodeGraphicsInfo rootNGI = null;
       for (NodeGraphicsInfo thread : dg.getRoot().getChildren()) {
+        if (rootNGI == null) rootNGI = thread;
         assert(thread.gnt instanceof ThreadNode);
         layout(thread, -10, 0);
 
@@ -75,7 +77,7 @@ public class GraphLayoutHandler {
         }
       }
 
-      setXPositions();
+      setXPositions(dg.getRoot());
       didLayout = true;
     }
 
@@ -91,7 +93,7 @@ public class GraphLayoutHandler {
         rail.add(n);
     }
 
-    private void setXPositions(){
+    private void setXPositions(NodeGraphicsInfo rootInfo){
         HashSet<NodeGraphicsInfo> seen = new HashSet<NodeGraphicsInfo>();
         float mid = findMid();
         float xPos = 0;
@@ -114,6 +116,17 @@ public class GraphLayoutHandler {
                     node.x = xPos + PADDING;
                     seen.add(node);
                     xPos += node.width + PADDING;
+                }
+            }
+        }
+
+        float rootXcorrection = rootInfo.x;
+        for( Integer y : grid.keySet()){
+            HashMap<Integer, ArrayList<NodeGraphicsInfo>> zPlane = grid.get(y);
+            for(Integer z : zPlane.keySet()){
+                for(int i = 0; i < zPlane.get(z).size(); i++){
+                    NodeGraphicsInfo node = zPlane.get(z).get(i);
+                    node.x -= rootXcorrection;
                 }
             }
         }
