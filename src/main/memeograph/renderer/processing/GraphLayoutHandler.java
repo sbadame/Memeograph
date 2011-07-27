@@ -60,7 +60,7 @@ public class GraphLayoutHandler {
       for (NodeGraphicsInfo thread : dg.getRoot().getChildren()) {
         if (rootNGI == null) rootNGI = thread;
         assert(thread.gnt instanceof ThreadNode);
-        layout(thread, -10, 0);
+        layout(thread, 0, 0);
 
         if(!thread.getChildren().isEmpty()) continue;
 
@@ -72,7 +72,7 @@ public class GraphLayoutHandler {
             sf = thread.getChildren().iterator().next();
             if (seen.contains(sf)) break;
             y += 1;
-            layout(sf, -10, y);
+            layout(sf, 0, y);
             seen.add(sf);
         }
       }
@@ -120,7 +120,7 @@ public class GraphLayoutHandler {
             }
         }
 
-        float rootXcorrection = rootInfo.x;
+        float rootXcorrection = grid.get(0).get(0).get(0).x;
         for( Integer y : grid.keySet()){
             HashMap<Integer, ArrayList<NodeGraphicsInfo>> zPlane = grid.get(y);
             for(Integer z : zPlane.keySet()){
